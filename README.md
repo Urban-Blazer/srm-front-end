@@ -1,6 +1,6 @@
-# 🌟 Movement Web3 Template 🌟
+# 🌟 Sui Web3 Template 🌟
 
-Elevate your Movement blockchain development experience with this robust template powered by Next.js and integrated with [Nightly Connect](https://connect.nightly.app/docs/) for seamless wallet management. This template provides you with the core building blocks to jump-start your Movement project!
+Elevate your Sui blockchain development experience with this robust template powered by Next.js and integrated with [Nightly Connect](https://connect.nightly.app/docs/) for seamless wallet management. This template provides you with the core building blocks to jump-start your Sui project!
 
 ![Discord](https://img.shields.io/discord/7nhFHA6yZq?color=7389D8&logo=discord&logoColor=ffffff)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
@@ -14,10 +14,10 @@ Getting up and running is as easy as 1-2-3!
 
 ```bash
 # Clone the repo
-git clone https://github.com/nightly-labs/movement-web3-template.git
+git clone https://github.com/nightly-labs/sui-web3-template.git
 
 # Navigate to project directory
-cd movement-web3-template
+cd sui-web3-template
 
 # Install dependencies
 npm/yarn/pnpm/bun install
@@ -27,7 +27,7 @@ npm/yarn/pnpm/bun install
 
 ```
 
-Now, open your browser and navigate to [http://localhost:3000](http://localhost:3000) to see your blazing fast Movement app in action!
+Now, open your browser and navigate to [http://localhost:3000](http://localhost:3000) to see your blazing fast Sui app in action!
 
 ---
 

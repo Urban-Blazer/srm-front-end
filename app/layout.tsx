@@ -5,23 +5,23 @@ import Head from 'next/head'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Movement Template App',
+  title: 'Sui Template App',
   description:
-    'Start your Movement journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
+    'Start your Sui journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
   twitter: {
-    title: 'Movement Template App',
+    title: 'Sui Template App',
     description:
-      'Start your Movement journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
-    images: 'https://movement-web3-template.nightly.app/metatag.png',
+      'Start your Sui journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
+    images: 'https://sui-web3-template.nightly.app/preview.png',
     card: 'summary_large_image',
     site: '@nightly_app',
   },
   openGraph: {
-    title: 'Movement Template App',
+    title: 'Sui Template App',
     description:
-      'Start your Movement journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
-    images: 'https://movement-web3-template.nightly.app/metatag.png',
-    url: 'https://movement-web3-template.nightly.app',
+      'Start your Sui journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
+    images: 'https://sui-web3-template.nightly.app/preview.png',
+    url: 'https://sui-web3-template.nightly.app',
     type: 'website',
   },
 }

@@ -6,8 +6,8 @@ export const getAdapter = async (persisted = true) => {
   _adapter = await NightlyConnectSuiAdapter.build(
     {
       appMetadata: {
-        name: 'Sui Template',
-        description: 'Sui Template',
+        name: 'Sui Rewards',
+        description: 'SuiRewards.me',
         icon: 'https://docs.nightly.app/img/logo.png',
       },
     },

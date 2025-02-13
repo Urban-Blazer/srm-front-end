@@ -25,6 +25,7 @@
     "@types/react-dom": "18.2.7",
     "autoprefixer": "10.4.15",
     "babel-plugin-macros": "^3.1.0",
+    "bufferutil": "^4.0.9",
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.1",
     "next": "13.5.1",
@@ -36,6 +37,7 @@
     "tailwindcss": "3.3.3",
     "three": "0.127.0",
     "typescript": "5.2.2",
+    "utf-8-validate": "^6.0.5",
     "wouter": "2.7.4"
   },
   "overrides": {

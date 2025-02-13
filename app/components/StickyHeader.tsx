@@ -20,7 +20,7 @@ const StickyHeader: React.FC = () => {
             setUserAccount(account[0])
           }
         } catch (error) {
-          await adapter.disconnect().catch(() => {})
+          await adapter.disconnect().catch(() => { })
           console.log(error)
         }
       }
@@ -29,7 +29,7 @@ const StickyHeader: React.FC = () => {
     // Try eagerly connect
   }, [])
   return (
-    <header className='fixed top-0 left-0 w-full bg-opacity-50  p-6 z-10'>
+    <div className="relative z-50">
       <div className='flex items-center justify-between'>
         <div>
           {/* <Image
@@ -55,7 +55,7 @@ const StickyHeader: React.FC = () => {
                 }
               } catch (error) {
                 // If error, disconnect ignore error
-                await adapter.disconnect().catch(() => {})
+                await adapter.disconnect().catch(() => { })
               }
             }}
             onDisconnect={async () => {
@@ -134,7 +134,7 @@ const StickyHeader: React.FC = () => {
           )}
         </div>
       </div>
-    </header>
+    </div>
   )
 }
 

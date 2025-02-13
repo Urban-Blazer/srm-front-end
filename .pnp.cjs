@@ -42,6 +42,7 @@ const RAW_RUNTIME_STATE =
           ["@types/three", "npm:0.156.0"],\
           ["autoprefixer", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:10.4.15"],\
           ["babel-plugin-macros", "npm:3.1.0"],\
+          ["bufferutil", "npm:4.0.9"],\
           ["encoding", "npm:0.1.13"],\
           ["eslint", "npm:8.49.0"],\
           ["eslint-config-next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
@@ -54,6 +55,7 @@ const RAW_RUNTIME_STATE =
           ["tailwindcss", "npm:3.3.3"],\
           ["three", "npm:0.127.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"],\
+          ["utf-8-validate", "npm:6.0.5"],\
           ["wouter", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:2.7.4"]\
         ],\
         "linkType": "SOFT"\
@@ -4718,6 +4720,17 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["bufferutil", [\
+      ["npm:4.0.9", {\
+        "packageLocation": "./.yarn/unplugged/bufferutil-npm-4.0.9-956b9c83fa/node_modules/bufferutil/",\
+        "packageDependencies": [\
+          ["bufferutil", "npm:4.0.9"],\
+          ["node-gyp", "npm:11.1.0"],\
+          ["node-gyp-build", "npm:4.8.4"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["busboy", [\
       ["npm:1.6.0", {\
         "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/busboy-npm-1.6.0-ebb5cbb04b-10c0.zip/node_modules/busboy/",\
@@ -7777,6 +7790,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["node-gyp-build", [\
+      ["npm:4.8.4", {\
+        "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/node-gyp-build-npm-4.8.4-106c2a0b4f-10c0.zip/node_modules/node-gyp-build/",\
+        "packageDependencies": [\
+          ["node-gyp-build", "npm:4.8.4"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["node-localstorage", [\
       ["npm:2.2.1", {\
         "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/node-localstorage-npm-2.2.1-bc01536b9e-10c0.zip/node_modules/node-localstorage/",\
@@ -9378,6 +9400,7 @@ const RAW_RUNTIME_STATE =
           ["@types/three", "npm:0.156.0"],\
           ["autoprefixer", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:10.4.15"],\
           ["babel-plugin-macros", "npm:3.1.0"],\
+          ["bufferutil", "npm:4.0.9"],\
           ["encoding", "npm:0.1.13"],\
           ["eslint", "npm:8.49.0"],\
           ["eslint-config-next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
@@ -9390,6 +9413,7 @@ const RAW_RUNTIME_STATE =
           ["tailwindcss", "npm:3.3.3"],\
           ["three", "npm:0.127.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"],\
+          ["utf-8-validate", "npm:6.0.5"],\
           ["wouter", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:2.7.4"]\
         ],\
         "linkType": "SOFT"\
@@ -9951,6 +9975,17 @@ const RAW_RUNTIME_STATE =
         "packagePeers": [\
           "@types/react",\
           "react"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["utf-8-validate", [\
+      ["npm:6.0.5", {\
+        "packageLocation": "./.yarn/unplugged/utf-8-validate-npm-6.0.5-0c83b6bb07/node_modules/utf-8-validate/",\
+        "packageDependencies": [\
+          ["utf-8-validate", "npm:6.0.5"],\
+          ["node-gyp", "npm:11.1.0"],\
+          ["node-gyp-build", "npm:4.8.4"]\
         ],\
         "linkType": "HARD"\
       }]\

@@ -1889,6 +1889,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-spring/core@npm:^9.7.5, @react-spring/core@npm:~9.7.5":
+  version: 9.7.5
+  resolution: "@react-spring/core@npm:9.7.5"
+  dependencies:
+    "@react-spring/animated": "npm:~9.7.5"
+    "@react-spring/shared": "npm:~9.7.5"
+    "@react-spring/types": "npm:~9.7.5"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: 10c0/5bfd83dfe248cd91889f215f015d908c7714ef445740fd5afa054b27ebc7d5a456abf6c309e2459d9b5b436e78d6fda16b62b9601f96352e9130552c02270830
+  languageName: node
+  linkType: hard
+
 "@react-spring/core@npm:~9.1.1":
   version: 9.1.2
   resolution: "@react-spring/core@npm:9.1.2"
@@ -1899,19 +1912,6 @@ __metadata:
   peerDependencies:
     react: ">=16.8"
   checksum: 10c0/c2a3b07c506f7a526759d3726bb437b649185efc321fdb2ed0c947f73f69bbc8870637be73c9a3d14c789929b8e1d5153b27f6798b83136912a1298c91d48fee
-  languageName: node
-  linkType: hard
-
-"@react-spring/core@npm:~9.7.5":
-  version: 9.7.5
-  resolution: "@react-spring/core@npm:9.7.5"
-  dependencies:
-    "@react-spring/animated": "npm:~9.7.5"
-    "@react-spring/shared": "npm:~9.7.5"
-    "@react-spring/types": "npm:~9.7.5"
-  peerDependencies:
-    react: ^16.8.0 || ^17.0.0 || ^18.0.0
-  checksum: 10c0/5bfd83dfe248cd91889f215f015d908c7714ef445740fd5afa054b27ebc7d5a456abf6c309e2459d9b5b436e78d6fda16b62b9601f96352e9130552c02270830
   languageName: node
   linkType: hard
 
@@ -1946,19 +1946,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-spring/three@npm:9.1.1":
-  version: 9.1.1
-  resolution: "@react-spring/three@npm:9.1.1"
+"@react-spring/three@npm:^9.7.5":
+  version: 9.7.5
+  resolution: "@react-spring/three@npm:9.7.5"
   dependencies:
-    "@react-spring/animated": "npm:~9.1.1"
-    "@react-spring/core": "npm:~9.1.1"
-    "@react-spring/shared": "npm:~9.1.1"
-    "@react-spring/types": "npm:~9.1.1"
+    "@react-spring/animated": "npm:~9.7.5"
+    "@react-spring/core": "npm:~9.7.5"
+    "@react-spring/shared": "npm:~9.7.5"
+    "@react-spring/types": "npm:~9.7.5"
   peerDependencies:
     "@react-three/fiber": ">=6.0"
-    react: ">=16.11"
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
     three: ">=0.126"
-  checksum: 10c0/fec8327a376f00880e76e338073bacd1e73ea8660700a3b885d467cc33502426c37fbe6b971c51c1b75088eb067868169511d662edd58c47b2907cfb8a9d996c
+  checksum: 10c0/793f2c27a55060b015880e661ede045f240e4be9b85f448616fb0f8f282bed21d08fb2389a70c73addffbdb868c38bc26d8c6f6f55dd2b0ef67ba6c5a11a55d9
   languageName: node
   linkType: hard
 
@@ -6956,7 +6956,8 @@ __metadata:
     "@mysten/sui.js": "npm:^0.48.1"
     "@mysten/wallet-standard": "npm:^0.9.0"
     "@nightlylabs/wallet-selector-sui": "npm:^0.4.2"
-    "@react-spring/three": "npm:9.1.1"
+    "@react-spring/core": "npm:^9.7.5"
+    "@react-spring/three": "npm:^9.7.5"
     "@react-spring/web": "npm:9.1.1"
     "@react-three/drei": "npm:4.1.8"
     "@react-three/fiber": "npm:6.0.14"

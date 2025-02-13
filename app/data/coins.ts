@@ -3,7 +3,7 @@ export const predefinedCoins = [
         symbol: "SUI",
         typeName: "0x2::sui::SUI",
         decimals: 9,
-        logo: "https://cdn.prod.website-files.com/6425f546844727ce5fb9e5ab/659d970f53d2997773cf1db1_emblem-sui-d.svg",
+        logo: "https://strapi-dev.scand.app/uploads/sui_c07df05f00.png",
     },
     {
         symbol: "USDC",

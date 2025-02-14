@@ -7,26 +7,8 @@ export const predefinedCoins = [
     },
     {
         symbol: "USDC",
-        typeName: "0x2::coin::USDC",
+        typeName: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
         decimals: 6,
-        logo: "https://assets.coingecko.com/coins/images/6319/small/usdc.png",
-    },
-    {
-        symbol: "DAI",
-        typeName: "0x2::coin::DAI",
-        decimals: 18,
-        logo: "https://assets.coingecko.com/coins/images/9956/small/DAI.png",
-    },
-    {
-        symbol: "LDO",
-        typeName: "0x2::coin::LDO",
-        decimals: 18,
-        logo: "https://assets.coingecko.com/coins/images/13573/small/Lido_DAO.png",
-    },
-    {
-        symbol: "SOL",
-        typeName: "0x2::coin::SOL",
-        decimals: 9,
-        logo: "https://assets.coingecko.com/coins/images/4128/small/solana.png",
+        logo: "https://strapi-dev.scand.app/uploads/usdc_019d7ef24b.png",
     },
 ];

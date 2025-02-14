@@ -20,6 +20,10 @@ const initialState = {
     deployerRoyaltyFee: 0,
     rewardsFee: 0,
     deployerRoyaltyWallet: "",
+    initialPrice: 0,
+    initialPriceMode: "customPerDropdown",
+    depositDropdownCoin: "", // Amount of dropdown coin
+    depositCustomCoin: "",   // Amount of custom coin
 };
 
 function isValidSuiAddress(address: string): boolean {
@@ -28,17 +32,50 @@ function isValidSuiAddress(address: string): boolean {
 
 function reducer(state: any, action: any) {
     switch (action.type) {
-        case "SET_COIN": return { ...state, selectedCoin: action.payload };
-        case "SET_CUSTOM_COIN": return { ...state, customCoin: action.payload };
-        case "SET_STEP": return { ...state, step: action.payload };
-        case "TOGGLE_DROPDOWN": return { ...state, dropdownOpen: !state.dropdownOpen };
-        case "SET_LOADING": return { ...state, loading: action.payload };
+        case "SET_COIN":
+            return { ...state, selectedCoin: action.payload };
+        case "SET_CUSTOM_COIN":
+            return { ...state, customCoin: action.payload };
+        case "SET_STEP":
+            return { ...state, step: action.payload };
+        case "TOGGLE_DROPDOWN":
+            return { ...state, dropdownOpen: !state.dropdownOpen };
+        case "SET_LOADING":
+            return { ...state, loading: action.payload };
         case "SET_METADATA":
             return { ...state, dropdownCoinMetadata: action.payload.dropdown, customCoinMetadata: action.payload.custom };
         case "SET_FEES":
             return { ...state, [action.field]: action.value };
-        case "SET_WALLET": return { ...state, deployerRoyaltyWallet: action.payload };
-        default: return state;
+        case "SET_WALLET":
+            return { ...state, deployerRoyaltyWallet: action.payload };
+        case "SET_INITIAL_PRICE":
+            return {
+                ...state,
+                initialPrice: action.payload,
+                depositDropdownCoin: "", // Reset deposits
+                depositCustomCoin: "",
+            };
+        case "SET_INITIAL_PRICE_MODE":
+            return {
+                ...state,
+                initialPriceMode: action.payload,
+                depositDropdownCoin: "", // Reset deposits
+                depositCustomCoin: "",
+            };
+        case "SET_DEPOSIT_DROPDOWN":
+            return {
+                ...state,
+                depositDropdownCoin: action.payload,
+                depositCustomCoin: state.initialPrice > 0 ? (parseFloat(action.payload) * state.initialPrice).toFixed(6) : "",
+            };
+        case "SET_DEPOSIT_CUSTOM":
+            return {
+                ...state,
+                depositCustomCoin: action.payload,
+                depositDropdownCoin: state.initialPrice > 0 ? (parseFloat(action.payload) / state.initialPrice).toFixed(6) : "",
+            };
+        default:
+            return state;
     }
 }
 
@@ -135,7 +172,7 @@ export default function Pools() {
 
                 {/* Step 2: Configure Fees & Wallet */}
                 {state.step === 2 && state.dropdownCoinMetadata && state.customCoinMetadata && (
-                    <div className="flex flex-col h-screen w-full">
+                    <div className="flex flex-col h-screen w-full overflow-y-auto pb-32">
                         <h2 className="text-xl font-semibold mb-4 text-black">Set Pool Fees</h2>
 
                         {/* Selected Coins Display */}
@@ -203,7 +240,7 @@ export default function Pools() {
                                     <p className="text-red-500 text-sm mt-1">Invalid Sui address. It must start with "0x" and be 66 characters long.</p>
                                 )}
                             </div>
-                        
+                        </div>
 
                         {/* Navigation Buttons */}
                         <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex justify-between">
@@ -213,69 +250,130 @@ export default function Pools() {
                                 ← Back to Step 1
                             </button>
 
-                            <button className="bg-black text-white p-3 rounded-lg"
+                            <button
+                                className={`p-3 rounded-lg ${isValidSuiAddress(state.deployerRoyaltyWallet) && state.deployerRoyaltyWallet ? "bg-black text-white" : "bg-gray-300 text-gray-600 cursor-not-allowed"}`}
+                                disabled={!isValidSuiAddress(state.deployerRoyaltyWallet) || !state.deployerRoyaltyWallet}
                                 onClick={() => dispatch({ type: "SET_STEP", payload: 3 })}
                             >
                                 Proceed to Step 3 →
                             </button>
                         </div>
                     </div>
-                    </div>
                 )}
 
-{/* Step 3: Review & Confirm */}
-{state.step === 3 && (
-    <div className="flex flex-col h-screen w-full">
-        <h2 className="text-xl font-semibold mb-4 text-black">Review & Confirm</h2>
 
-        {/* Selected Coins */}
-        <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
-            <div className="flex items-center space-x-2">
-                <img src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
-                <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata?.symbol}</span>
-            </div>
+                {/* Step 3: Token Deposit - Existing Logic is Kept */}
+                {state.step === 3 && (
+                    <div className="flex flex-col h-screen w-full overflow-y-auto pb-32">
+                        <h2 className="text-xl font-semibold mb-4 text-black">Review & Confirm</h2>
 
-            <span className="text-2xl font-bold text-black">/</span>
+                        {/* Selected Coins */}
+                        <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
+                            <div className="flex items-center space-x-2">
+                                <img src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
+                                <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata?.symbol}</span>
+                            </div>
 
-            <div className="flex items-center space-x-2">
-                <img src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
-                <span className="text-lg font-semibold text-black">{state.customCoinMetadata?.symbol}</span>
-            </div>
-        </div>
+                            <span className="text-2xl font-bold text-black">/</span>
 
-        {/* Fee Summary */}
-        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-            <h3 className="text-lg font-semibold text-black">Fees</h3>
-            <ul className="space-y-2 text-black">
-                <li><strong>LP Builder Fee:</strong> {state.lpBuilderFee.toFixed(2)}%</li>
-                <li><strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee.toFixed(2)}%</li>
-                <li><strong>Deployer Royalty Fee:</strong> {state.deployerRoyaltyFee.toFixed(2)}%</li>
-                <li><strong>Rewards Fee:</strong> {state.rewardsFee.toFixed(2)}%</li>
-            </ul>
-        </div>
+                            <div className="flex items-center space-x-2">
+                                <img src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
+                                <span className="text-lg font-semibold text-black">{state.customCoinMetadata?.symbol}</span>
+                            </div>
+                        </div>
 
-        {/* Deployer Wallet */}
-        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-            <h3 className="text-lg font-semibold text-black">Deployer Wallet</h3>
-            <p className="text-black">{state.deployerRoyaltyWallet || "Not set"}</p>
-        </div>
+                        {/* Fee Summary */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Fees</h3>
+                            <ul className="space-y-2 text-black">
+                                <li><strong>LP Builder Fee:</strong> {state.lpBuilderFee.toFixed(2)}%</li>
+                                <li><strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee.toFixed(2)}%</li>
+                                <li><strong>Deployer Royalty Fee:</strong> {state.deployerRoyaltyFee.toFixed(2)}%</li>
+                                <li><strong>Rewards Fee:</strong> {state.rewardsFee.toFixed(2)}%</li>
+                            </ul>
+                        </div>
 
-        {/* Navigation Buttons */}
-        <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex justify-between">
-            <button className="bg-gray-500 text-white p-3 rounded-lg"
-                onClick={() => dispatch({ type: "SET_STEP", payload: 2 })}
-            >
-                ← Back to Step 2
-            </button>
+                        {/* Deployer Wallet */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Deployer Wallet</h3>
+                            <p className="text-black">{state.deployerRoyaltyWallet || "Not set"}</p>
+                        </div>
 
-            <button className="bg-black text-white p-3 rounded-lg"
-                onClick={() => dispatch({ type: "SET_STEP", payload: 4 })} // Placeholder for finalization
-            >
-                Confirm & Continue →
-            </button>
-        </div>
-    </div>
-)}
+                        {/* Initial Price Input */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Initial Price</h3>
+                            <p className="text-gray-500 mb-2">Set the starting exchange rate between the two tokens you are providing.</p>
+
+                            {/* Toggle Button */}
+                            <div className="flex items-center justify-between bg-white p-2 rounded-lg border w-48 mb-2">
+                                <button
+                                    className={`px-3 py-1 rounded-md ${state.initialPriceMode === "customPerDropdown" ? "bg-black text-white" : "bg-gray-200 text-black"}`}
+                                    onClick={() => dispatch({ type: "SET_INITIAL_PRICE_MODE", payload: "customPerDropdown" })}
+                                >
+                                    {state.dropdownCoinMetadata?.symbol}
+                                </button>
+                                <button
+                                    className={`px-3 py-1 rounded-md ${state.initialPriceMode === "dropdownPerCustom" ? "bg-black text-white" : "bg-gray-200 text-black"}`}
+                                    onClick={() => dispatch({ type: "SET_INITIAL_PRICE_MODE", payload: "dropdownPerCustom" })}
+                                >
+                                    {state.customCoinMetadata?.symbol}
+                                </button>
+                            </div>
+
+                            {/* Input Field */}
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    className="w-full p-3 border rounded-lg bg-gray-50 text-black text-lg"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.0001"
+                                    value={state.initialPrice || ""}
+                                    onChange={(e) => dispatch({ type: "SET_INITIAL_PRICE", payload: parseFloat(e.target.value) || 0 })}
+                                />
+                                <span className="absolute right-4 top-3 text-gray-500 text-lg">
+                                    {state.initialPriceMode === "customPerDropdown"
+                                        ? `${state.customCoinMetadata?.symbol} per ${state.dropdownCoinMetadata?.symbol}`
+                                        : `${state.dropdownCoinMetadata?.symbol} per ${state.customCoinMetadata?.symbol}`}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* ✅ Deposit Token Amount Section (NEW) */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Deposit Tokens</h3>
+                            <p className="text-gray-500 mb-4">Specify the token amounts for your liquidity contribution.</p>
+
+                            {/* First Token */}
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-2">
+                                <input
+                                    type="number"
+                                    className="bg-transparent text-2xl font-semibold text-black w-full outline-none"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.0001"
+                                    value={state.depositDropdownCoin}
+                                    onChange={(e) => dispatch({ type: "SET_DEPOSIT_DROPDOWN", payload: e.target.value })}
+                                />
+                                <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata?.symbol}</span>
+                            </div>
+
+                            {/* Second Token */}
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-2">
+                                <input
+                                    type="number"
+                                    className="bg-transparent text-2xl font-semibold text-black w-full outline-none"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.0001"
+                                    value={state.depositCustomCoin}
+                                    onChange={(e) => dispatch({ type: "SET_DEPOSIT_CUSTOM", payload: e.target.value })}
+                                />
+                                <span className="text-lg font-semibold text-black">{state.customCoinMetadata?.symbol}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </div>

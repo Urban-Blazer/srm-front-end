@@ -265,7 +265,7 @@ export default function Pools() {
                 {/* Step 3: Token Deposit - Existing Logic is Kept */}
                 {state.step === 3 && (
                     <div className="flex flex-col h-screen w-full overflow-y-auto pb-32">
-                        <h2 className="text-xl font-semibold mb-4 text-black">Review & Confirm</h2>
+                        <h2 className="text-xl font-semibold mb-4 text-black">Set Deposit Amounts</h2>
 
                         {/* Selected Coins */}
                         <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
@@ -371,6 +371,89 @@ export default function Pools() {
                                 />
                                 <span className="text-lg font-semibold text-black">{state.customCoinMetadata?.symbol}</span>
                             </div>
+                        </div>
+                        {/* Navigation Buttons */}
+                        <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex justify-between">
+                            <button className="bg-gray-500 text-white p-3 rounded-lg"
+                                onClick={() => dispatch({ type: "SET_STEP", payload: 2 })}
+                            >
+                                ← Back to Step 2
+                            </button>
+
+                            <button className="bg-black text-white p-3 rounded-lg"
+                                onClick={() => dispatch({ type: "SET_STEP", payload: 4 })}
+                            >
+                                Proceed to Step 4 →
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {state.step === 4 && (
+                    <div className="flex flex-col h-screen w-full overflow-y-auto pb-32">
+                        <h2 className="text-xl font-semibold mb-4 text-black">Review & Create Pool</h2>
+
+                        {/* Coin Pair Summary */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Selected Coins</h3>
+                            <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg">
+                                <div className="flex items-center space-x-2">
+                                    <img src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
+                                    <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata?.symbol}</span>
+                                </div>
+                                <span className="text-2xl font-bold text-black">/</span>
+                                <div className="flex items-center space-x-2">
+                                    <img src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
+                                    <span className="text-lg font-semibold text-black">{state.customCoinMetadata?.symbol}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Fees Summary */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Fees</h3>
+                            <ul className="space-y-2 text-black">
+                                <li><strong>LP Builder Fee:</strong> {state.lpBuilderFee.toFixed(2)}%</li>
+                                <li><strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee.toFixed(2)}%</li>
+                                <li><strong>Deployer Royalty Fee:</strong> {state.deployerRoyaltyFee.toFixed(2)}%</li>
+                                <li><strong>Rewards Fee:</strong> {state.rewardsFee.toFixed(2)}%</li>
+                            </ul>
+                        </div>
+
+                        {/* Deployer Wallet */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Deployer Wallet</h3>
+                            <p className="text-black">{state.deployerRoyaltyWallet || "Not set"}</p>
+                        </div>
+
+                        {/* Initial Price & Deposit Amounts */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Initial Price</h3>
+                            <p className="text-black text-lg">
+                                1 {state.dropdownCoinMetadata?.symbol} = {state.initialPrice} {state.customCoinMetadata?.symbol}
+                            </p>
+                        </div>
+
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Deposit Amounts</h3>
+                            <p className="text-black text-lg">
+                                {state.depositDropdownCoin} {state.dropdownCoinMetadata?.symbol} / {state.depositCustomCoin} {state.customCoinMetadata?.symbol}
+                            </p>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex justify-between">
+                            <button className="bg-gray-500 text-white p-3 rounded-lg"
+                                onClick={() => dispatch({ type: "SET_STEP", payload: 3 })}
+                            >
+                                ← Back to Step 3
+                            </button>
+
+                            <button className="bg-black text-white p-3 rounded-lg"
+                                onClick={() => handleCreatePool()}
+                            >
+                                Create Pool ✅
+                            </button>
                         </div>
                     </div>
                 )}

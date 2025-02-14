@@ -8,6 +8,7 @@ const steps = [
     { number: 1, label: "Select Token Pair" },
     { number: 2, label: "Set Fees" },
     { number: 3, label: "Set Deposit Amount" },
+    { number: 4, label: "Review & Create Pool"}
 ];
 
 export default function StepIndicator({ step }: StepIndicatorProps) {

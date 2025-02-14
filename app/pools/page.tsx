@@ -1,9 +1,11 @@
 "use client";
-import { useReducer } from "react";
+import { useReducer, useEffect, useState } from "react"; // ✅ Add useState here
 import StepIndicator from "../components/StepIndicator";
 import { SuiClient } from "@mysten/sui.js/client";
 import { predefinedCoins } from "../data/coins";
-import { GETTER_RPC } from "../config";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { GETTER_RPC, PACKAGE_ID, MODULE_NAME, FACTORY_ID } from "../config";
+import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -33,7 +35,11 @@ function isValidSuiAddress(address: string): boolean {
 function reducer(state: any, action: any) {
     switch (action.type) {
         case "SET_COIN":
-            return { ...state, selectedCoin: action.payload };
+            return {
+                ...state,
+                selectedCoin: action.payload,
+                dropdownOpen: false // Close dropdown after selection
+            };
         case "SET_CUSTOM_COIN":
             return { ...state, customCoin: action.payload };
         case "SET_STEP":
@@ -43,7 +49,11 @@ function reducer(state: any, action: any) {
         case "SET_LOADING":
             return { ...state, loading: action.payload };
         case "SET_METADATA":
-            return { ...state, dropdownCoinMetadata: action.payload.dropdown, customCoinMetadata: action.payload.custom };
+            return {
+                ...state,
+                dropdownCoinMetadata: action.payload.dropdown,
+                customCoinMetadata: action.payload.custom
+            };
         case "SET_FEES":
             return { ...state, [action.field]: action.value };
         case "SET_WALLET":
@@ -81,7 +91,63 @@ function reducer(state: any, action: any) {
 
 export default function Pools() {
     const [state, dispatch] = useReducer(reducer, initialState);
+    const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
+    const [walletConnected, setWalletConnected] = useState(false);
+    const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
+    // ✅ Initialize Nightly Connect Adapter
+    useEffect(() => {
+        const initWallet = async () => {
+            try {
+                const adapter = await NightlyConnectSuiAdapter.build({
+                    appMetadata: {
+                        name: "Sui DEX",
+                        description: "DEX for trading tokens on Sui",
+                        icon: "https://your-app-logo-url.com/icon.png",
+                    },
+                });
+
+                setWalletAdapter(adapter);
+
+                // ✅ Manually request connection before fetching accounts
+                await adapter.connect(); // 🔥 Ensure wallet is connected
+
+                // ✅ Fetch accounts after ensuring connection
+                const accounts = await adapter.getAccounts();
+                console.log("Nightly Connect Accounts:", accounts);
+
+                if (accounts.length > 0) {
+                    console.log("Wallet detected:", accounts[0]);
+                    setWalletConnected(true);
+                    setWalletAddress(accounts[0]); // Set wallet address properly
+                } else {
+                    console.warn("No accounts found from Nightly Connect.");
+                }
+
+                // ✅ Handle wallet connection events
+                adapter.on("connect", async (account) => {
+                    console.log("Wallet connected:", account);
+                    setWalletConnected(true);
+                    setWalletAddress(account);
+                });
+
+                // ✅ Handle wallet disconnection
+                adapter.on("disconnect", () => {
+                    console.log("Wallet disconnected");
+                    setWalletConnected(false);
+                    setWalletAddress(null);
+                });
+
+            } catch (error) {
+                console.error("Failed to initialize Nightly Connect:", error);
+            }
+        };
+
+        initWallet();
+    }, []);
+
+
+    // ✅ Fetch Coin Metadata
     const fetchMetadata = async () => {
         if (!state.customCoin.trim()) {
             alert("Please enter a valid Coin Type (e.g., 0x2::sui::SUI)");
@@ -91,32 +157,238 @@ export default function Pools() {
         dispatch({ type: "SET_LOADING", payload: true });
 
         try {
+            // 🔍 Fetch metadata for dropdown coin and custom coin
             const [dropdownMetadata, customMetadata] = await Promise.all([
-                provider.getCoinMetadata({ coinType: state.selectedCoin.typeName }),
-                provider.getCoinMetadata({ coinType: state.customCoin.trim() })
+                provider.getCoinMetadata({ coinType: state.selectedCoin?.typeName }),
+                provider.getCoinMetadata({ coinType: state.customCoin.trim() }),
             ]);
 
+            console.log("✅ Fetched Metadata:", { dropdownMetadata, customMetadata });
+
+            // 🔥 Ensure typeName exists in metadata before setting state
             if (dropdownMetadata && customMetadata) {
                 dispatch({
                     type: "SET_METADATA",
-                    payload: { dropdown: { ...dropdownMetadata, iconUrl: dropdownMetadata.iconUrl || state.selectedCoin.logo }, custom: customMetadata }
+                    payload: {
+                        dropdown: { ...dropdownMetadata, typeName: state.selectedCoin?.typeName },
+                        custom: { ...customMetadata, typeName: state.customCoin.trim() }
+                    },
                 });
+
+                console.log("✅ Metadata successfully stored!", {
+                    dropdown: { ...dropdownMetadata, typeName: state.selectedCoin?.typeName },
+                    custom: { ...customMetadata, typeName: state.customCoin.trim() },
+                });
+
                 dispatch({ type: "SET_STEP", payload: 2 });
             } else {
                 alert("One or both coin metadata could not be retrieved.");
             }
         } catch (error) {
-            console.error("Error fetching coin metadata:", error);
-            alert("Failed to fetch coin metadata. Please ensure the coin type is correct.");
+            console.error("❌ Error fetching coin metadata:", error);
+            alert("Failed to fetch coin metadata.");
         }
 
         dispatch({ type: "SET_LOADING", payload: false });
     };
 
+
+    // ✅ Create Pool Transaction
+    const handleCreatePool = async () => {
+        console.log("🔍 Checking wallet connection:", walletConnected, walletAddress);
+
+        if (!walletConnected || !walletAddress || !walletAdapter) {
+            alert("⚠️ Please connect your wallet first.");
+            return;
+        }
+
+        try {
+            dispatch({ type: "SET_LOADING", payload: true });
+
+            const accounts = await walletAdapter.getAccounts();
+            console.log("👛 Wallet accounts from Nightly:", accounts);
+
+            if (accounts.length === 0) {
+                alert("⚠️ No accounts found. Please reconnect your wallet.");
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            const userAddress = accounts[0].address;
+            console.log("✅ Using wallet address:", userAddress);
+
+            // ✅ Validate metadata before proceeding
+            if (!state.dropdownCoinMetadata?.typeName || !state.customCoinMetadata?.typeName) {
+                alert("⚠️ Coin metadata is missing! Please go back and reselect your tokens.");
+                console.error("❌ Metadata is missing!", {
+                    dropdownCoinMetadata: state.dropdownCoinMetadata,
+                    customCoinMetadata: state.customCoinMetadata,
+                });
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            console.log("✅ Expected Coin Types:", state.dropdownCoinMetadata.typeName, state.customCoinMetadata.typeName);
+
+            // ✅ Fetch owned coin objects INCLUDING balance field
+            const { data: ownedObjects } = await provider.getOwnedObjects({
+                owner: userAddress,
+                filter: { StructType: "0x2::coin::Coin" },
+                options: { showType: true, showContent: true },
+            });
+
+            console.log("🔍 Owned objects:", ownedObjects);
+
+            // ✅ Extract and clean up coin data
+            const coins = ownedObjects
+                .map((obj) => {
+                    const rawType = obj.data?.type;
+                    if (!rawType || !rawType.startsWith("0x2::coin::Coin<")) return null;
+
+                    return {
+                        objectId: obj.data?.objectId,
+                        type: rawType.replace("0x2::coin::Coin<", "").replace(">", "").trim(),
+                        balance: obj.data?.content?.fields?.balance
+                            ? BigInt(obj.data?.content?.fields?.balance)
+                            : BigInt(0),
+                    };
+                })
+                .filter(Boolean); // Remove null values
+
+            console.log("🔍 Extracted Coins with Balance:", coins);
+
+            // ✅ Find matching coin objects
+            const expectedCoinA = state.dropdownCoinMetadata.typeName;
+            const expectedCoinB = state.customCoinMetadata.typeName;
+            const coinA = coins.find((c) => c.type === expectedCoinA);
+            const coinB = coins.find((c) => c.type === expectedCoinB);
+
+            if (!coinA || !coinB) {
+                alert("⚠️ Insufficient tokens in wallet. Coin objects not found.");
+                console.error("❌ Missing Coin Objects:", { coinA, coinB });
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            // ✅ Check if balances are present
+            if (!coinA.balance || !coinB.balance) {
+                alert("⚠️ Insufficient token balance in wallet. Coin objects found but no balance.");
+                console.error("❌ Balance Missing:", { coinA, coinB });
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            // ✅ Convert Deposits from Whole Coins → MIST (Multiply by 10⁹)
+            const depositDropdownMIST = BigInt(Math.floor(parseFloat(state.depositDropdownCoin) * 1_000_000_000));
+            const depositCustomMIST = BigInt(Math.floor(parseFloat(state.depositCustomCoin) * 1_000_000_000));
+
+            console.log("💰 Deposit Amounts in MIST:");
+            console.log(`${state.dropdownCoinMetadata.symbol}:`, depositDropdownMIST.toString());
+            console.log(`${state.customCoinMetadata.symbol}:`, depositCustomMIST.toString());
+
+            // ✅ Ensure user has enough balance
+            if (coinA.balance < depositDropdownMIST || coinB.balance < depositCustomMIST) {
+                alert("⚠️ Insufficient token balance in wallet.");
+                console.error("❌ Balance Check Failed!");
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            console.log("✅ Balance Check Passed!");
+            console.log("💰 Selected Coin Objects for Deposit:");
+            console.log(`${state.dropdownCoinMetadata.symbol}:`, coinA.objectId, "Balance:", coinA.balance.toString());
+            console.log(`${state.customCoinMetadata.symbol}:`, coinB.objectId, "Balance:", coinB.balance.toString());
+
+            // ✅ Build Transaction Block
+            const txb = new TransactionBlock();
+            txb.setGasBudget(1_000_000_000);
+
+            txb.moveCall({
+                target: `${PACKAGE_ID}::${MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
+                typeArguments: [state.dropdownCoinMetadata!.typeName, state.customCoinMetadata!.typeName],
+                arguments: [
+                    txb.object(FACTORY_ID),
+                    txb.object(coinA.objectId),
+                    txb.pure.u64(depositDropdownMIST),
+                    txb.object(coinB.objectId),
+                    txb.pure.u64(depositCustomMIST),
+                    txb.pure.u64(Math.round(state.lpBuilderFee * 100)), // Convert % → basis points
+                    txb.pure.u64(Math.round(state.buybackBurnFee * 100)),
+                    txb.pure.u64(Math.round(state.deployerRoyaltyFee * 100)),
+                    txb.pure.u64(Math.round(state.rewardsFee * 100)),
+                    txb.pure.address(state.deployerRoyaltyWallet),
+                ],
+            });
+
+            // ✅ Sign Transaction
+            console.log("✍️ Signing transaction...");
+            const signedTx = await walletAdapter.signTransactionBlock({
+                transactionBlock: txb,
+                account: userAddress,
+                chain: "sui:devnet",
+            });
+
+            console.log("✅ Transaction Signed:", signedTx);
+
+            // ✅ Submit Transaction
+            console.log("🚀 Submitting transaction...");
+            const executeResponse = await provider.executeTransactionBlock({
+                transactionBlock: signedTx.transactionBlockBytes, // Correct parameter
+                signature: signedTx.signature,
+                options: { showEffects: true, showEvents: true },
+            });
+
+            console.log("✅ Transaction Executed:", executeResponse);
+
+            // ✅ Extract the transaction digest
+            const txnDigest = executeResponse.digest;
+            console.log("🔍 Tracking transaction digest:", txnDigest);
+
+            if (!txnDigest) {
+                console.error("❌ Transaction digest is missing!");
+                alert("Transaction submission failed. Check the console.");
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            // ✅ Wait for Transaction Confirmation
+            console.log("🕒 Waiting for confirmation...");
+            const txnDetails = await provider.getTransactionBlock({
+                digest: txnDigest,
+                options: { showEffects: true, showEvents: true },
+            });
+
+            console.log("🎉 Transaction Confirmed!", txnDetails);
+
+            // ✅ Check for emitted events
+            const poolCreatedEvent = txnDetails.events?.find((event) =>
+                event.type.includes("PoolCreated")
+            );
+
+            if (poolCreatedEvent) {
+                console.log("✅ Pool Created Event Detected!", poolCreatedEvent);
+                alert(`🎉 Pool Created! Pool ID: ${poolCreatedEvent.parsedJson?.pool_id}`);
+            } else {
+                console.warn("⚠️ No PoolCreated event detected in this transaction.");
+            }
+
+            dispatch({ type: "SET_STEP", payload: 1 }); // Reset form after success
+        } catch (error) {
+            console.error("❌ Transaction failed:", error);
+            alert("Transaction failed. Check console for details.");
+        }
+
+        dispatch({ type: "SET_LOADING", payload: false });
+    };
+
+
     return (
-        <div className="flex min-h-screen bg-gray-100 p-6 overflow-y-auto">
+        <div className="flex h-screen bg-gray-100 p-6 overflow-hidden">
+
             <StepIndicator step={state.step} />
-            <div className="flex-1 bg-white p-8 rounded-lg shadow-lg h-screen overflow-y-auto">
+            <div className="flex-1 bg-white p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
+
+
                 <h1 className="text-2xl font-bold mb-6">Create a New Pool</h1>
 
                 {/* Step 1: Select Coins */}
@@ -172,7 +444,7 @@ export default function Pools() {
 
                 {/* Step 2: Configure Fees & Wallet */}
                 {state.step === 2 && state.dropdownCoinMetadata && state.customCoinMetadata && (
-                    <div className="flex flex-col h-screen w-full overflow-y-auto pb-32">
+                    <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
                         <h2 className="text-xl font-semibold mb-4 text-black">Set Pool Fees</h2>
 
                         {/* Selected Coins Display */}
@@ -264,7 +536,8 @@ export default function Pools() {
 
                 {/* Step 3: Token Deposit - Existing Logic is Kept */}
                 {state.step === 3 && (
-                    <div className="flex flex-col h-screen w-full overflow-y-auto pb-32">
+                    <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
+
                         <h2 className="text-xl font-semibold mb-4 text-black">Set Deposit Amounts</h2>
 
                         {/* Selected Coins */}
@@ -390,7 +663,8 @@ export default function Pools() {
                 )}
 
                 {state.step === 4 && (
-                    <div className="flex flex-col h-screen w-full overflow-y-auto pb-32">
+                    <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
+
                         <h2 className="text-xl font-semibold mb-4 text-black">Review & Create Pool</h2>
 
                         {/* Coin Pair Summary */}

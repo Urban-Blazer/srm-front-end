@@ -170,10 +170,16 @@ export default function Pools() {
                                         max={max}
                                         step="0.01"
                                         placeholder={`Enter fee (0.00 - ${max.toFixed(2)})`}
-                                        value={state[field] || ""}
+                                        value={state[field] === 0 ? "" : state[field]} // Show empty instead of zero
+                                        onBlur={(e) => {
+                                            if (e.target.value.trim() === "") {
+                                                dispatch({ type: "SET_FEES", field, value: 0 }); // Default to 0 if empty
+                                            }
+                                        }}
                                         onChange={(e) => {
                                             let value = parseFloat(e.target.value);
-                                            if (value > max) value = max;  // Prevent exceeding max
+                                            if (isNaN(value) || value < 0) value = 0;  // Prevent negatives
+                                            if (value > max) value = max;  // Enforce max limit
                                             dispatch({ type: "SET_FEES", field, value });
                                         }}
                                     />
@@ -182,7 +188,7 @@ export default function Pools() {
 
                             {/* Deployer Royalty Wallet Address Validation */}
                             <div>
-                                <label className="block text-gray-700">Deployer Royalty Wallet Address</label>
+                                <label className="block text-gray-700">Deployer Royalty Wallet Address *</label>
                                 <input
                                     type="text"
                                     className={`w-full p-2 border rounded-lg text-black ${state.deployerRoyaltyWallet && !isValidSuiAddress(state.deployerRoyaltyWallet) ? "border-red-500" : ""}`}
@@ -190,7 +196,10 @@ export default function Pools() {
                                     value={state.deployerRoyaltyWallet}
                                     onChange={(e) => dispatch({ type: "SET_WALLET", payload: e.target.value })}
                                 />
-                                {!isValidSuiAddress(state.deployerRoyaltyWallet) && state.deployerRoyaltyWallet.length > 0 && (
+                                {!state.deployerRoyaltyWallet && (
+                                    <p className="text-red-500 text-sm mt-1">Wallet address is required.</p>
+                                )}
+                                {state.deployerRoyaltyWallet && !isValidSuiAddress(state.deployerRoyaltyWallet) && (
                                     <p className="text-red-500 text-sm mt-1">Invalid Sui address. It must start with "0x" and be 66 characters long.</p>
                                 )}
                             </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useReducer, useEffect, useState } from "react"; // ✅ Add useState here
+import { useReducer, useEffect, useState } from "react";
 import StepIndicator from "@components/StepIndicator";
 import { SuiClient } from "@mysten/sui.js/client";
 import { predefinedCoins } from "@data/coins";
@@ -24,8 +24,8 @@ const initialState = {
     deployerRoyaltyWallet: "",
     initialPrice: 0,
     initialPriceMode: "customPerDropdown",
-    depositDropdownCoin: "", // Amount of dropdown coin
-    depositCustomCoin: "",   // Amount of custom coin
+    depositDropdownCoin: "",
+    depositCustomCoin: "",
 };
 
 function isValidSuiAddress(address: string): boolean {
@@ -38,7 +38,7 @@ function reducer(state: any, action: any) {
             return {
                 ...state,
                 selectedCoin: action.payload,
-                dropdownOpen: false // Close dropdown after selection
+                dropdownOpen: false 
             };
         case "SET_CUSTOM_COIN":
             return { ...state, customCoin: action.payload };
@@ -62,14 +62,14 @@ function reducer(state: any, action: any) {
             return {
                 ...state,
                 initialPrice: action.payload,
-                depositDropdownCoin: "", // Reset deposits
+                depositDropdownCoin: "",
                 depositCustomCoin: "",
             };
         case "SET_INITIAL_PRICE_MODE":
             return {
                 ...state,
                 initialPriceMode: action.payload,
-                depositDropdownCoin: "", // Reset deposits
+                depositDropdownCoin: "",
                 depositCustomCoin: "",
             };
         case "SET_DEPOSIT_DROPDOWN":

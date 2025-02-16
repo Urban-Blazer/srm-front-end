@@ -1,6 +1,6 @@
 "use client";
 import { useReducer, useEffect, useState } from "react";
-import StepIndicator from "@components/StepIndicator";
+import StepIndicator from "@components/CreatePoolStepIndicator";
 import { SuiClient } from "@mysten/sui.js/client";
 import { predefinedCoins } from "@data/coins";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
@@ -38,7 +38,7 @@ function reducer(state: any, action: any) {
             return {
                 ...state,
                 selectedCoin: action.payload,
-                dropdownOpen: false 
+                dropdownOpen: false
             };
         case "SET_CUSTOM_COIN":
             return { ...state, customCoin: action.payload };
@@ -94,6 +94,13 @@ export default function Pools() {
     const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
     const [walletConnected, setWalletConnected] = useState(false);
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+    // ✅ Allow navigation to previous steps only (not forward skipping)
+    const setStep = (step: number) => {
+        if (step < state.step) {
+            dispatch({ type: "SET_STEP", payload: step });
+        }
+    };
 
     // ✅ Initialize Nightly Connect Adapter
     useEffect(() => {
@@ -351,28 +358,68 @@ export default function Pools() {
                 return;
             }
 
-            // ✅ Wait for Transaction Confirmation
+            // ✅ Wait for Transaction Confirmation with Retry
             console.log("🕒 Waiting for confirmation...");
-            const txnDetails = await provider.getTransactionBlock({
-                digest: txnDigest,
-                options: { showEffects: true, showEvents: true },
-            });
+            const txnDetails = await fetchTransactionWithRetry(txnDigest);
 
-            console.log("🎉 Transaction Confirmed!", txnDetails);
+            if (!txnDetails) {
+                alert("Transaction confirmed, but details are missing. Please check later.");
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
 
-            // ✅ Check for emitted events
+            console.log("✅ Transaction Successfully Confirmed:", txnDetails);
+
+            // ✅ Extract PoolCreated event
             const poolCreatedEvent = txnDetails.events?.find((event) =>
                 event.type.includes("PoolCreated")
             );
 
-            if (poolCreatedEvent) {
-                console.log("✅ Pool Created Event Detected!", poolCreatedEvent);
-                alert(`🎉 Pool Created! Pool ID: ${poolCreatedEvent.parsedJson?.pool_id}`);
-            } else {
-                console.warn("⚠️ No PoolCreated event detected in this transaction.");
+            if (!poolCreatedEvent) {
+                alert(`Transaction confirmed, but no PoolCreated event found.`);
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
             }
 
-            dispatch({ type: "SET_STEP", payload: 1 }); // Reset form after success
+            // ✅ Extract event data safely
+            const poolDataFromEvent = poolCreatedEvent.parsedJson;
+            if (!poolDataFromEvent) {
+                alert(`PoolCreated event detected, but no data available.`);
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            // ✅ Prepare data for submission
+            const poolData = {
+                poolId: poolDataFromEvent.pool_id,
+                coinA: poolDataFromEvent.a,
+                coinB: poolDataFromEvent.b,
+                initA: parseFloat(poolDataFromEvent.init_a),
+                initB: parseFloat(poolDataFromEvent.init_b),
+                lpMinted: parseFloat(poolDataFromEvent.lp_minted),
+                lockedLpBalance: parseFloat(poolDataFromEvent.locked_lp_balance),
+                lpBuilderFee: parseFloat(poolDataFromEvent.lp_builder_fee),
+                burnFee: parseFloat(poolDataFromEvent.burn_fee),
+                devRoyaltyFee: parseFloat(poolDataFromEvent.dev_royalty_fee),
+                rewardsFee: parseFloat(poolDataFromEvent.rewards_fee),
+                devWallet: poolDataFromEvent.dev_wallet,
+            };
+
+            console.log("📡 Sending pool data to database:", poolData);
+
+            const response = await fetch("/api/add-pool", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(poolData),
+            });
+
+            if (response.ok) {
+                alert(`🎉 Pool stored successfully! Pool ID: ${poolData.poolId}`);
+            } else {
+                alert(`⚠️ Error storing pool in database.`);
+            }
+
+            dispatch({ type: "SET_STEP", payload: 1 });
         } catch (error) {
             console.error("❌ Transaction failed:", error);
             alert("Transaction failed. Check console for details.");
@@ -381,11 +428,30 @@ export default function Pools() {
         dispatch({ type: "SET_LOADING", payload: false });
     };
 
+    // ✅ Retry function to wait for transaction propagation
+    const fetchTransactionWithRetry = async (txnDigest, retries = 5, delay = 3000) => {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                console.log(`🔍 Attempt ${attempt}: Fetching transaction details for digest: ${txnDigest}`);
+                const txnDetails = await provider.getTransactionBlock({
+                    digest: txnDigest,
+                    options: { showEffects: true, showEvents: true },
+                });
+
+                if (txnDetails) return txnDetails;
+            } catch (error) {
+                console.warn(`⚠️ Attempt ${attempt} failed. Retrying in ${delay / 1000}s...`, error);
+                await new Promise(res => setTimeout(res, delay));
+            }
+        }
+        return null;
+    };
+
 
     return (
         <div className="flex h-screen bg-gray-100 p-6 overflow-hidden">
 
-            <StepIndicator step={state.step} />
+            <StepIndicator step={state.step} setStep={setStep} />
             <div className="flex-1 bg-white p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
 
 

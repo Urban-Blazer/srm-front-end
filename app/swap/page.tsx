@@ -182,7 +182,7 @@ export default function Swap() {
                                         <span className="text-black font-medium">{sellToken.symbol}</span>
                                     </div>
                                 ) : (
-                                    <span>Select Token</span>
+                                    <span className="text-black font-medium">Select Token</span>
                                 )}
                             </button>
                         </div>
@@ -235,7 +235,7 @@ export default function Swap() {
                                         <span className="text-black font-medium">{buyToken.symbol}</span>
                                     </div>
                                 ) : (
-                                    <span>Select Token</span>
+                                    <span className="text-black font-medium">Select Token</span>
                                 )}
                             </button>
                         </div>

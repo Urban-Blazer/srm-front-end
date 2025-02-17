@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import AWS from "aws-sdk";
 import dotenv from "dotenv";
-import path from "path";
 
 dotenv.config();
 

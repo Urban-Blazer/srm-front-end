@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
-import { predefinedCoins } from "@data/coins";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC } from "../config";
 import TokenSelector from "@components/tokenSelector"

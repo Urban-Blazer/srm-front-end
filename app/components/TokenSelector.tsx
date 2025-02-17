@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC } from "../config";
 import { predefinedCoins } from "@data/coins";
-import { X, Search, PlusCircle, Plus, Loader2 } from "lucide-react";
+import { X, Search, PlusCircle, Plus, MinusCircle, Loader2 } from "lucide-react";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -78,6 +78,12 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
         }
     };
 
+    const handleRemoveToken = (token: Token) => {
+        console.log("Removing token:", token); // Debugging
+        const updatedTokens = savedTokens.filter((t) => t.typeName !== token.typeName);
+        setSavedTokens(updatedTokens);
+        localStorage.setItem("savedTokens", JSON.stringify(updatedTokens)); // Persist removal
+    };
 
     // Fetch Metadata for Custom Token
     const fetchMetadata = async () => {
@@ -184,6 +190,16 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                                         <img src={token.logo} alt={token.symbol} className="w-6 h-6 mr-2" />
                                         <span className="text-gray-800">{token.symbol}</span>
                                     </div>
+                                    {/* 🚀 Remove Token Button */}
+                                    <button
+                                        className="text-red-500 hover:text-red-700"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRemoveToken(token);
+                                        }}
+                                    >
+                                        <MinusCircle size={18} />
+                                    </button>
                                 </div>
                             ))}
                         </div>

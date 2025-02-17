@@ -14,6 +14,7 @@ const initialState = {
     customCoin: "",
     step: 1,
     loading: false,
+    poolData: null,
     dropdownOpen: false,
     dropdownCoinMetadata: null,
     customCoinMetadata: null,
@@ -84,6 +85,9 @@ function reducer(state: any, action: any) {
                 depositCustomCoin: action.payload,
                 depositDropdownCoin: state.initialPrice > 0 ? (parseFloat(action.payload) / state.initialPrice).toFixed(6) : "",
             };
+        case "SET_POOL_DATA": // 🔹 New case to store pool data
+            return { ...state, poolData: action.payload };
+
         default:
             return state;
     }
@@ -415,21 +419,25 @@ export default function Pools() {
 
             if (response.ok) {
                 alert(`🎉 Pool stored successfully! Pool ID: ${poolData.poolId}`);
+
+                // ✅ Move to Step 5 only if database update succeeds
+                dispatch({ type: "SET_POOL_DATA", payload: poolData });
+                dispatch({ type: "SET_STEP", payload: 5 });
             } else {
                 alert(`⚠️ Error storing pool in database.`);
             }
 
-            dispatch({ type: "SET_STEP", payload: 1 });
-        } catch (error) {
+            dispatch({ type: "SET_LOADING", payload: false });  // ✅ Inside the function
+
+        } catch (error) {  // ✅ Make sure there's a catch block
             console.error("❌ Transaction failed:", error);
             alert("Transaction failed. Check console for details.");
         }
 
-        dispatch({ type: "SET_LOADING", payload: false });
     };
 
     // ✅ Retry function to wait for transaction propagation
-    const fetchTransactionWithRetry = async (txnDigest, retries = 5, delay = 3000) => {
+    const fetchTransactionWithRetry = async (txnDigest, retries = 10, delay = 5000) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 console.log(`🔍 Attempt ${attempt}: Fetching transaction details for digest: ${txnDigest}`);
@@ -444,9 +452,9 @@ export default function Pools() {
                 await new Promise(res => setTimeout(res, delay));
             }
         }
+        console.error(`❌ All ${retries} attempts failed. Transaction might not be indexed yet.`);
         return null;
     };
-
 
     return (
         <div className="flex h-screen bg-gray-100 p-6 overflow-hidden">
@@ -789,10 +797,59 @@ export default function Pools() {
                                 ← Back to Step 3
                             </button>
 
-                            <button className="bg-black text-white p-3 rounded-lg"
+                            <button className="bg-black text-white p-3 rounded-lg disabled:opacity-50"
                                 onClick={() => handleCreatePool()}
+                                disabled={state.loading} // ✅ Prevent multiple clicks
                             >
-                                Create Pool ✅
+                                {state.loading ? "Processing..." : "Create Pool ✅"}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {state.step === 5 && (
+                    <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
+                        <h2 className="text-xl font-semibold mb-4 text-black">🎉 Pool Successfully Created!</h2>
+
+                        {state.poolData ? (
+                            <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                                <h3 className="text-lg font-semibold text-black">Pool Information</h3>
+                                <ul className="space-y-2 text-black">
+                                    <li><strong>Pool ID:</strong> {state.poolData.poolId}</li>
+
+                                    {/* LP Pair Label */}
+                                    <li><strong>LP Pair:</strong> {state.poolData.coinA?.name || "Unknown"} / {state.poolData.coinB?.name || "Unknown"}</li>
+
+                                    {/* Separate Coin A and Coin B */}
+                                    <li><strong>Coin A:</strong> {state.poolData.coinA?.name || "Unknown"}</li>
+                                    <li><strong>Initial Amount (A):</strong> {state.poolData.initA} {state.poolData.coinA?.name}</li>
+
+                                    <li><strong>Coin B:</strong> {state.poolData.coinB?.name || "Unknown"}</li>
+                                    <li><strong>Initial Amount (B):</strong> {state.poolData.initB} {state.poolData.coinB?.name}</li>
+
+                                    <li><strong>LP Minted:</strong> {state.poolData.lpMinted}</li>
+                                    <li><strong>Locked LP Balance:</strong> {state.poolData.lockedLpBalance}</li>
+
+                                    {/* Fees Section */}
+                                    <li><strong>Fees:</strong></li>
+                                    <ul className="ml-4">
+                                        <li>LP Builder Fee: {state.poolData.lpBuilderFee}%</li>
+                                        <li>Burn Fee: {state.poolData.burnFee}%</li>
+                                        <li>Developer Royalty Fee: {state.poolData.devRoyaltyFee}%</li>
+                                        <li>Rewards Fee: {state.poolData.rewardsFee}%</li>
+                                    </ul>
+
+                                    <li><strong>Developer Wallet:</strong> {state.poolData.devWallet}</li>
+                                </ul>
+                            </div>
+                        ) : (
+                            <div className="text-center text-gray-600 mt-10">⏳ Loading Pool Details...</div>
+                        )}
+
+                        <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex justify-center">
+                            <button className="bg-black text-white p-3 rounded-lg"
+                                onClick={() => dispatch({ type: "SET_STEP", payload: 1 })}>
+                                🔄 Create Another Pool
                             </button>
                         </div>
                     </div>

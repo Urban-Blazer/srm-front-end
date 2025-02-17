@@ -50,6 +50,7 @@ const RAW_RUNTIME_STATE =
           ["encoding", "npm:0.1.13"],\
           ["eslint", "npm:8.49.0"],\
           ["eslint-config-next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
+          ["lucide-react", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:0.475.0"],\
           ["next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
           ["postcss", "npm:8.4.30"],\
           ["react", "npm:18.2.0"],\
@@ -8651,6 +8652,28 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["lucide-react", [\
+      ["npm:0.475.0", {\
+        "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/lucide-react-npm-0.475.0-76625aba31-10c0.zip/node_modules/lucide-react/",\
+        "packageDependencies": [\
+          ["lucide-react", "npm:0.475.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:0.475.0", {\
+        "packageLocation": "./.yarn/__virtual__/lucide-react-virtual-7214d3115e/4/C:/Users/mattf/AppData/Local/Yarn/Berry/cache/lucide-react-npm-0.475.0-76625aba31-10c0.zip/node_modules/lucide-react/",\
+        "packageDependencies": [\
+          ["lucide-react", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:0.475.0"],\
+          ["@types/react", "npm:18.2.22"],\
+          ["react", "npm:18.2.0"]\
+        ],\
+        "packagePeers": [\
+          "@types/react",\
+          "react"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["make-fetch-happen", [\
       ["npm:14.0.3", {\
         "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/make-fetch-happen-npm-14.0.3-23b30e8691-10c0.zip/node_modules/make-fetch-happen/",\
@@ -10698,6 +10721,7 @@ const RAW_RUNTIME_STATE =
           ["encoding", "npm:0.1.13"],\
           ["eslint", "npm:8.49.0"],\
           ["eslint-config-next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
+          ["lucide-react", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:0.475.0"],\
           ["next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
           ["postcss", "npm:8.4.30"],\
           ["react", "npm:18.2.0"],\

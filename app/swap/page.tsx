@@ -28,6 +28,8 @@ export default function Swap() {
     const [poolId, setPoolId] = useState<string | null>(null);
     const [poolLoading, setPoolLoading] = useState(false);
     const [poolData, setPoolData] = useState<any>(null);
+    const [poolMetadata, setPoolMetadata] = useState<any>(null);
+    const [poolStats, setPoolStats] = useState<any>(null);
     
     // ✅ Close dropdown when clicking outside
     useEffect(() => {
@@ -87,21 +89,22 @@ export default function Swap() {
         };
     }, []);
 
-    // Fetch Pool ID when CoinA and CoinB selected
+    // ✅ Fetch Pool Metadata when CoinA and CoinB selected
     useEffect(() => {
         if (sellToken && buyToken) {
-            fetchPoolId(sellToken, buyToken);
+            fetchPoolMetadata(sellToken, buyToken);
         }
     }, [sellToken, buyToken]);
 
-    // Fetch Pool ID
-    const fetchPoolId = async (sellToken, buyToken) => {
+    // ✅ Fetch Pool Metadata
+    const fetchPoolMetadata = async (sellToken, buyToken) => {
         if (!sellToken || !buyToken) return;
 
         setPoolLoading(true);
-        setPoolId(null); // Reset previous value
+        setPoolId(null);
+        setPoolMetadata(null);
+        setPoolStats(null);
 
-        // Construct token pair key for DynamoDB
         const tokenPairKey = `${sellToken.typeName}-${buyToken.typeName}`;
 
         try {
@@ -111,31 +114,38 @@ export default function Swap() {
             if (data?.poolId) {
                 console.log("Pool ID found:", data.poolId);
                 setPoolId(data.poolId);
+
+                // ✅ Store Metadata
+                setPoolMetadata({
+                    coinA: data.coinA_metadata,
+                    coinB: data.coinB_metadata,
+                });
             } else {
                 console.log("Pool does not exist for:", tokenPairKey);
                 setPoolId(null);
+                setPoolMetadata(null);
             }
         } catch (error) {
-            console.error("Error fetching pool ID:", error);
+            console.error("Error fetching pool metadata:", error);
             setPoolId(null);
+            setPoolMetadata(null);
         }
 
         setPoolLoading(false);
     };
 
-    // ✅ Ensure `fetchPoolObject` is triggered when `poolId` updates
+    // ✅ Fetch Pool Stats when Pool ID updates
     useEffect(() => {
         if (poolId) {
-            console.log("Pool ID updated:", poolId);
-            fetchPoolObject(poolId);
+            fetchPoolStats(poolId);
         }
     }, [poolId]);
 
-    // ✅ Fetch Pool Object
-    const fetchPoolObject = async (poolObjectId) => {
+    // ✅ Fetch Pool Stats
+    const fetchPoolStats = async (poolObjectId) => {
         if (!poolObjectId) return;
 
-        console.log("Fetching Pool Object with ID:", poolObjectId);
+        console.log("Fetching Pool Stats with ID:", poolObjectId);
 
         try {
             const poolObject = await provider.getObject({
@@ -145,12 +155,11 @@ export default function Swap() {
 
             console.log("Pool Object Response:", poolObject);
 
-            // ✅ Ensure response has the expected structure
             if (poolObject?.data?.content?.fields) {
-                const fields = poolObject.data.content.fields; // ✅ Correctly accessing the "fields"
+                const fields = poolObject.data.content.fields;
 
-                // ✅ Extract only necessary properties
-                const extractedData = {
+                // ✅ Extract Pool Statistics
+                setPoolStats({
                     balance_a: fields.balance_a || 0,
                     balance_b: fields.balance_b || 0,
                     burn_balance_b: fields.burn_balance_b || 0,
@@ -160,18 +169,12 @@ export default function Swap() {
                     locked_lp_balance: fields.locked_lp_balance || 0,
                     lp_builder_fee: fields.lp_builder_fee || 0,
                     reward_balance_a: fields.reward_balance_a || 0,
-                    reward_fee: fields.rewards_fee || 0, // ✅ Corrected key name
-                };
-
-                console.log("Extracted Pool Data:", extractedData);
-                setPoolData(extractedData); // ✅ Store extracted pool data
-            } else {
-                console.log("No content fields found in Pool Object.");
-                setPoolData(null);
+                    reward_fee: fields.rewards_fee || 0,
+                });
             }
         } catch (error) {
-            console.error("Error fetching pool object:", error);
-            setPoolData(null);
+            console.error("Error fetching pool stats:", error);
+            setPoolStats(null);
         }
     };
 
@@ -358,30 +361,56 @@ export default function Swap() {
                     <p className="text-gray-500">Loading pool data...</p>
                 ) : poolId ? (
                     <>
-                        <p className="text-black">
-                            <strong>Pool ID:</strong> {poolId}
-                        </p>
-                        {poolData ? (
+                        <p className="text-black"><strong>Pool ID:</strong> {poolId}</p>
+
+                        {poolMetadata && (
+                            <div className="mt-4">
+                                {/* ✅ Display Coin A Metadata */}
+                                <div className="flex items-center space-x-3 bg-gray-100 p-3 rounded-lg text-black">
+                                    {poolMetadata.coinA.image && (
+                                        <img src={poolMetadata.coinA.image} alt={poolMetadata.coinA.symbol} className="w-8 h-8 rounded-full" />
+                                    )}
+                                    <p className="text-lg font-semibold">
+                                        {poolMetadata.coinA.symbol} ({poolMetadata.coinA.name})
+                                    </p>
+                                </div>
+
+                                {/* ✅ Display Coin B Metadata */}
+                                <div className="flex items-center space-x-3 bg-gray-100 p-3 rounded-lg mt-2 text-black">
+                                    {poolMetadata.coinB.image && (
+                                        <img src={poolMetadata.coinB.image} alt={poolMetadata.coinB.symbol} className="w-8 h-8 rounded-full" />
+                                    )}
+                                    <p className="text-lg font-semibold">
+                                        {poolMetadata.coinB.symbol} ({poolMetadata.coinB.name})
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {poolStats ? (
                             <div className="mt-4 text-black">
-                                <p><strong>Balance A:</strong> {poolData.balance_a}</p>
-                                <p><strong>Balance B:</strong> {poolData.balance_b}</p>
-                                <p><strong>Burn Balance B:</strong> {poolData.burn_balance_b}</p>
-                                <p><strong>Burn Fee:</strong> {poolData.burn_fee}</p>
-                                <p><strong>Dev Royalty Fee:</strong> {poolData.dev_royalty_fee}</p>
-                                <p><strong>Dev Wallet:</strong> {poolData.dev_wallet}</p>
-                                <p><strong>Locked LP Balance:</strong> {poolData.locked_lp_balance}</p>
-                                <p><strong>LP Builder Fee:</strong> {poolData.lp_builder_fee}</p>
-                                <p><strong>Reward Balance A:</strong> {poolData.reward_balance_a}</p>
-                                <p><strong>Reward Fee:</strong> {poolData.reward_fee}</p>
+                                {/* ✅ Pool Data Details */}
+                                <p><strong>Balance A:</strong> {poolStats.balance_a}</p>
+                                <p><strong>Balance B:</strong> {poolStats.balance_b}</p>
+                                <p><strong>Burn Balance B:</strong> {poolStats.burn_balance_b}</p>
+                                <p><strong>Burn Fee:</strong> {poolStats.burn_fee}%</p>
+                                <p><strong>Dev Royalty Fee:</strong> {poolStats.dev_royalty_fee}%</p>
+                                <p><strong>Dev Wallet:</strong> {poolStats.dev_wallet}</p>
+                                <p><strong>Locked LP Balance:</strong> {poolStats.locked_lp_balance}</p>
+                                <p><strong>LP Builder Fee:</strong> {poolStats.lp_builder_fee}%</p>
+                                <p><strong>Reward Balance A:</strong> {poolStats.reward_balance_a}</p>
+                                <p><strong>Reward Fee:</strong> {poolStats.reward_fee}%</p>
                             </div>
                         ) : (
-                            <p className="text-red-500">Pool Data Not Available</p>
+                            <p className="text-red-500 mt-4">Pool Stats Not Available</p>
                         )}
                     </>
                 ) : (
                     <p className="text-red-500">Pool Does Not Exist</p>
                 )}
             </div>
+
+
 
         </div>
     );

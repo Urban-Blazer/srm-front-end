@@ -407,6 +407,21 @@ export default function Pools() {
                 devRoyaltyFee: parseFloat(poolDataFromEvent.dev_royalty_fee),
                 rewardsFee: parseFloat(poolDataFromEvent.rewards_fee),
                 devWallet: poolDataFromEvent.dev_wallet,
+            
+                // ✅ Add Coin A Metadata
+                coinA_name: state.dropdownCoinMetadata.name || "Unknown",
+                coinA_symbol: state.dropdownCoinMetadata.symbol || "Unknown",
+                coinA_description: state.dropdownCoinMetadata.description || "",
+                coinA_decimals: state.dropdownCoinMetadata.decimals || 0,
+                coinA_image: state.dropdownCoinMetadata.iconUrl || "",
+
+                // ✅ Add Coin B Metadata
+                coinB_name: state.customCoinMetadata.name || "Unknown",
+                coinB_symbol: state.customCoinMetadata.symbol || "Unknown",
+                coinB_description: state.customCoinMetadata.description || "",
+                coinB_decimals: state.customCoinMetadata.decimals || 0,
+                coinB_image: state.customCoinMetadata.iconUrl || "",
+            
             };
 
             console.log("📡 Sending pool data to database:", poolData);

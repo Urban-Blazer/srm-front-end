@@ -29,33 +29,45 @@ export async function GET(req: NextRequest) {
         const [coinA, coinB] = tokenPair.split("-");
 
         // ✅ Create both possible pair orders
-        const pairKey1 = `${coinA}-${coinB}`; // Original order
-        const pairKey2 = `${coinB}-${coinA}`; // Reversed order
+        const pairKeys = [`${coinA}-${coinB}`, `${coinB}-${coinA}`]; // Try both orders
 
-        // ✅ Try fetching both orders
-        const params1 = {
-            TableName: TABLE_NAME,
-            Key: { "Pair": { S: pairKey1 } },
+        // ✅ Function to Fetch Pool Metadata from DynamoDB
+        const fetchPoolMetadata = async (pairKey: string) => {
+            const params = {
+                TableName: TABLE_NAME,
+                Key: { "Pair": { S: pairKey } },
+            };
+
+            const response = await dynamoDB.send(new GetItemCommand(params));
+
+            if (response.Item && response.Item.poolId?.S) {
+                return {
+                    poolId: response.Item.poolId.S,
+                    coinA_metadata: {
+                        name: response.Item.coinA_name?.S || "Unknown",
+                        symbol: response.Item.coinA_symbol?.S || "Unknown",
+                        description: response.Item.coinA_description?.S || "",
+                        decimals: parseInt(response.Item.coinA_decimals?.N || "0", 10),
+                        image: response.Item.coinA_image?.S || "",
+                    },
+                    coinB_metadata: {
+                        name: response.Item.coinB_name?.S || "Unknown",
+                        symbol: response.Item.coinB_symbol?.S || "Unknown",
+                        description: response.Item.coinB_description?.S || "",
+                        decimals: parseInt(response.Item.coinB_decimals?.N || "0", 10),
+                        image: response.Item.coinB_image?.S || "",
+                    }
+                };
+            }
+            return null;
         };
-        const params2 = {
-            TableName: TABLE_NAME,
-            Key: { "Pair": { S: pairKey2 } },
-        };
 
-        // ✅ Try fetching first pair order
-        const command1 = new GetItemCommand(params1);
-        let response = await dynamoDB.send(command1);
-
-        if (response.Item && response.Item.poolId?.S) {
-            return NextResponse.json({ poolId: response.Item.poolId.S }, { status: 200 });
-        }
-
-        // ✅ Try fetching second pair order if the first one failed
-        const command2 = new GetItemCommand(params2);
-        response = await dynamoDB.send(command2);
-
-        if (response.Item && response.Item.poolId?.S) {
-            return NextResponse.json({ poolId: response.Item.poolId.S }, { status: 200 });
+        // ✅ Try fetching the pool metadata using both token pair orders
+        for (const pairKey of pairKeys) {
+            const poolMetadata = await fetchPoolMetadata(pairKey);
+            if (poolMetadata) {
+                return NextResponse.json(poolMetadata, { status: 200 });
+            }
         }
 
         // ✅ If neither order exists, return "Pool Not Found"

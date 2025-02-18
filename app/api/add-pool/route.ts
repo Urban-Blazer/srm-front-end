@@ -47,6 +47,20 @@ export async function POST(req: Request) {
                 devRoyaltyFee: body.devRoyaltyFee || 0,
                 rewardsFee: body.rewardsFee || 0,
                 devWallet: body.devWallet || "",
+
+                // ✅ Store Coin A Metadata
+                coinA_name: body.coinA_name || "Unknown",
+                coinA_symbol: body.coinA_symbol || "Unknown",
+                coinA_description: body.coinA_description || "",
+                coinA_decimals: body.coinA_decimals || 0,
+                coinA_image: body.coinA_image || "",
+
+                // ✅ Store Coin B Metadata
+                coinB_name: body.coinB_name || "Unknown",
+                coinB_symbol: body.coinB_symbol || "Unknown",
+                coinB_description: body.coinB_description || "",
+                coinB_decimals: body.coinB_decimals || 0,
+                coinB_image: body.coinB_image || "",
             },
         };
 

@@ -27,6 +27,7 @@ export default function Swap() {
     // Store Pool Information
     const [poolId, setPoolId] = useState<string | null>(null);
     const [poolLoading, setPoolLoading] = useState(false);
+    const [poolData, setPoolData] = useState<any>(null);
     
     // ✅ Close dropdown when clicking outside
     useEffect(() => {
@@ -93,8 +94,6 @@ export default function Swap() {
         }
     }, [sellToken, buyToken]);
 
-
-    // Fetch Pool ID
     // Fetch Pool ID
     const fetchPoolId = async (sellToken, buyToken) => {
         if (!sellToken || !buyToken) return;
@@ -122,6 +121,58 @@ export default function Swap() {
         }
 
         setPoolLoading(false);
+    };
+
+    // ✅ Ensure `fetchPoolObject` is triggered when `poolId` updates
+    useEffect(() => {
+        if (poolId) {
+            console.log("Pool ID updated:", poolId);
+            fetchPoolObject(poolId);
+        }
+    }, [poolId]);
+
+    // ✅ Fetch Pool Object
+    const fetchPoolObject = async (poolObjectId) => {
+        if (!poolObjectId) return;
+
+        console.log("Fetching Pool Object with ID:", poolObjectId);
+
+        try {
+            const poolObject = await provider.getObject({
+                id: poolObjectId,
+                options: { showContent: true },
+            });
+
+            console.log("Pool Object Response:", poolObject);
+
+            // ✅ Ensure response has the expected structure
+            if (poolObject?.data?.content?.fields) {
+                const fields = poolObject.data.content.fields; // ✅ Correctly accessing the "fields"
+
+                // ✅ Extract only necessary properties
+                const extractedData = {
+                    balance_a: fields.balance_a || 0,
+                    balance_b: fields.balance_b || 0,
+                    burn_balance_b: fields.burn_balance_b || 0,
+                    burn_fee: fields.burn_fee || 0,
+                    dev_royalty_fee: fields.dev_royalty_fee || 0,
+                    dev_wallet: fields.dev_wallet || "",
+                    locked_lp_balance: fields.locked_lp_balance || 0,
+                    lp_builder_fee: fields.lp_builder_fee || 0,
+                    reward_balance_a: fields.reward_balance_a || 0,
+                    reward_fee: fields.rewards_fee || 0, // ✅ Corrected key name
+                };
+
+                console.log("Extracted Pool Data:", extractedData);
+                setPoolData(extractedData); // ✅ Store extracted pool data
+            } else {
+                console.log("No content fields found in Pool Object.");
+                setPoolData(null);
+            }
+        } catch (error) {
+            console.error("Error fetching pool object:", error);
+            setPoolData(null);
+        }
     };
 
     // ✅ Fetch Token Balances when a Token is Selected
@@ -301,12 +352,32 @@ export default function Swap() {
 
             {/* Pool Information Card */}
             <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6 lg:mt-0 lg:ml-6">
-                <h2 className="text-lg font-bold mb-2">Pool Information</h2>
+                <h2 className="text-lg font-bold mb-2 text-black">Pool Information</h2>
 
                 {poolLoading ? (
                     <p className="text-gray-500">Loading pool data...</p>
                 ) : poolId ? (
-                    <p className="text-black">Pool ID: <span className="font-semibold">{poolId}</span></p>
+                    <>
+                        <p className="text-black">
+                            <strong>Pool ID:</strong> {poolId}
+                        </p>
+                        {poolData ? (
+                            <div className="mt-4 text-black">
+                                <p><strong>Balance A:</strong> {poolData.balance_a}</p>
+                                <p><strong>Balance B:</strong> {poolData.balance_b}</p>
+                                <p><strong>Burn Balance B:</strong> {poolData.burn_balance_b}</p>
+                                <p><strong>Burn Fee:</strong> {poolData.burn_fee}</p>
+                                <p><strong>Dev Royalty Fee:</strong> {poolData.dev_royalty_fee}</p>
+                                <p><strong>Dev Wallet:</strong> {poolData.dev_wallet}</p>
+                                <p><strong>Locked LP Balance:</strong> {poolData.locked_lp_balance}</p>
+                                <p><strong>LP Builder Fee:</strong> {poolData.lp_builder_fee}</p>
+                                <p><strong>Reward Balance A:</strong> {poolData.reward_balance_a}</p>
+                                <p><strong>Reward Fee:</strong> {poolData.reward_fee}</p>
+                            </div>
+                        ) : (
+                            <p className="text-red-500">Pool Data Not Available</p>
+                        )}
+                    </>
                 ) : (
                     <p className="text-red-500">Pool Does Not Exist</p>
                 )}

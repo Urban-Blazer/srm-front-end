@@ -22,6 +22,7 @@
     "paths": {
       "@components/*": ["app/components/*"],
       "@data/*": ["app/data/*"],
+      "@svg/*": ["app/svg/*"],
       "@/*": ["./*"]
     }
   },

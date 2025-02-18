@@ -4,6 +4,7 @@ import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC } from "../config";
 import TokenSelector from "@components/tokenSelector"
+import CopyIcon from "@svg/copy-icon.svg";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -354,63 +355,122 @@ export default function Swap() {
             </div>
 
             {/* Pool Information Card */}
-            <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6 lg:mt-0 lg:ml-6">
-                <h2 className="text-lg font-bold mb-2 text-black">Pool Information</h2>
+            <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6 lg:mt-0 lg:ml-6 overflow-hidden">
+                <h2 className="text-lg font-bold mb-4 text-black">Pool Information</h2>
 
                 {poolLoading ? (
                     <p className="text-gray-500">Loading pool data...</p>
                 ) : poolId ? (
                     <>
-                        <p className="text-black"><strong>Pool ID:</strong> {poolId}</p>
+                        {/* ✅ Pool ID with Copy Button */}
+                        <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg overflow-x-auto">
+                            <p className="text-black truncate">
+                                <strong>Pool ID:</strong> {poolId}
+                            </p>
+                            <button
+                                onClick={() => navigator.clipboard.writeText(poolId)}
+                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                            >
+                                <CopyIcon className="w-5 h-5" />
+                            </button>
+                        </div>
 
-                        {poolMetadata && (
-                            <div className="mt-4">
-                                {/* ✅ Display Coin A Metadata */}
-                                <div className="flex items-center space-x-3 bg-gray-100 p-3 rounded-lg text-black">
-                                    {poolMetadata.coinA.image && (
-                                        <img src={poolMetadata.coinA.image} alt={poolMetadata.coinA.symbol} className="w-8 h-8 rounded-full" />
-                                    )}
+                        {/* ✅ Prevent rendering if `poolStats` or `poolMetadata` is missing */}
+                        {poolStats && poolMetadata ? (
+                            <div className="mt-4 space-y-3 max-h-[500px] overflow-y-auto pb-20">
+                                {/* ✅ Display Coin A Metadata with Balance */}
+                                <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-black">
+                                    <div className="flex items-center space-x-3">
+                                        {poolMetadata?.coinA?.image && (
+                                            <img src={poolMetadata?.coinA?.image} alt={poolMetadata?.coinA?.symbol} className="w-8 h-8 rounded-full" />
+                                        )}
+                                        <p className="text-lg font-semibold">
+                                            {poolMetadata?.coinA?.symbol} ({poolMetadata?.coinA?.name})
+                                        </p>
+                                    </div>
                                     <p className="text-lg font-semibold">
-                                        {poolMetadata.coinA.symbol} ({poolMetadata.coinA.name})
+                                        {(
+                                            Number(poolStats?.balance_a || 0) /
+                                            Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0))
+                                        ).toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: Number(poolMetadata?.coinA?.decimals || 2),
+                                        })}
                                     </p>
                                 </div>
 
-                                {/* ✅ Display Coin B Metadata */}
-                                <div className="flex items-center space-x-3 bg-gray-100 p-3 rounded-lg mt-2 text-black">
-                                    {poolMetadata.coinB.image && (
-                                        <img src={poolMetadata.coinB.image} alt={poolMetadata.coinB.symbol} className="w-8 h-8 rounded-full" />
-                                    )}
+                                {/* ✅ Display Coin B Metadata with Balance */}
+                                <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-black">
+                                    <div className="flex items-center space-x-3">
+                                        {poolMetadata?.coinB?.image && (
+                                            <img src={poolMetadata?.coinB?.image} alt={poolMetadata?.coinB?.symbol} className="w-8 h-8 rounded-full" />
+                                        )}
+                                        <p className="text-lg font-semibold">
+                                            {poolMetadata?.coinB?.symbol} ({poolMetadata?.coinB?.name})
+                                        </p>
+                                    </div>
                                     <p className="text-lg font-semibold">
-                                        {poolMetadata.coinB.symbol} ({poolMetadata.coinB.name})
+                                        {(
+                                            Number(poolStats?.balance_b || 0) /
+                                            Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0))
+                                        ).toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: Number(poolMetadata?.coinB?.decimals || 2),
+                                        })}
                                     </p>
                                 </div>
-                            </div>
-                        )}
 
-                        {poolStats ? (
-                            <div className="mt-4 text-black">
-                                {/* ✅ Pool Data Details */}
-                                <p><strong>Balance A:</strong> {poolStats.balance_a}</p>
-                                <p><strong>Balance B:</strong> {poolStats.balance_b}</p>
-                                <p><strong>Burn Balance B:</strong> {poolStats.burn_balance_b}</p>
-                                <p><strong>Burn Fee:</strong> {poolStats.burn_fee}%</p>
-                                <p><strong>Dev Royalty Fee:</strong> {poolStats.dev_royalty_fee}%</p>
-                                <p><strong>Dev Wallet:</strong> {poolStats.dev_wallet}</p>
-                                <p><strong>Locked LP Balance:</strong> {poolStats.locked_lp_balance}</p>
-                                <p><strong>LP Builder Fee:</strong> {poolStats.lp_builder_fee}%</p>
-                                <p><strong>Reward Balance A:</strong> {poolStats.reward_balance_a}</p>
-                                <p><strong>Reward Fee:</strong> {poolStats.reward_fee}%</p>
+                                {/* ✅ Pool Stats Section */}
+                                <div className="text-black space-y-2">
+                                    {/* ✅ LP Locked Balance Now Always Visible */}
+                                    <p><strong>Pool Locked LP:</strong> {poolStats?.locked_lp_balance?.toLocaleString() || "0"}</p>
+                                    
+                                    <p><strong>Pool Locked Coins:</strong> {(
+                                        Number(poolStats?.burn_balance_b || 0) /
+                                        Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0))
+                                    ).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: Number(poolMetadata?.coinB?.decimals || 2),
+                                    })} {poolMetadata?.coinB?.symbol}</p>
+
+                                    <p><strong>Reward Balance:</strong> {(
+                                        Number(poolStats?.reward_balance_a || 0) /
+                                        Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0))
+                                    ).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: Number(poolMetadata?.coinA?.decimals || 2),
+                                    })} {poolMetadata?.coinA?.symbol}</p>
+
+                                    {/* ✅ Correctly formatted fees as percentages */}
+                                    <p><strong>LP Builder Fee:</strong> {((poolStats?.lp_builder_fee || 0) / 100).toFixed(2)}%</p>
+                                    <p><strong>Reward Fee:</strong> {((poolStats?.reward_fee || 0) / 100).toFixed(2)}%</p>
+                                    <p><strong>Burn Fee:</strong> {((poolStats?.burn_fee || 0) / 100).toFixed(2)}%</p>
+                                    <p><strong>Deployer Royalty Fee:</strong> {((poolStats?.dev_royalty_fee || 0) / 100).toFixed(2)}%</p>
+                                    
+                                    {/* ✅ Dev Wallet with Copy Button */}
+                                    <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg overflow-x-auto">
+                                        <p className="text-black truncate">
+                                            <strong>Deployer Royalty Wallet:</strong> {poolStats?.dev_wallet || ""}
+                                        </p>
+                                        <button
+                                            onClick={() => navigator.clipboard.writeText(poolStats?.dev_wallet || "")}
+                                            className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                        >
+                                            <CopyIcon className="w-5 h-5" />
+                                        </button>
+                                    </div>
+
+                                    
+                                </div>
                             </div>
                         ) : (
-                            <p className="text-red-500 mt-4">Pool Stats Not Available</p>
+                            <p className="text-red-500 mt-4">Pool Data Not Available</p>
                         )}
                     </>
                 ) : (
                     <p className="text-red-500">Pool Does Not Exist</p>
                 )}
             </div>
-
-
 
         </div>
     );

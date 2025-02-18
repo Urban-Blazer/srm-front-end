@@ -30,17 +30,23 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
     // Load user-saved tokens from localStorage
     useEffect(() => {
         const storedTokens = localStorage.getItem("savedTokens");
-        console.log("Loaded savedTokens from localStorage:", storedTokens);
         if (storedTokens) {
-            setSavedTokens(JSON.parse(storedTokens));
+            try {
+                setSavedTokens(JSON.parse(storedTokens));
+            } catch (error) {
+                console.error("❌ Error parsing savedTokens from localStorage:", error);
+                setSavedTokens([]); // Fallback to empty array if parsing fails
+            }
         }
     }, []);
 
     // Save to localStorage whenever savedTokens changes
     useEffect(() => {
-        console.log("Updated savedTokens:", savedTokens);
-        localStorage.setItem("savedTokens", JSON.stringify(savedTokens));
+        if (savedTokens.length > 0) { // ✅ Prevents accidental overwriting with an empty array
+            localStorage.setItem("savedTokens", JSON.stringify(savedTokens));
+        }
     }, [savedTokens]);
+
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -67,19 +73,16 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
 
     // Handle adding a new token to saved list
     const handleAddToken = (token: Token) => {
-        console.log("Trying to add token:", token);
-        if (!savedTokens.some((t) => t.typeName === token.typeName)) {
-            const updatedTokens = [...savedTokens.slice(-19), token]; // Keep last 20
-            console.log("Updated savedTokens:", updatedTokens);
+        if (!savedTokens.some((t) => t.typeName === token.typeName)) { // ✅ Prevent duplicates
+            const updatedTokens = [...savedTokens, token];
             setSavedTokens(updatedTokens);
-            localStorage.setItem("savedTokens", JSON.stringify(updatedTokens)); // Persist across sessions
+            localStorage.setItem("savedTokens", JSON.stringify(updatedTokens));
         } else {
-            console.log("Token already exists in savedTokens.");
+            console.log("❌ Token already exists in savedTokens.");
         }
     };
 
     const handleRemoveToken = (token: Token) => {
-        console.log("Removing token:", token); // Debugging
         const updatedTokens = savedTokens.filter((t) => t.typeName !== token.typeName);
         setSavedTokens(updatedTokens);
         localStorage.setItem("savedTokens", JSON.stringify(updatedTokens)); // Persist removal
@@ -214,18 +217,16 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                             <div
                                 key={token.typeName}
                                 className="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 rounded-md"
+                                onClick={() => handleSelectToken(token)} // ✅ Allow selection directly
                             >
-                                <div
-                                    className="flex items-center cursor-pointer"
-                                    onClick={() => handleSelectToken(token)}
-                                >
+                                <div className="flex items-center">
                                     <img src={token.logo} alt={token.symbol} className="w-6 h-6 mr-2" />
                                     <span className="text-gray-800">{token.symbol}</span>
                                 </div>
                                 <button
                                     className="text-blue-500 hover:text-blue-700"
                                     onClick={(e) => {
-                                        e.stopPropagation();
+                                        e.stopPropagation(); // ✅ Prevents event bubbling
                                         handleAddToken(token);
                                     }}
                                 >
@@ -234,6 +235,7 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                             </div>
                         ))}
                     </div>
+
                 </div>
             </div>
 

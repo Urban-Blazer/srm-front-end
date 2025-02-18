@@ -23,6 +23,10 @@ export default function Swap() {
     const walletAdapterRef = useRef<NightlyConnectSuiAdapter | null>(null);
 
     const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+    // Store Pool Information
+    const [poolId, setPoolId] = useState<string | null>(null);
+    const [poolLoading, setPoolLoading] = useState(false);
     
     // ✅ Close dropdown when clicking outside
     useEffect(() => {
@@ -82,6 +86,43 @@ export default function Swap() {
         };
     }, []);
 
+    // Fetch Pool ID when CoinA and CoinB selected
+    useEffect(() => {
+        if (sellToken && buyToken) {
+            fetchPoolId(sellToken, buyToken);
+        }
+    }, [sellToken, buyToken]);
+
+
+    // Fetch Pool ID
+    // Fetch Pool ID
+    const fetchPoolId = async (sellToken, buyToken) => {
+        if (!sellToken || !buyToken) return;
+
+        setPoolLoading(true);
+        setPoolId(null); // Reset previous value
+
+        // Construct token pair key for DynamoDB
+        const tokenPairKey = `${sellToken.typeName}-${buyToken.typeName}`;
+
+        try {
+            const response = await fetch(`/api/get-pool-id?tokenPair=${encodeURIComponent(tokenPairKey)}`);
+            const data = await response.json();
+
+            if (data?.poolId) {
+                console.log("Pool ID found:", data.poolId);
+                setPoolId(data.poolId);
+            } else {
+                console.log("Pool does not exist for:", tokenPairKey);
+                setPoolId(null);
+            }
+        } catch (error) {
+            console.error("Error fetching pool ID:", error);
+            setPoolId(null);
+        }
+
+        setPoolLoading(false);
+    };
 
     // ✅ Fetch Token Balances when a Token is Selected
     const fetchBalance = async (token, setBalance) => {
@@ -145,11 +186,10 @@ export default function Swap() {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100 overflow-y-auto">
+        <div className="flex flex-col lg:flex-row justify-center items-center min-h-screen bg-gray-100 p-4">
 
+            {/* Swap Interface */}
             <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 relative">
-
-                {/* Swap Interface */}
                 <div className="flex flex-col space-y-4">
                     <h2 className="text-xl font-bold text-center">Swap Tokens</h2>
 
@@ -191,7 +231,6 @@ export default function Swap() {
                             <TokenSelector
                                 onSelectToken={(token) => handleSelectToken(token, "sell")}
                                 onClose={() => setDropdownOpen(null)}
-                                type="sell"
                             />
                         )}
                     </div>
@@ -244,7 +283,6 @@ export default function Swap() {
                             <TokenSelector
                                 onSelectToken={(token) => handleSelectToken(token, "buy")}
                                 onClose={() => setDropdownOpen(null)}
-                                type="buy"
                             />
                         )}
                     </div>
@@ -260,6 +298,20 @@ export default function Swap() {
                     </button>
                 </div>
             </div>
+
+            {/* Pool Information Card */}
+            <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6 lg:mt-0 lg:ml-6">
+                <h2 className="text-lg font-bold mb-2">Pool Information</h2>
+
+                {poolLoading ? (
+                    <p className="text-gray-500">Loading pool data...</p>
+                ) : poolId ? (
+                    <p className="text-black">Pool ID: <span className="font-semibold">{poolId}</span></p>
+                ) : (
+                    <p className="text-red-500">Pool Does Not Exist</p>
+                )}
+            </div>
+
         </div>
     );
 }

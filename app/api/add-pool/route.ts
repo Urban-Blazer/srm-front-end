@@ -25,16 +25,19 @@ export async function POST(req: Request) {
         const coinA = typeof body.coinA === "object" ? body.coinA.name || "" : body.coinA;
         const coinB = typeof body.coinB === "object" ? body.coinB.name || "" : body.coinB;
 
-        // ✅ Ensure Pair key is properly formatted as a string
-        const pairKey = `${coinA}-${coinB}`;
+        // ✅ Ensure Pair key is properly formatted with "0x" prefix
+        const formattedCoinA = coinA.startsWith("0x") ? coinA : `0x${coinA}`;
+        const formattedCoinB = coinB.startsWith("0x") ? coinB : `0x${coinB}`;
+
+        const pairKey = `${formattedCoinA}-${formattedCoinB}`;
 
         const params = {
             TableName: TABLE_NAME,
             Item: {
-                Pair: pairKey, // ✅ Correct primary key
+                Pair: pairKey, // ✅ Store with "0x" prefixes
                 poolId: body.poolId,
-                coinA, // ✅ Store only the string type
-                coinB, // ✅ Store only the string type
+                coinA: formattedCoinA, // ✅ Store formatted coinA
+                coinB: formattedCoinB, // ✅ Store formatted coinB
                 initA: body.initA || 0,
                 initB: body.initB || 0,
                 lpMinted: body.lpMinted || 0,

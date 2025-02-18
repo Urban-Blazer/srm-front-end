@@ -1,67 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { SuiClient } from "@mysten/sui.js/client";
-import { GETTER_RPC } from "../../config";
+import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import dotenv from "dotenv";
 
-// ✅ Initialize DynamoDB Client
-const client = new DynamoDBClient({ region: process.env.AWS_REGION });
-const docClient = DynamoDBDocumentClient.from(client);
+dotenv.config();
 
-// ✅ Initialize Blockchain Provider
-const provider = new SuiClient({ url: GETTER_RPC });
+// ✅ Configure AWS DynamoDB Client (v3 SDK)
+const dynamoDB = new DynamoDBClient({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+});
 
+const TABLE_NAME = process.env.DYNAMODB_TABLE || "PoolLookup";
+
+// ✅ Define GET handler (Edge API Route Format)
 export async function GET(req: NextRequest) {
+    const { searchParams } = new URL(req.url);
+    const tokenPair = searchParams.get("tokenPair");
+
+    if (!tokenPair) {
+        return NextResponse.json({ error: "Missing token pair" }, { status: 400 });
+    }
+
     try {
-        const { searchParams } = new URL(req.url);
-        const query = searchParams.get("query"); // ✅ This is the TypeName
+        // Extract CoinA and CoinB from tokenPair
+        const [coinA, coinB] = tokenPair.split("-");
 
-        if (!query) {
-            return NextResponse.json({ message: "Missing query parameter" }, { status: 400 });
-        }
+        // ✅ Create both possible pair orders
+        const pairKey1 = `${coinA}-${coinB}`; // Original order
+        const pairKey2 = `${coinB}-${coinA}`; // Reversed order
 
-        // ✅ Query DynamoDB GSI for CoinB (which is the TypeName)
-        const command = new QueryCommand({
-            TableName: process.env.DYNAMODB_TABLE,
-            IndexName: "CoinB-index", // ✅ Use GSI on CoinB
-            KeyConditionExpression: "CoinB = :query",
-            ExpressionAttributeValues: {
-                ":query": query,
-            },
-        });
-
-        const { Items } = await docClient.send(command);
-
-        if (!Items || Items.length === 0) {
-            return NextResponse.json({ message: "Token not found" }, { status: 404 });
-        }
-
-        // ✅ Since CoinB **is** the TypeName, use `query` directly
-        const typeName = query;
-
-        // ✅ Fetch metadata from blockchain using provider.getCoinMetadata()
-        let metadata;
-        try {
-            metadata = await provider.getCoinMetadata({ coinType: typeName });
-
-            if (!metadata) {
-                return NextResponse.json({ message: "Metadata not found for token" }, { status: 404 });
-            }
-        } catch (error) {
-            console.error("❌ Error fetching blockchain metadata:", error);
-            return NextResponse.json({ message: "Failed to fetch token metadata" }, { status: 500 });
-        }
-
-        // ✅ Construct response with metadata & logo URL
-        const token = {
-            symbol: metadata.symbol || "Unknown",
-            typeName: typeName,
-            logo: metadata.logoURI || "/default-logo.png",
+        // ✅ Try fetching both orders
+        const params1 = {
+            TableName: TABLE_NAME,
+            Key: { "Pair": { S: pairKey1 } },
+        };
+        const params2 = {
+            TableName: TABLE_NAME,
+            Key: { "Pair": { S: pairKey2 } },
         };
 
-        return NextResponse.json(token);
+        // ✅ Try fetching first pair order
+        const command1 = new GetItemCommand(params1);
+        let response = await dynamoDB.send(command1);
+
+        if (response.Item && response.Item.poolId?.S) {
+            return NextResponse.json({ poolId: response.Item.poolId.S }, { status: 200 });
+        }
+
+        // ✅ Try fetching second pair order if the first one failed
+        const command2 = new GetItemCommand(params2);
+        response = await dynamoDB.send(command2);
+
+        if (response.Item && response.Item.poolId?.S) {
+            return NextResponse.json({ poolId: response.Item.poolId.S }, { status: 200 });
+        }
+
+        // ✅ If neither order exists, return "Pool Not Found"
+        return NextResponse.json({ message: "Pool not found" }, { status: 404 });
+
     } catch (error) {
-        console.error("❌ Error fetching token:", error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+        console.error("DynamoDB Error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

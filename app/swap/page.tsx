@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import { SuiClient } from "@mysten/sui.js/client";
-import { GETTER_RPC } from "../config";
+import { GETTER_RPC, PACKAGE_ID, QUOTE_MODULE_NAME, CONFIG_ID } from "../config";
 import TokenSelector from "@components/tokenSelector"
 import CopyIcon from "@svg/copy-icon.svg";
 
@@ -19,6 +19,10 @@ export default function Swap() {
     const [sellBalance, setSellBalance] = useState(0);
     const [buyBalance, setBuyBalance] = useState(0);
     const [dropdownOpen, setDropdownOpen] = useState<"sell" | "buy" | null>(null);
+    const [maxSlippage, setMaxSlippage] = useState("0.5"); // Default slippage at 0.5%
+    const [isAtoB, setIsAtoB] = useState<boolean | null>(null); // Track if swapping A -> B or B -> A
+    const [fetchingQuote, setFetchingQuote] = useState(false); // Track loading state for quote
+
 
     // ✅ Initialize Wallet Connection
     const walletAdapterRef = useRef<NightlyConnectSuiAdapter | null>(null);
@@ -98,6 +102,7 @@ export default function Swap() {
     }, [sellToken, buyToken]);
 
     // ✅ Fetch Pool Metadata
+    // ✅ Fetch Pool Metadata
     const fetchPoolMetadata = async (sellToken, buyToken) => {
         if (!sellToken || !buyToken) return;
 
@@ -105,6 +110,7 @@ export default function Swap() {
         setPoolId(null);
         setPoolMetadata(null);
         setPoolStats(null);
+        setIsAtoB(null); 
 
         const tokenPairKey = `${sellToken.typeName}-${buyToken.typeName}`;
 
@@ -116,20 +122,28 @@ export default function Swap() {
                 console.log("Pool ID found:", data.poolId);
                 setPoolId(data.poolId);
 
-                // ✅ Store Metadata
-                setPoolMetadata({
+                // ✅ Store Metadata in a variable first
+                const metadata = {
                     coinA: data.coinA_metadata,
                     coinB: data.coinB_metadata,
-                });
+                };
+
+                setPoolMetadata(metadata);
+
+                // ✅ Now `metadata` is defined, so this will work correctly
+                setIsAtoB(sellToken.typeName === metadata.coinA?.typeName);
+
             } else {
                 console.log("Pool does not exist for:", tokenPairKey);
                 setPoolId(null);
                 setPoolMetadata(null);
+                setIsAtoB(null);
             }
         } catch (error) {
             console.error("Error fetching pool metadata:", error);
             setPoolId(null);
             setPoolMetadata(null);
+            setIsAtoB(null);
         }
 
         setPoolLoading(false);
@@ -146,6 +160,7 @@ export default function Swap() {
     const fetchPoolStats = async (poolObjectId) => {
         if (!poolObjectId) return;
 
+        setPoolStats(null);
         console.log("Fetching Pool Stats with ID:", poolObjectId);
 
         try {
@@ -159,7 +174,7 @@ export default function Swap() {
             if (poolObject?.data?.content?.fields) {
                 const fields = poolObject.data.content.fields;
 
-                // ✅ Extract Pool Statistics
+                // ✅ Ensure values are always defined
                 setPoolStats({
                     balance_a: fields.balance_a || 0,
                     balance_b: fields.balance_b || 0,
@@ -170,12 +185,66 @@ export default function Swap() {
                     locked_lp_balance: fields.locked_lp_balance || 0,
                     lp_builder_fee: fields.lp_builder_fee || 0,
                     reward_balance_a: fields.reward_balance_a || 0,
-                    reward_fee: fields.rewards_fee || 0,
+                    rewards_fee: fields.rewards_fee || 0,
+                });
+            } else {
+                console.warn("Missing pool fields:", poolObject);
+                setPoolStats({
+                    balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
+                    dev_royalty_fee: 0, dev_wallet: "", locked_lp_balance: 0,
+                    lp_builder_fee: 0, reward_balance_a: 0, reward_fee: 0
                 });
             }
         } catch (error) {
             console.error("Error fetching pool stats:", error);
-            setPoolStats(null);
+            setPoolStats({
+                balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
+                dev_royalty_fee: 0, dev_wallet: "", locked_lp_balance: 0,
+                lp_builder_fee: 0, reward_balance_a: 0, reward_fee: 0
+            });
+        }
+    };
+
+    const getSwapQuote = async (
+        poolId: string,
+        amount: string,
+        isSell: boolean,
+        isAtoB: boolean,
+        sellType: string,
+        buyType: string,
+        poolStats: any // ✅ Pass pool stats
+    ) => {
+        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return null;
+
+        setFetchingQuote(true);
+
+        try {
+            const amountU64 = Math.floor(Number(amount) * 1_000_000_000); // Convert to MIST
+
+            // ✅ Ensure values are not undefined
+            const response = await fetch(
+                `/api/get-quote?poolId=${poolId}&amount=${amountU64}&isSell=${isSell}&isAtoB=${isAtoB}` +
+                `&sellType=${encodeURIComponent(sellType)}&buyType=${encodeURIComponent(buyType)}` +
+                `&balanceA=${poolStats.balance_a || 0}&balanceB=${poolStats.balance_b || 0}` +
+                `&swapFee=${poolStats.swap_fee || 0}&lpBuilderFee=${poolStats.lp_builder_fee || 0}` +
+                `&burnFee=${poolStats.burn_fee || 0}&devRoyaltyFee=${poolStats.dev_royalty_fee || 0}` +
+                `&rewardsFee=${poolStats.reward_fee || 0}`
+            );
+
+            const data = await response.json();
+
+            if (data?.quote) {
+                console.log("Swap Quote Received:", data.quote);
+                return data.quote.map((val: string) => Number(val) / 1_000_000_000); // Convert from MIST
+            } else {
+                console.log("No valid swap quote received.");
+                return null;
+            }
+        } catch (error) {
+            console.error("Error fetching swap quote:", error);
+            return null;
+        } finally {
+            setFetchingQuote(false);
         }
     };
 
@@ -208,24 +277,76 @@ export default function Swap() {
     }, [buyToken, walletAddress]);
 
     // ✅ Handle Token Selection
-    const handleSelectToken = (token, type) => {
-        console.log(`Selected ${token.symbol} as ${type}`);
+    const handleSelectToken = async (token, type) => {
+        let newSellToken = sellToken;
+        let newBuyToken = buyToken;
 
         if (type === "sell") {
             if (buyToken && buyToken.symbol === token.symbol) {
+                newBuyToken = null;
                 setBuyToken(null);
                 setBuyBalance(0);
             }
+            newSellToken = token;
             setSellToken(token);
         } else {
             if (sellToken && sellToken.symbol === token.symbol) {
+                newSellToken = null;
                 setSellToken(null);
                 setSellBalance(0);
             }
+            newBuyToken = token;
             setBuyToken(token);
         }
 
+        if (newSellToken && newBuyToken) {
+            // ✅ Fetch pool metadata first
+            await fetchPoolMetadata(newSellToken, newBuyToken);
+        }
+
         setDropdownOpen(null); // ✅ Close dropdown after selection
+    };
+
+    const handleSellAmountChange = async (e) => {
+        const amount = e.target.value;
+        setSellAmount(amount);
+
+        if (!poolId || isAtoB === null || !amount || !sellToken || !buyToken || !poolStats) return;
+
+        // ✅ Ensure poolStats contains balances
+        if (!poolStats.balance_a || !poolStats.balance_b) {
+            console.warn("Skipping quote fetch due to missing pool balances");
+            return;
+        }
+
+        setFetchingQuote(true);
+        const quote = await getSwapQuote(poolId, amount, true, isAtoB, sellToken.typeName, buyToken.typeName, poolStats);
+        setFetchingQuote(false);
+
+        if (quote) {
+            setBuyAmount(quote[0]);
+        }
+    };
+
+    const handleBuyAmountChange = async (e) => {
+        const amount = e.target.value;
+        setBuyAmount(amount);
+
+        if (!poolId || isAtoB === null || !amount || !sellToken || !buyToken || !poolStats) return;
+
+        // ✅ Ensure poolStats contains balances
+        if (!poolStats.balance_a || !poolStats.balance_b) {
+            console.warn("Skipping quote fetch due to missing pool balances");
+            return;
+        }
+
+        setFetchingQuote(true);
+        const quote = await getSwapQuote(poolId, amount, false, isAtoB, sellToken.typeName, buyToken.typeName, poolStats);
+        setFetchingQuote(false);
+
+        if (quote) {
+            setSellAmount(quote[0]);
+        }
     };
 
     // ✅ Swap Tokens Function
@@ -237,16 +358,39 @@ export default function Swap() {
             // Swap balances
             setSellBalance(buyBalance);
             setBuyBalance(sellBalance);
+
+            // ✅ Swap the `isAtoB` value
+            setIsAtoB((prev) => !prev);
         }
     };
 
+
     return (
-        <div className="flex flex-col lg:flex-row justify-center items-center min-h-screen bg-gray-100 p-4">
+        <div className="min-h-screen flex flex-col lg:flex-row justify-center items-center bg-gray-100 p-4 pb-20 overflow-y-auto">
 
             {/* Swap Interface */}
             <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 relative">
-                <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-4 pb-24">
                     <h2 className="text-xl font-bold text-center">Swap Tokens</h2>
+
+                    {/* Max Slippage Input */}
+                    <div className="bg-gray-100 p-3 rounded-lg">
+                        <div className="flex justify-between items-center">
+                            <label className="text-gray-600 font-medium">Max Slippage</label>
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="10"
+                                    value={maxSlippage}
+                                    onChange={(e) => setMaxSlippage(parseFloat(e.target.value))}
+                                    className="bg-white text-black text-right font-semibold px-3 py-1 border border-gray-300 rounded-lg w-20 outline-none"
+                                />
+                                <span className="text-gray-500">%</span>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Sell Input */}
                     <div className="bg-gray-100 p-4 rounded-lg relative">
@@ -263,7 +407,8 @@ export default function Swap() {
                                 className="bg-transparent text-2xl font-semibold text-black w-full outline-none"
                                 placeholder="0"
                                 value={sellAmount}
-                                onChange={(e) => setSellAmount(e.target.value)}
+                                onChange={handleSellAmountChange}
+                                disabled={fetchingQuote}
                             />
                             {/* Sell Token Selection Button */}
                             <button
@@ -315,7 +460,8 @@ export default function Swap() {
                                 className="bg-transparent text-2xl font-semibold text-black w-full outline-none"
                                 placeholder="0"
                                 value={buyAmount}
-                                onChange={(e) => setBuyAmount(e.target.value)}
+                                onChange={handleBuyAmountChange}
+                                disabled={fetchingQuote}
                             />
                             {/* Buy Token Selection Button */}
                             <button
@@ -347,15 +493,15 @@ export default function Swap() {
                         className={`w-full text-white p-3 rounded-lg ${walletConnected && sellToken && buyToken ? "bg-black" : "bg-gray-300 cursor-not-allowed"
                             }`}
                         onClick={!walletConnected ? () => walletAdapter?.connect() : () => console.log("Swap Executed")}
-                        disabled={walletConnected && (!sellToken || !buyToken)}
+                        disabled={fetchingQuote || walletConnected && (!sellToken || !buyToken)}
                     >
-                        {walletConnected ? "Swap" : "Connect Wallet"}
+                        {fetchingQuote ? "Fetching Quote..." : walletConnected ? "Swap" : "Connect Wallet"}
                     </button>
                 </div>
             </div>
 
             {/* Pool Information Card */}
-            <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6 lg:mt-0 lg:ml-6 overflow-hidden">
+            <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6 lg:mt-0 lg:ml-6">
                 <h2 className="text-lg font-bold mb-4 text-black">Pool Information</h2>
 
                 {poolLoading ? (

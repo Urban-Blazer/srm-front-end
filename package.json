@@ -13,6 +13,9 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.749.0",
     "@aws-sdk/lib-dynamodb": "^3.749.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^6.4.5",
     "@mysten/sui.js": "^0.48.1",
     "@mysten/wallet-standard": "^0.9.0",
     "@nightlylabs/wallet-selector-sui": "^0.4.2",

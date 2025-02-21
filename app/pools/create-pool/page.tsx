@@ -4,8 +4,9 @@ import StepIndicator from "@components/CreatePoolStepIndicator";
 import { SuiClient } from "@mysten/sui.js/client";
 import { predefinedCoins } from "@data/coins";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { GETTER_RPC, PACKAGE_ID, MODULE_NAME, FACTORY_ID } from "../../config";
+import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, FACTORY_ID } from "../../config";
 import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
+import TransactionModal from "@components/TransactionModal";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -98,6 +99,13 @@ export default function Pools() {
     const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
     const [walletConnected, setWalletConnected] = useState(false);
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+    const [logs, setLogs] = useState<string[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const addLog = (message: string) => {
+        setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
+    };
 
     // ✅ Allow navigation to previous steps only (not forward skipping)
     const setStep = (step: number) => {
@@ -206,6 +214,8 @@ export default function Pools() {
 
     // ✅ Create Pool Transaction
     const handleCreatePool = async () => {
+        setLogs([]); // Clear previous logs
+        setIsModalOpen(true); // Open modal
         console.log("🔍 Checking wallet connection:", walletConnected, walletAddress);
 
         if (!walletConnected || !walletAddress || !walletAdapter) {
@@ -304,7 +314,7 @@ export default function Pools() {
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
-
+            addLog("✅ Balance Check Passed!");
             console.log("✅ Balance Check Passed!");
             console.log("💰 Selected Coin Objects for Deposit:");
             console.log(`${state.dropdownCoinMetadata.symbol}:`, coinA.objectId, "Balance:", coinA.balance.toString());
@@ -315,7 +325,7 @@ export default function Pools() {
             txb.setGasBudget(1_000_000_000);
 
             txb.moveCall({
-                target: `${PACKAGE_ID}::${MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
+                target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
                 typeArguments: [state.dropdownCoinMetadata!.typeName, state.customCoinMetadata!.typeName],
                 arguments: [
                     txb.object(FACTORY_ID),
@@ -332,6 +342,7 @@ export default function Pools() {
             });
 
             // ✅ Sign Transaction
+            addLog("✍️ Signing transaction...");
             console.log("✍️ Signing transaction...");
             const signedTx = await walletAdapter.signTransactionBlock({
                 transactionBlock: txb,
@@ -339,9 +350,11 @@ export default function Pools() {
                 chain: "sui:devnet",
             });
 
+            addLog("✅ Transaction Signed!");
             console.log("✅ Transaction Signed:", signedTx);
 
             // ✅ Submit Transaction
+            addLog("🚀 Submitting transaction...");
             console.log("🚀 Submitting transaction...");
             const executeResponse = await provider.executeTransactionBlock({
                 transactionBlock: signedTx.transactionBlockBytes, // Correct parameter
@@ -349,10 +362,12 @@ export default function Pools() {
                 options: { showEffects: true, showEvents: true },
             });
 
+            addLog("✅ Transaction Executed!");
             console.log("✅ Transaction Executed:", executeResponse);
 
             // ✅ Extract the transaction digest
             const txnDigest = executeResponse.digest;
+            addLog(`🔍 Tracking transaction digest: ${txnDigest}`);
             console.log("🔍 Tracking transaction digest:", txnDigest);
 
             if (!txnDigest) {
@@ -363,24 +378,33 @@ export default function Pools() {
             }
 
             // ✅ Wait for Transaction Confirmation with Retry
+            addLog("🕒 Waiting for confirmation...");
             console.log("🕒 Waiting for confirmation...");
-            const txnDetails = await fetchTransactionWithRetry(txnDigest);
+            let txnDetails = await fetchTransactionWithRetry(txnDigest);
 
             if (!txnDetails) {
-                alert("Transaction confirmed, but details are missing. Please check later.");
+                alert("Transaction not successful please retry");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
 
+            addLog("✅ Transaction Successfully Confirmed");
             console.log("✅ Transaction Successfully Confirmed:", txnDetails);
 
             // ✅ Extract PoolCreated event
-            const poolCreatedEvent = txnDetails.events?.find((event) =>
+            let poolCreatedEvent = txnDetails.events?.find((event) =>
                 event.type.includes("PoolCreated")
             );
 
             if (!poolCreatedEvent) {
-                alert(`Transaction confirmed, but no PoolCreated event found.`);
+                console.warn(`⚠️ PoolCreated event missing on first attempt! Retrying event extraction...`);
+                await new Promise((res) => setTimeout(res, 5000)); // Wait 5s and retry
+                txnDetails = await fetchTransactionWithRetry(txnDigest);
+                poolCreatedEvent = txnDetails?.events?.find((event) => event.type.includes("PoolCreated"));
+            }
+
+            if (!poolCreatedEvent) {
+                alert(`Transaction not successful please retry`);
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
@@ -407,7 +431,7 @@ export default function Pools() {
                 devRoyaltyFee: parseFloat(poolDataFromEvent.dev_royalty_fee),
                 rewardsFee: parseFloat(poolDataFromEvent.rewards_fee),
                 devWallet: poolDataFromEvent.dev_wallet,
-            
+
                 // ✅ Add Coin A Metadata
                 coinA_name: state.dropdownCoinMetadata.name || "Unknown",
                 coinA_symbol: state.dropdownCoinMetadata.symbol || "Unknown",
@@ -421,38 +445,57 @@ export default function Pools() {
                 coinB_description: state.customCoinMetadata.description || "",
                 coinB_decimals: state.customCoinMetadata.decimals || 0,
                 coinB_image: state.customCoinMetadata.iconUrl || "",
-            
             };
 
+            addLog("📡 Sending pool data to database...");
             console.log("📡 Sending pool data to database:", poolData);
 
-            const response = await fetch("/api/add-pool", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(poolData),
-            });
+            let dbSuccess = false;
+            for (let attempt = 1; attempt <= 10; attempt++) {
+                addLog(`📡 Database Attempt ${attempt}...`);
+                try {
+                    const response = await fetch("/api/add-pool", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(poolData),
+                    });
 
-            if (response.ok) {
-                alert(`🎉 Pool stored successfully! Pool ID: ${poolData.poolId}`);
+                    if (response.ok) {
+                        dbSuccess = true;
+                        addLog(`✅ Pool stored successfully in database (Attempt ${attempt})`);
+                        console.log(`✅ Pool stored successfully in database (Attempt ${attempt})`);
 
-                // ✅ Move to Step 5 only if database update succeeds
-                dispatch({ type: "SET_POOL_DATA", payload: poolData });
-                dispatch({ type: "SET_STEP", payload: 5 });
-            } else {
-                alert(`⚠️ Error storing pool in database.`);
+                        // ✅ Move to Step 5 after success
+                        dispatch({ type: "SET_POOL_DATA", payload: poolData });
+                        dispatch({ type: "SET_STEP", payload: 5 });
+                        break; // Exit retry loop if successful
+                    } else {
+                        addLog(`⚠️ Database attempt ${attempt} failed. Retrying...`);
+                        console.warn(`⚠️ Database attempt ${attempt} failed. Retrying...`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Database submission error (Attempt ${attempt}):`, error);
+                }
+                await new Promise((res) => setTimeout(res, 5000)); // Wait 5s before retrying
             }
 
-            dispatch({ type: "SET_LOADING", payload: false });  // ✅ Inside the function
+            if (!dbSuccess) {
+                alert("⚠️ Pool data failed to store in database after retries.");
+            }
 
-        } catch (error) {  // ✅ Make sure there's a catch block
+            dispatch({ type: "SET_LOADING", payload: false });
+
+        } catch (error) {
             console.error("❌ Transaction failed:", error);
             alert("Transaction failed. Check console for details.");
+            dispatch({ type: "SET_LOADING", payload: false });
+        } finally {
+            setTimeout(() => setIsModalOpen(false), 5000); // Close modal after 5s
         }
-
     };
 
     // ✅ Retry function to wait for transaction propagation
-    const fetchTransactionWithRetry = async (txnDigest, retries = 10, delay = 5000) => {
+    const fetchTransactionWithRetry = async (txnDigest, retries = 20, delay = 5000) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 console.log(`🔍 Attempt ${attempt}: Fetching transaction details for digest: ${txnDigest}`);
@@ -461,7 +504,20 @@ export default function Pools() {
                     options: { showEffects: true, showEvents: true },
                 });
 
-                if (txnDetails) return txnDetails;
+                if (txnDetails) {
+                    console.log("✅ Full Transaction Details:", txnDetails);
+
+                    // 🛠️ Log transaction status
+                    if (txnDetails.effects && txnDetails.effects.status) {
+                        console.log("📡 Transaction Status:", txnDetails.effects.status);
+                        if (txnDetails.effects.status.status !== "success") {
+                            console.error("❌ Transaction Failed!", txnDetails.effects.status.error);
+                            return null; // Stop further processing
+                        }
+                    }
+
+                    return txnDetails;
+                }
             } catch (error) {
                 console.warn(`⚠️ Attempt ${attempt} failed. Retrying in ${delay / 1000}s...`, error);
                 await new Promise(res => setTimeout(res, delay));
@@ -814,10 +870,12 @@ export default function Pools() {
 
                             <button className="bg-black text-white p-3 rounded-lg disabled:opacity-50"
                                 onClick={() => handleCreatePool()}
+                                
                                 disabled={state.loading} // ✅ Prevent multiple clicks
                             >
                                 {state.loading ? "Processing..." : "Create Pool ✅"}
                             </button>
+                            <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} />
                         </div>
                     </div>
                 )}

@@ -2,9 +2,28 @@ import { NextResponse } from "next/server";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC, PACKAGE_ID, QUOTE_MODULE_NAME, CONFIG_ID } from "../../config";
+const SWAP_FEE_BPS = 10; // 0.1% = 10 basis points
 
 const provider = new SuiClient({ url: GETTER_RPC });
 const DEFAULT_SENDER = "0x456c66e09501a4519eba083153c199ea91f7a7d15ecf9993f35994d688353f4f"; // Replace with a real Sui address
+
+// ✅ Helper function to decode `u64` values from byte arrays
+function decodeU64(bytes: number[]): bigint {
+    if (!Array.isArray(bytes) || bytes.length !== 8) {
+        console.error("Invalid byte array for u64 decoding:", bytes);
+        return BigInt(0); // Return 0 if there's an issue
+    }
+    return (
+        BigInt(bytes[0]) |
+        (BigInt(bytes[1]) << 8n) |
+        (BigInt(bytes[2]) << 16n) |
+        (BigInt(bytes[3]) << 24n) |
+        (BigInt(bytes[4]) << 32n) |
+        (BigInt(bytes[5]) << 40n) |
+        (BigInt(bytes[6]) << 48n) |
+        (BigInt(bytes[7]) << 56n)
+    );
+}
 
 export async function GET(req: Request) {
     try {
@@ -13,6 +32,7 @@ export async function GET(req: Request) {
         const amount = searchParams.get("amount");
         const isSell = searchParams.get("isSell") === "true";
         const isAtoB = searchParams.get("isAtoB") === "true";
+        console.log("DEBUG: isAtoB should be", isAtoB ? "true (A → B)" : "false (B → A)");
         const sender = searchParams.get("sender") || DEFAULT_SENDER;
 
         // ✅ Required Pool Data
@@ -28,37 +48,43 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
         }
 
-        console.log("Calling get-quote API with:", { poolId, amount, isSell, isAtoB, sender, balanceA, balanceB });
+        console.log("🚀 Calling get-quote API with:");
+        console.log("   - Pool ID:", poolId);
+        console.log("   - Amount:", amount);
+        console.log("   - isSell:", isSell);
+        console.log("   - isAtoB:", isAtoB);
+        console.log("   - Sender:", sender);
+        console.log("   - Balance A:", balanceA);
+        console.log("   - Balance B:", balanceB);
 
         // ✅ Create Transaction Block
         const txb = new TransactionBlock();
-        const method = isSell ? "get_swap_quote_by_sell" : "get_swap_quote_by_buy";
+        const method = isSell
+            ? "get_swap_quote_by_sell" // Selling coin → Get amount received
+            : "get_swap_quote_by_buy"; // Buying coin → Get required sell amount
 
         // ✅ Ensure Values are Numbers
-        const amountValue = txb.pure(Number(amount));
-        const isAtoBValue = txb.pure(isAtoB);
-        const balanceAValue = txb.pure(Number(balanceA));
-        const balanceBValue = txb.pure(Number(balanceB));
-        const swapFeeValue = txb.pure(100); // ✅ Always 100 basis points
-        const lpBuilderFeeValue = txb.pure(Number(lpBuilderFee || 0));
-        const burnFeeValue = txb.pure(Number(burnFee || 0));
-        const devRoyaltyFeeValue = txb.pure(Number(devRoyaltyFee || 0));
-        const rewardsFeeValue = txb.pure(Number(rewardsFee || 0));
+        const amountValue = txb.pure.u64(BigInt(amount));
+        const isAtoBValue = txb.pure.bool(isAtoB);
+        const balanceAValue = txb.pure.u64(BigInt(balanceA));
+        const balanceBValue = txb.pure.u64(BigInt(balanceB));
+        const swapFeeValue = txb.pure.u64(SWAP_FEE_BPS);
+        const lpBuilderFeeValue = txb.pure.u64(Number(lpBuilderFee) || 0);
+        const burnFeeValue = txb.pure.u64(Number(burnFee) || 0);
+        const devRoyaltyFeeValue = txb.pure.u64(Number(devRoyaltyFee) || 0);
+        const rewardsFeeValue = txb.pure.u64(Number(rewardsFee) || 0);
 
-        // ✅ Remove `typeArguments` since `quote.move` functions don't need them
+        // ✅ Ensure the correct function call arguments are used
+        const argumentsList = isAtoB
+            ? [amountValue, isAtoBValue, balanceAValue, balanceBValue, swapFeeValue, lpBuilderFeeValue, burnFeeValue, devRoyaltyFeeValue, rewardsFeeValue]
+            : [amountValue, isAtoBValue, balanceBValue, balanceAValue, swapFeeValue, lpBuilderFeeValue, burnFeeValue, devRoyaltyFeeValue, rewardsFeeValue]; // ✅ Fix order
+
+        console.log("✅ Arguments Passed to Move Call:", argumentsList);
+
+        // ✅ Call the Move function with corrected arguments
         txb.moveCall({
             target: `${PACKAGE_ID}::${QUOTE_MODULE_NAME}::${method}`,
-            arguments: [
-                amountValue,
-                isAtoBValue,
-                balanceAValue,
-                balanceBValue,
-                swapFeeValue,
-                lpBuilderFeeValue,
-                burnFeeValue,
-                devRoyaltyFeeValue,
-                rewardsFeeValue
-            ],
+            arguments: argumentsList, // ✅ Pass corrected argument list
         });
 
         console.log("Simulating Transaction...");
@@ -74,16 +100,30 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "No quote available" }, { status: 400 });
         }
 
-        // ✅ Fix: Properly Decode `u64` Return Values
-        const decodeU64 = (bytes: number[]) => {
-            return bytes.reduce((acc, byte, index) => acc + BigInt(byte) * (BigInt(256) ** BigInt(index)), BigInt(0));
-        };
+        // ✅ Decode return values properly
+        const rawReturnValues = response.results[0].returnValues;
 
-        const quote = response.results[0].returnValues.map(([bytes]: any) =>
-            Number(decodeU64(bytes)) / 1_000_000_000
-        );
+        if (!rawReturnValues || !Array.isArray(rawReturnValues)) {
+            console.error("Invalid return values:", rawReturnValues);
+            return NextResponse.json({ error: "Invalid return values" }, { status: 400 });
+        }
+
+        const quote = rawReturnValues.map(([bytes, type]: any) => {
+            if (type === "u64") {
+                const value = Number(decodeU64(bytes)) / 1_000_000_000; // ✅ Convert to human-readable
+                console.log("Decoded Quote (Converted):", value);
+                return value.toFixed(6);
+            }
+            return "0.000000";
+        });
 
         console.log("Final Quote:", quote);
+
+        // ✅ Ensure the quote does not contain NaN values
+        if (quote.every((val) => isNaN(val))) {
+            console.error("Error: Decoded quote contains NaN values:", quote);
+            return NextResponse.json({ error: "Invalid quote response" }, { status: 400 });
+        }
 
         return NextResponse.json({ quote }, { status: 200 });
 

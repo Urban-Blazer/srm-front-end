@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC, PACKAGE_ID, QUOTE_MODULE_NAME, CONFIG_ID } from "../config";
@@ -23,6 +23,8 @@ export default function Swap() {
     const [isAtoB, setIsAtoB] = useState<boolean | null>(null); // Track if swapping A -> B or B -> A
     const [fetchingQuote, setFetchingQuote] = useState(false); // Track loading state for quote
 
+    // ✅ Debounce Timer Ref
+    const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
     // ✅ Initialize Wallet Connection
     const walletAdapterRef = useRef<NightlyConnectSuiAdapter | null>(null);
@@ -101,7 +103,14 @@ export default function Swap() {
         }
     }, [sellToken, buyToken]);
 
-    // ✅ Fetch Pool Metadata
+    useEffect(() => {
+        return () => {
+            if (debounceTimer.current) {
+                clearTimeout(debounceTimer.current);
+            }
+        };
+    }, []);
+
     // ✅ Fetch Pool Metadata
     const fetchPoolMetadata = async (sellToken, buyToken) => {
         if (!sellToken || !buyToken) return;
@@ -131,7 +140,10 @@ export default function Swap() {
                 setPoolMetadata(metadata);
 
                 // ✅ Now `metadata` is defined, so this will work correctly
-                setIsAtoB(sellToken.typeName === metadata.coinA?.typeName);
+                const newIsAtoB = sellToken.typeName === metadata.coinA?.typeName;
+                setIsAtoB(newIsAtoB);
+                console.log("Updated isAtoB:", newIsAtoB);
+
 
             } else {
                 console.log("Pool does not exist for:", tokenPairKey);
@@ -205,49 +217,6 @@ export default function Swap() {
         }
     };
 
-    const getSwapQuote = async (
-        poolId: string,
-        amount: string,
-        isSell: boolean,
-        isAtoB: boolean,
-        sellType: string,
-        buyType: string,
-        poolStats: any // ✅ Pass pool stats
-    ) => {
-        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return null;
-
-        setFetchingQuote(true);
-
-        try {
-            const amountU64 = Math.floor(Number(amount) * 1_000_000_000); // Convert to MIST
-
-            // ✅ Ensure values are not undefined
-            const response = await fetch(
-                `/api/get-quote?poolId=${poolId}&amount=${amountU64}&isSell=${isSell}&isAtoB=${isAtoB}` +
-                `&sellType=${encodeURIComponent(sellType)}&buyType=${encodeURIComponent(buyType)}` +
-                `&balanceA=${poolStats.balance_a || 0}&balanceB=${poolStats.balance_b || 0}` +
-                `&swapFee=${poolStats.swap_fee || 0}&lpBuilderFee=${poolStats.lp_builder_fee || 0}` +
-                `&burnFee=${poolStats.burn_fee || 0}&devRoyaltyFee=${poolStats.dev_royalty_fee || 0}` +
-                `&rewardsFee=${poolStats.reward_fee || 0}`
-            );
-
-            const data = await response.json();
-
-            if (data?.quote) {
-                console.log("Swap Quote Received:", data.quote);
-                return data.quote.map((val: string) => Number(val) / 1_000_000_000); // Convert from MIST
-            } else {
-                console.log("No valid swap quote received.");
-                return null;
-            }
-        } catch (error) {
-            console.error("Error fetching swap quote:", error);
-            return null;
-        } finally {
-            setFetchingQuote(false);
-        }
-    };
-
     // ✅ Fetch Token Balances when a Token is Selected
     const fetchBalance = async (token, setBalance) => {
         if (!walletAddress || !token) return;
@@ -300,14 +269,18 @@ export default function Swap() {
         }
 
         if (newSellToken && newBuyToken) {
-            // ✅ Fetch pool metadata first
             await fetchPoolMetadata(newSellToken, newBuyToken);
         }
 
-        setDropdownOpen(null); // ✅ Close dropdown after selection
+        // ✅ Reset input fields to zero
+        setSellAmount("");
+        setBuyAmount("");
+
+        setDropdownOpen(null);
     };
 
-    const handleSellAmountChange = async (e) => {
+    // ✅ Handle Sell Amount Change with Debounce
+    const handleSellAmountChange = (e) => {
         const amount = e.target.value;
         setSellAmount(amount);
 
@@ -319,16 +292,11 @@ export default function Swap() {
             return;
         }
 
-        setFetchingQuote(true);
-        const quote = await getSwapQuote(poolId, amount, true, isAtoB, sellToken.typeName, buyToken.typeName, poolStats);
-        setFetchingQuote(false);
-
-        if (quote) {
-            setBuyAmount(quote[0]);
-        }
+        debouncedGetQuote(amount, true);
     };
 
-    const handleBuyAmountChange = async (e) => {
+    // ✅ Handle Buy Amount Change with Debounce
+    const handleBuyAmountChange = (e) => {
         const amount = e.target.value;
         setBuyAmount(amount);
 
@@ -340,30 +308,134 @@ export default function Swap() {
             return;
         }
 
-        setFetchingQuote(true);
-        const quote = await getSwapQuote(poolId, amount, false, isAtoB, sellToken.typeName, buyToken.typeName, poolStats);
-        setFetchingQuote(false);
+        // ✅ Prevent sending zero or negative values
+        if (Number(amount) <= 0) {
+            setSellAmount(""); // Reset sellAmount if input is invalid
+            return;
+        }
 
-        if (quote) {
-            setSellAmount(quote[0]);
+        console.log("🔍 Reverse Swap Debug:");
+        console.log("  - Buy Amount:", amount);
+        console.log("  - isAtoB:", isAtoB);
+        console.log("  - Pool ID:", poolId);
+        console.log("  - Balance A:", poolStats.balance_a);
+        console.log("  - Balance B:", poolStats.balance_b);
+
+        // ✅ Use isSell = false because we are calculating how much we need to sell
+        debouncedGetQuote(amount, false);
+    };
+
+    // ✅ Debounce function: Fetch quote and format number correctly
+    const debouncedGetQuote = useCallback(async (amount: string, isSell: boolean) => {
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+        debounceTimer.current = setTimeout(async () => {
+            if (!poolId || isAtoB === null || !amount || !sellToken || !buyToken || !poolStats) return;
+
+            // ✅ Prevent sending zero or negative values
+            if (Number(amount) <= 0) {
+                isSell ? setBuyAmount("") : setSellAmount("");
+                return;
+            }
+
+            setFetchingQuote(true);
+            try {
+                const quote = await getSwapQuote(
+                    poolId,
+                    amount,
+                    isSell,
+                    isAtoB,
+                    sellToken.typeName,
+                    buyToken.typeName,
+                    poolStats
+                );
+
+                if (quote) {
+                    const formattedQuote = quote[0]; // ✅ Use value directly from API (already formatted)
+                    if (isSell) {
+                        setBuyAmount(formattedQuote);
+                    } else {
+                        setSellAmount(formattedQuote); // Ensure correct reverse calculation
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching quote:", error);
+                isSell ? setBuyAmount("") : setSellAmount("");
+            } finally {
+                setFetchingQuote(false);
+            }
+        }, 300);
+    }, [poolId, isAtoB, sellToken, buyToken, poolStats]);
+
+
+    const getSwapQuote = async (
+        poolId: string,
+        amount: string,
+        isSell: boolean,
+        isAtoB: boolean,
+        sellType: string,
+        buyType: string,
+        poolStats: any
+    ) => {
+        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return null;
+
+        setFetchingQuote(true);
+
+        try {
+            const amountU64 = Math.floor(Number(amount) * 1_000_000_000); // Convert to raw integer (MIST)
+
+            // ✅ Fetch Quote API
+            const response = await fetch(
+                `/api/get-quote?poolId=${poolId}&amount=${amountU64}&isSell=${isSell}&isAtoB=${isAtoB}` +
+                `&sellType=${encodeURIComponent(sellType)}&buyType=${encodeURIComponent(buyType)}` +
+                `&balanceA=${poolStats.balance_a || 0}&balanceB=${poolStats.balance_b || 0}` +
+                `&swapFee=${poolStats.swap_fee || 0}&lpBuilderFee=${poolStats.lp_builder_fee || 0}` +
+                `&burnFee=${poolStats.burn_fee || 0}&devRoyaltyFee=${poolStats.dev_royalty_fee || 0}` +
+                `&rewardsFee=${poolStats.reward_fee || 0}`
+            );
+
+            const data = await response.json();
+
+            if (data?.quote) {
+                console.log("Swap Quote Received:", data.quote);
+
+                // ✅ Convert each quote value to decimal and return formatted
+                return data.quote; // ✅ Use values directly from the API response
+            } else {
+                console.log("No valid swap quote received.");
+                return null;
+            }
+        } catch (error) {
+            console.error("Error fetching swap quote:", error);
+            return null;
+        } finally {
+            setFetchingQuote(false);
         }
     };
 
     // ✅ Swap Tokens Function
     const handleSwapTokens = () => {
         if (sellToken && buyToken) {
-            setSellToken(buyToken);
-            setBuyToken(sellToken);
+            const newSellToken = buyToken;
+            const newBuyToken = sellToken;
+
+            setSellToken(newSellToken);
+            setBuyToken(newBuyToken);
 
             // Swap balances
             setSellBalance(buyBalance);
             setBuyBalance(sellBalance);
 
-            // ✅ Swap the `isAtoB` value
-            setIsAtoB((prev) => !prev);
+            // ✅ Instead of toggling, set `isAtoB` based on new sellToken
+            const newIsAtoB = newSellToken?.typeName === poolMetadata?.coinA?.typeName;
+            setIsAtoB(newIsAtoB);
+            console.log("🔄 Updated isAtoB after swap:", newIsAtoB);
+
+            // ✅ Reset input fields to zero
+            setSellAmount("");
+            setBuyAmount("");
         }
     };
-
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row justify-center items-center bg-gray-100 p-4 pb-20 overflow-y-auto">

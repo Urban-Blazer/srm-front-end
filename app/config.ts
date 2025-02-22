@@ -1,8 +1,8 @@
 export const GETTER_RPC = "https://fullnode.devnet.sui.io:443";
 export const TRANSACTION_RPC = "https://fullnode.devnet.sui.io:443";
-export const PACKAGE_ID = "0xfe5f0d6d062daa01d9fdb59b5755ef1777187bc602446795292e608f7e47fa1b";
+export const PACKAGE_ID = "0x7f801debf5e13303331d0db7ad847218a14cfa882310dd6d107abf2e176d4fd7";
 export const DEX_MODULE_NAME = "srmV1";
 export const QUOTE_MODULE_NAME = "quote";
-export const FACTORY_ID = "0xe3781e3d130eecda48bfbb7b30781291199e42ec9373078ecb234f59f94b8804";
-export const CONFIG_ID = "0x5d1f105a7f2f41997ef137b49fdcf100b0a9e39dba4fb2f5469270aed18f9035";
+export const FACTORY_ID = "0xe67e9b11dd0cf9e2a55ae7ca19f49b85365f58869fef0e7988ebd86ab50cc535";
+export const CONFIG_ID = "0x8c9ff3a8b7877c8389c8d905911d96bb9c0e975af941817254ab36444c1d38b8";
 export const DEFAULT_GAS_BUDGET = 1_000_000_000;

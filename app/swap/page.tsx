@@ -119,7 +119,7 @@ export default function Swap() {
         setPoolId(null);
         setPoolMetadata(null);
         setPoolStats(null);
-        setIsAtoB(null); 
+        setIsAtoB(null);
 
         const tokenPairKey = `${sellToken.typeName}-${buyToken.typeName}`;
 
@@ -127,32 +127,47 @@ export default function Swap() {
             const response = await fetch(`/api/get-pool-id?tokenPair=${encodeURIComponent(tokenPairKey)}`);
             const data = await response.json();
 
+            console.log("🌐 Raw Pool Metadata Response:", data); // 🔍 Debugging Step
+
             if (data?.poolId) {
-                console.log("Pool ID found:", data.poolId);
+                console.log("✅ Pool ID found:", data.poolId);
                 setPoolId(data.poolId);
 
-                // ✅ Store Metadata in a variable first
+                // 🚨 Check if metadata exists before setting state
+                if (!data.coinA_metadata || !data.coinB_metadata) {
+                    console.warn("🚨 Pool metadata missing from API response!");
+                    return;
+                }
+
                 const metadata = {
                     coinA: data.coinA_metadata,
                     coinB: data.coinB_metadata,
                 };
 
+                console.log("✅ Setting Pool Metadata:", metadata);
                 setPoolMetadata(metadata);
 
-                // ✅ Now `metadata` is defined, so this will work correctly
-                const newIsAtoB = sellToken.typeName === metadata.coinA?.typeName;
-                setIsAtoB(newIsAtoB);
-                console.log("Updated isAtoB:", newIsAtoB);
+                // 🚀 Ensure `poolMetadata` is fully set before checking `isAtoB`
+                setTimeout(() => {
+                    console.log("💡 Checking `isAtoB` condition after metadata fetch:");
+                    console.log("  - SellToken TypeName:", sellToken.typeName);
+                    console.log("  - Metadata CoinA TypeName:", metadata.coinA?.typeName);
+                    console.log("  - Metadata CoinB TypeName:", metadata.coinB?.typeName);
 
+                    // ✅ Now we can safely determine `isAtoB`
+                    const newIsAtoB = sellToken.typeName === metadata.coinA?.typeName;
+                    setIsAtoB(newIsAtoB);
 
+                    console.log("🔄 Updated isAtoB:", newIsAtoB);
+                }, 200); // Delay ensures metadata is set
             } else {
-                console.log("Pool does not exist for:", tokenPairKey);
+                console.log("⚠️ Pool does not exist for:", tokenPairKey);
                 setPoolId(null);
                 setPoolMetadata(null);
                 setIsAtoB(null);
             }
         } catch (error) {
-            console.error("Error fetching pool metadata:", error);
+            console.error("❌ Error fetching pool metadata:", error);
             setPoolId(null);
             setPoolMetadata(null);
             setIsAtoB(null);
@@ -160,6 +175,7 @@ export default function Swap() {
 
         setPoolLoading(false);
     };
+
 
     // ✅ Fetch Pool Stats when Pool ID updates
     useEffect(() => {
@@ -238,12 +254,12 @@ export default function Swap() {
 
     // ✅ Fetch balances whenever `sellToken` or `buyToken` changes
     useEffect(() => {
-        if (sellToken) fetchBalance(sellToken, setSellBalance);
-    }, [sellToken, walletAddress]);
+        if (sellToken && !fetchingQuote) fetchBalance(sellToken, setSellBalance);
+    }, [sellToken, walletAddress, fetchingQuote]);
 
     useEffect(() => {
-        if (buyToken) fetchBalance(buyToken, setBuyBalance);
-    }, [buyToken, walletAddress]);
+        if (buyToken && !fetchingQuote) fetchBalance(buyToken, setBuyBalance);
+    }, [buyToken, walletAddress, fetchingQuote]);
 
     // ✅ Handle Token Selection
     const handleSelectToken = async (token, type) => {
@@ -321,7 +337,7 @@ export default function Swap() {
         console.log("  - Balance A:", poolStats.balance_a);
         console.log("  - Balance B:", poolStats.balance_b);
 
-        // ✅ Use isSell = false because we are calculating how much we need to sell
+        // ✅ Explicitly pass `isSell = false` for reverse quote
         debouncedGetQuote(amount, false);
     };
 
@@ -332,49 +348,37 @@ export default function Swap() {
         debounceTimer.current = setTimeout(async () => {
             if (!poolId || isAtoB === null || !amount || !sellToken || !buyToken || !poolStats) return;
 
-            // ✅ Prevent sending zero or negative values
             if (Number(amount) <= 0) {
-                isSell ? setBuyAmount("") : setSellAmount("");
                 return;
             }
 
             setFetchingQuote(true);
             try {
-                const quote = await getSwapQuote(
-                    poolId,
-                    amount,
-                    isSell,
-                    isAtoB,
-                    sellToken.typeName,
-                    buyToken.typeName,
-                    poolStats
-                );
+                const response = await getSwapQuote(poolId, amount, isSell, isAtoB, poolStats);
 
-                if (quote) {
-                    const formattedQuote = quote[0]; // ✅ Use value directly from API (already formatted)
+                if (response) {
+                    console.log("✅ Updated Swap Quote:", response);
+
                     if (isSell) {
-                        setBuyAmount(formattedQuote);
+                        setBuyAmount(response.buyAmount); // ✅ Correctly update buy amount
+                        setBuyBalance(parseFloat(response.buyAmount)); // ✅ Also update balance
                     } else {
-                        setSellAmount(formattedQuote); // Ensure correct reverse calculation
+                        setSellAmount(response.sellAmount); // ✅ Correctly update sell amount
                     }
                 }
             } catch (error) {
                 console.error("Error fetching quote:", error);
-                isSell ? setBuyAmount("") : setSellAmount("");
             } finally {
                 setFetchingQuote(false);
             }
         }, 300);
     }, [poolId, isAtoB, sellToken, buyToken, poolStats]);
 
-
     const getSwapQuote = async (
         poolId: string,
         amount: string,
         isSell: boolean,
         isAtoB: boolean,
-        sellType: string,
-        buyType: string,
         poolStats: any
     ) => {
         if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return null;
@@ -384,23 +388,30 @@ export default function Swap() {
         try {
             const amountU64 = Math.floor(Number(amount) * 1_000_000_000); // Convert to raw integer (MIST)
 
-            // ✅ Fetch Quote API
-            const response = await fetch(
-                `/api/get-quote?poolId=${poolId}&amount=${amountU64}&isSell=${isSell}&isAtoB=${isAtoB}` +
-                `&sellType=${encodeURIComponent(sellType)}&buyType=${encodeURIComponent(buyType)}` +
-                `&balanceA=${poolStats.balance_a || 0}&balanceB=${poolStats.balance_b || 0}` +
-                `&swapFee=${poolStats.swap_fee || 0}&lpBuilderFee=${poolStats.lp_builder_fee || 0}` +
-                `&burnFee=${poolStats.burn_fee || 0}&devRoyaltyFee=${poolStats.dev_royalty_fee || 0}` +
-                `&rewardsFee=${poolStats.reward_fee || 0}`
-            );
+            // ✅ Construct query to match `quote.move` argument order
+            const queryParams = new URLSearchParams({
+                poolId,
+                amount: amountU64.toString(),
+                isSell: isSell.toString(),
+                isAtoB: isAtoB.toString(),
+                balanceA: poolStats.balance_a?.toString() || "0",
+                balanceB: poolStats.balance_b?.toString() || "0",
+                swapFee: poolStats.swap_fee?.toString() || "0",
+                lpBuilderFee: poolStats.lp_builder_fee?.toString() || "0",
+                burnFee: poolStats.burn_fee?.toString() || "0",
+                devRoyaltyFee: poolStats.dev_royalty_fee?.toString() || "0",
+                rewardsFee: poolStats.reward_fee?.toString() || "0",
+            });
 
+            // ✅ Fetch Quote API
+            const response = await fetch(`/api/get-quote?${queryParams}`);
             const data = await response.json();
 
-            if (data?.quote) {
-                console.log("Swap Quote Received:", data.quote);
-
-                // ✅ Convert each quote value to decimal and return formatted
-                return data.quote; // ✅ Use values directly from the API response
+            if (data?.buyAmount || data?.sellAmount) {
+                console.log("🔄 Swap Quote Received:", data);
+                return isSell
+                    ? { buyAmount: data.buyAmount }  // ✅ Extract correctly
+                    : { sellAmount: data.sellAmount }; // ✅ Extract correctly
             } else {
                 console.log("No valid swap quote received.");
                 return null;
@@ -414,7 +425,7 @@ export default function Swap() {
     };
 
     // ✅ Swap Tokens Function
-    const handleSwapTokens = () => {
+    const handleSwapTokens = async () => {
         if (sellToken && buyToken) {
             const newSellToken = buyToken;
             const newBuyToken = sellToken;
@@ -426,14 +437,25 @@ export default function Swap() {
             setSellBalance(buyBalance);
             setBuyBalance(sellBalance);
 
-            // ✅ Instead of toggling, set `isAtoB` based on new sellToken
-            const newIsAtoB = newSellToken?.typeName === poolMetadata?.coinA?.typeName;
-            setIsAtoB(newIsAtoB);
-            console.log("🔄 Updated isAtoB after swap:", newIsAtoB);
+            console.log("🔄 Swapping Tokens...");
+            console.log("  - New SellToken:", newSellToken.typeName);
+            console.log("  - New BuyToken:", newBuyToken.typeName);
 
-            // ✅ Reset input fields to zero
-            setSellAmount("");
-            setBuyAmount("");
+            // ✅ Fetch new metadata **before** updating `isAtoB`
+            await fetchPoolMetadata(newSellToken, newBuyToken);
+
+            // ✅ Ensure we update `isAtoB` only if metadata is valid
+            setTimeout(() => {
+                if (!poolMetadata || !poolMetadata.coinA || !poolMetadata.coinB) {
+                    console.warn("🚨 Pool metadata missing, cannot update isAtoB!");
+                    return;
+                }
+
+                const updatedIsAtoB = newSellToken?.typeName === poolMetadata?.coinA?.typeName;
+                setIsAtoB(updatedIsAtoB);
+
+                console.log("🔄 Corrected isAtoB After Swap:", updatedIsAtoB);
+            }, 300); // Delay ensures metadata is fetched
         }
     };
 

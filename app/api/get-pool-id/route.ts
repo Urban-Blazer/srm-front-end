@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
                 return {
                     poolId: response.Item.poolId.S,
                     coinA_metadata: {
+                        typeName: response.Item.coinA?.S || "Unknown",
                         name: response.Item.coinA_name?.S || "Unknown",
                         symbol: response.Item.coinA_symbol?.S || "Unknown",
                         description: response.Item.coinA_description?.S || "",
@@ -51,6 +52,7 @@ export async function GET(req: NextRequest) {
                         image: response.Item.coinA_image?.S || "",
                     },
                     coinB_metadata: {
+                        typeName: response.Item.coinB?.S || "Unknown",
                         name: response.Item.coinB_name?.S || "Unknown",
                         symbol: response.Item.coinB_symbol?.S || "Unknown",
                         description: response.Item.coinB_description?.S || "",

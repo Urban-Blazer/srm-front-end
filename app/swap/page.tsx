@@ -2,9 +2,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import { SuiClient } from "@mysten/sui.js/client";
-import { GETTER_RPC, PACKAGE_ID, QUOTE_MODULE_NAME, CONFIG_ID } from "../config";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../config";
 import TokenSelector from "@components/tokenSelector"
 import CopyIcon from "@svg/copy-icon.svg";
+import TransactionModal from "@components/TransactionModal";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -22,9 +24,15 @@ export default function Swap() {
     const [maxSlippage, setMaxSlippage] = useState("0.5"); // Default slippage at 0.5%
     const [isAtoB, setIsAtoB] = useState<boolean | null>(null); // Track if swapping A -> B or B -> A
     const [fetchingQuote, setFetchingQuote] = useState(false); // Track loading state for quote
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [logs, setLogs] = useState<string[]>([]);
 
     // ✅ Debounce Timer Ref
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+    const addLog = (message: string) => {
+        setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
+    };
 
     // ✅ Initialize Wallet Connection
     const walletAdapterRef = useRef<NightlyConnectSuiAdapter | null>(null);
@@ -475,6 +483,203 @@ export default function Swap() {
         }
     };
 
+    const handleSwap = async (attempt = 1) => {
+        setLogs([]); // Clear previous logs
+        setIsModalOpen(true); // Open modal
+        addLog(`⚡ Initiating Swap... (Attempt ${attempt})`);
+        console.log(`⚡ Initiating Swap... (Attempt ${attempt})`);
+
+        if (!walletAdapter || !walletConnected || !sellToken || !buyToken || !sellAmount || !poolId || isAtoB === null || !poolMetadata) {
+            alert("🚨 Swap execution failed: Missing required parameters.");
+            return;
+        }
+
+        try {
+            const userAddress = walletAddress!;
+            addLog(`👛 Using wallet address: ${userAddress}`);
+
+            // ✅ Fetch correct type arguments from poolMetadata
+            const typeArguments = [poolMetadata.coinA.typeName, poolMetadata.coinB.typeName];
+
+            // ✅ Select correct decimals from poolMetadata
+            const decimals = poolMetadata.coinA.typeName === sellToken.typeName ? poolMetadata.coinA.decimals : poolMetadata.coinB.decimals;
+            const sellAmountU64 = BigInt(Math.floor(Number(sellAmount) * Math.pow(10, decimals)));
+            const minOutU64 = BigInt(Math.floor((Number(buyAmount) * (1 - Number(maxSlippage) / 100)) * Math.pow(10, decimals)));
+
+            if (minOutU64 <= 0n) {
+                alert("🚨 Slippage is too high. Adjust your settings.");
+                return;
+            }
+
+            // 🔍 Fetch owned coin objects (matching the sell token)
+            const { data: ownedObjects } = await provider.getOwnedObjects({
+                owner: userAddress,
+                filter: { StructType: "0x2::coin::Coin" },
+                options: { showType: true, showContent: true },
+            });
+
+            addLog("🔍 Owned objects fetched.");
+            console.log("🔍 Owned objects:", ownedObjects);
+
+            // ✅ Extract coin data & filter based on type
+            const coins = ownedObjects
+                .map((obj) => {
+                    const rawType = obj.data?.type;
+                    if (!rawType || !rawType.startsWith("0x2::coin::Coin<")) return null;
+
+                    return {
+                        objectId: obj.data?.objectId,
+                        type: rawType.replace("0x2::coin::Coin<", "").replace(">", "").trim(),
+                        balance: obj.data?.content?.fields?.balance ? BigInt(obj.data?.content?.fields?.balance) : BigInt(0),
+                    };
+                })
+                .filter(Boolean); // Remove null values
+
+            console.log("🔍 Extracted Coins with Balance:", coins);
+
+            // ✅ Find matching coin object
+            const matchingCoin = coins.find((c) => c.type === sellToken.typeName);
+
+            if (!matchingCoin || matchingCoin.balance < sellAmountU64) {
+                alert("⚠️ Insufficient tokens in wallet.");
+                console.error("❌ Missing or insufficient Coin Object:", { matchingCoin });
+                return;
+            }
+
+            addLog(`✅ Using Coin ID: ${matchingCoin.objectId}`);
+            console.log(`✅ Using Coin ID: ${matchingCoin.objectId}, Balance: ${matchingCoin.balance.toString()}`);
+
+            // ✅ Build Transaction Block
+            const txb = new TransactionBlock();
+            txb.setGasBudget(1_000_000_000);
+
+            // Convert coin object ID to transaction object
+            const coinObject = txb.object(matchingCoin.objectId);
+
+            // 🔹 Split the required amount
+            const [usedCoin] = txb.splitCoins(coinObject, [txb.pure.u64(sellAmountU64)]);
+
+            // 📌 Determine the correct swap function
+            const swapFunction = isAtoB
+                ? `${PACKAGE_ID}::${DEX_MODULE_NAME}::swap_a_for_b_with_coins_and_transfer_to_sender`
+                : `${PACKAGE_ID}::${DEX_MODULE_NAME}::swap_b_for_a_with_coins_and_transfer_to_sender`;
+
+            // 🚀 Construct the transaction block
+            txb.moveCall({
+                target: swapFunction,
+                typeArguments,
+                arguments: [
+                    txb.object(poolId),
+                    txb.object(CONFIG_ID),
+                    usedCoin,
+                    txb.pure.u64(sellAmountU64),
+                    txb.pure.u64(minOutU64),
+                    txb.object("0x6"), // Clock object
+                ],
+            });
+
+            // ✅ Sign Transaction
+            addLog("✍️ Signing transaction...");
+            console.log("✍️ Signing transaction...");
+            const signedTx = await walletAdapter.signTransactionBlock({
+                transactionBlock: txb,
+                account: userAddress,
+                chain: "sui:devnet",
+            });
+
+            addLog("✅ Transaction Signed!");
+            console.log("✅ Transaction Signed:", signedTx);
+
+            // ✅ Submit Transaction
+            addLog("🚀 Submitting transaction...");
+            console.log("🚀 Submitting transaction...");
+            const executeResponse = await provider.executeTransactionBlock({
+                transactionBlock: signedTx.transactionBlockBytes, // Correct parameter
+                signature: signedTx.signature,
+                options: { showEffects: true, showEvents: true },
+            });
+
+            addLog("✅ Transaction Executed!");
+            console.log("✅ Transaction Executed:", executeResponse);
+
+            // ✅ Extract the transaction digest
+            const txnDigest = executeResponse.digest;
+            addLog(`🔍 Tracking transaction digest: ${txnDigest}`);
+            console.log("🔍 Tracking transaction digest:", txnDigest);
+
+            if (!txnDigest) {
+                console.error("❌ Transaction digest is missing!");
+                alert("Transaction submission failed. Check the console.");
+                return;
+            }
+
+            // ✅ Wait for Transaction Confirmation with Retry
+            addLog("🕒 Waiting for confirmation...");
+            console.log("🕒 Waiting for confirmation...");
+            let txnDetails = await fetchTransactionWithRetry(txnDigest);
+
+            if (!txnDetails) {
+                alert("Transaction not successful please retry");
+                return;
+            }
+
+            addLog("✅ Transaction Successfully Confirmed");
+            console.log("✅ Transaction Successfully Confirmed:", txnDetails);
+            alert(`✅ Swap Successful! Transaction Digest: ${txnDigest}`);
+
+            // 🔄 Refresh balances after the swap
+            await fetchBalance(sellToken, setSellBalance);
+            await fetchBalance(buyToken, setBuyBalance);
+
+        } catch (error) {
+            addLog(`❌ Swap Failed (Attempt ${attempt}): ${error.message}`);
+            console.error(`❌ Swap Failed (Attempt ${attempt}):`, error);
+
+            if (attempt < 3) {
+                console.log(`🔁 Retrying Swap... (Attempt ${attempt + 1})`);
+                setTimeout(() => handleSwap(attempt + 1), 2000); // Retry after 2 seconds
+            } else {
+                alert("❌ Swap failed after multiple attempts. Check console for details.");
+            }
+        }
+    };
+    
+    const fetchTransactionWithRetry = async (txnDigest, retries = 10, delay = 5000) => {
+        await new Promise((res) => setTimeout(res, 3000)); // ⏳ Delay before first check
+
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                addLog(`🔍 Checking transaction status... (Attempt ${attempt})`);
+                console.log(`🔍 Checking transaction status... (Attempt ${attempt})`);
+
+                const txnDetails = await provider.getTransactionBlock({
+                    digest: txnDigest,
+                    options: { showEffects: true, showEvents: true },
+                });
+
+                if (txnDetails?.effects?.status?.status === "success") {
+                    addLog("✅ Transaction Successfully Confirmed!");
+                    console.log("✅ Transaction Successfully Confirmed!", txnDetails);
+                    return txnDetails;
+                } else {
+                    console.warn(`⚠️ Transaction not confirmed yet (Attempt ${attempt})`, txnDetails);
+                }
+            } catch (error) {
+                if (error.message.includes("Could not find the referenced transaction")) {
+                    console.warn(`⏳ Transaction not yet indexed. Retrying... (Attempt ${attempt})`);
+                } else {
+                    console.error(`❌ Error fetching transaction (Attempt ${attempt}):`, error);
+                }
+            }
+
+            await new Promise((res) => setTimeout(res, delay)); // ⏳ Wait before retrying
+        }
+
+        console.error("❌ Transaction failed after multiple attempts.");
+        addLog("❌ Transaction failed after multiple attempts.");
+        return null;
+    };
+
     return (
         <div className="min-h-screen flex flex-col lg:flex-row justify-center items-center bg-gray-100 p-4 pb-20 overflow-y-auto">
 
@@ -602,11 +807,12 @@ export default function Swap() {
                     <button
                         className={`w-full text-white p-3 rounded-lg ${walletConnected && sellToken && buyToken ? "bg-black" : "bg-gray-300 cursor-not-allowed"
                             }`}
-                        onClick={!walletConnected ? () => walletAdapter?.connect() : () => console.log("Swap Executed")}
+                        onClick={!walletConnected ? () => walletAdapter?.connect() : () => handleSwap(1)}
                         disabled={fetchingQuote || walletConnected && (!sellToken || !buyToken)}
                     >
                         {fetchingQuote ? "Fetching Quote..." : walletConnected ? "Swap" : "Connect Wallet"}
                     </button>
+                    <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} />
                 </div>
             </div>
 

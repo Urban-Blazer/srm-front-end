@@ -48,15 +48,6 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
         }
 
-        console.log("🚀 Calling get-quote API with:");
-        console.log("   - Pool ID:", poolId);
-        console.log("   - Amount:", amount);
-        console.log("   - isSell:", isSell);
-        console.log("   - isAtoB:", isAtoB);
-        console.log("   - Sender:", sender);
-        console.log("   - Balance A:", balanceA);
-        console.log("   - Balance B:", balanceB);
-
         // ✅ Create Transaction Block
         const txb = new TransactionBlock();
         const method = isSell ? "get_swap_quote_by_sell" : "get_swap_quote_by_buy";
@@ -71,6 +62,18 @@ export async function GET(req: Request) {
         const burnFeeValue = txb.pure.u64(Number(burnFee) || 0);
         const devRoyaltyFeeValue = txb.pure.u64(Number(devRoyaltyFee) || 0);
         const rewardsFeeValue = txb.pure.u64(Number(rewardsFee) || 0);
+
+        console.log("🔥 Swap Debug:");
+        console.log("- Buy/Sell Mode:", isSell ? "SELL" : "BUY");
+        console.log("- Amount:", amountValue);
+        console.log("- isAtoB:", isAtoBValue);
+        console.log("- Pool Balance A:", balanceAValue);
+        console.log("- Pool Balance B:", balanceBValue);
+        console.log("- Swap Fee:", swapFeeValue);
+        console.log("- LP Fee:", lpBuilderFeeValue);
+        console.log("- Burn Fee:", burnFeeValue);
+        console.log("- Dev Fee:", devRoyaltyFeeValue);
+        console.log("- Rewards Fee:", rewardsFeeValue);
 
         console.log("🚀 Checking API inputs before Move call:", {
             isSell,
@@ -89,8 +92,8 @@ export async function GET(req: Request) {
         const argumentsList = [
             amountValue,
             isAtoBValue,
-            balanceAValue, // Don't swap these
-            balanceBValue, // Don't swap these
+            balanceAValue,
+            balanceBValue,
             swapFeeValue,
             lpBuilderFeeValue,
             burnFeeValue,

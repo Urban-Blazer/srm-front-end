@@ -38,6 +38,15 @@ export default function Swap() {
     const [poolMetadata, setPoolMetadata] = useState<any>(null);
     const [poolStats, setPoolStats] = useState<any>(null);
     
+    useEffect(() => {
+        console.log("✅ UI Updated - New Buy Amount:", buyAmount);
+    }, [buyAmount]);
+
+    useEffect(() => {
+        console.log("✅ UI Updated - New Sell Amount:", sellAmount);
+    }, [sellAmount]);
+
+
     // ✅ Close dropdown when clicking outside
     useEffect(() => {
         function handleClickOutside(event) {
@@ -220,7 +229,7 @@ export default function Swap() {
                 setPoolStats({
                     balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
                     dev_royalty_fee: 0, dev_wallet: "", locked_lp_balance: 0,
-                    lp_builder_fee: 0, reward_balance_a: 0, reward_fee: 0
+                    lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
                 });
             }
         } catch (error) {
@@ -228,7 +237,7 @@ export default function Swap() {
             setPoolStats({
                 balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
                 dev_royalty_fee: 0, dev_wallet: "", locked_lp_balance: 0,
-                lp_builder_fee: 0, reward_balance_a: 0, reward_fee: 0
+                lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
             });
         }
     };
@@ -360,11 +369,13 @@ export default function Swap() {
                     console.log("✅ Updated Swap Quote:", response);
 
                     if (isSell) {
-                        setBuyAmount(response.buyAmount); // ✅ Correctly update buy amount
-                        setBuyBalance(parseFloat(response.buyAmount)); // ✅ Also update balance
+                        setBuyAmount(response.buyAmount);
+                        console.log("✅ Updated Buy Amount:", response.buyAmount);
                     } else {
-                        setSellAmount(response.sellAmount); // ✅ Correctly update sell amount
+                        setSellAmount(response.sellAmount);
+                        console.log("✅ Updated Sell Amount:", response.sellAmount);
                     }
+
                 }
             } catch (error) {
                 console.error("Error fetching quote:", error);
@@ -386,7 +397,12 @@ export default function Swap() {
         setFetchingQuote(true);
 
         try {
-            const amountU64 = Math.floor(Number(amount) * 1_000_000_000); // Convert to raw integer (MIST)
+
+            console.log("🛑 Before Conversion - amount:", amount);
+
+            const amountU64 = Number(amount) > 0 ? Math.floor(Number(amount) * 1_000_000_000) : 0;
+
+            console.log("🛑 After Conversion - amount:", amountU64);
 
             // ✅ Construct query to match `quote.move` argument order
             const queryParams = new URLSearchParams({
@@ -400,7 +416,7 @@ export default function Swap() {
                 lpBuilderFee: poolStats.lp_builder_fee?.toString() || "0",
                 burnFee: poolStats.burn_fee?.toString() || "0",
                 devRoyaltyFee: poolStats.dev_royalty_fee?.toString() || "0",
-                rewardsFee: poolStats.reward_fee?.toString() || "0",
+                rewardsFee: poolStats.rewards_fee?.toString() || "0",
             });
 
             // ✅ Fetch Quote API
@@ -683,7 +699,7 @@ export default function Swap() {
 
                                     {/* ✅ Correctly formatted fees as percentages */}
                                     <p><strong>LP Builder Fee:</strong> {((poolStats?.lp_builder_fee || 0) / 100).toFixed(2)}%</p>
-                                    <p><strong>Reward Fee:</strong> {((poolStats?.reward_fee || 0) / 100).toFixed(2)}%</p>
+                                    <p><strong>Reward Fee:</strong> {((poolStats?.rewards_fee || 0) / 100).toFixed(2)}%</p>
                                     <p><strong>Burn Fee:</strong> {((poolStats?.burn_fee || 0) / 100).toFixed(2)}%</p>
                                     <p><strong>Deployer Royalty Fee:</strong> {((poolStats?.dev_royalty_fee || 0) / 100).toFixed(2)}%</p>
                                     

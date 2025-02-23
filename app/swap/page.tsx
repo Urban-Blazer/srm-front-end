@@ -657,18 +657,59 @@ export default function Swap() {
                     options: { showEffects: true, showEvents: true },
                 });
 
+                // ✅ If transaction succeeded
                 if (txnDetails?.effects?.status?.status === "success") {
                     addLog("✅ Transaction Successfully Confirmed!");
                     console.log("✅ Transaction Successfully Confirmed!", txnDetails);
                     return txnDetails;
-                } else {
-                    console.warn(`⚠️ Transaction not confirmed yet (Attempt ${attempt})`, txnDetails);
                 }
+
+                // ❌ If transaction failed, extract Move abort error code
+                if (txnDetails?.effects?.status?.status === "failure") {
+                    const errorMessage = txnDetails.effects.status.error || "Unknown error occurred.";
+
+                    // 🔍 Extract MoveAbort details
+                    const moveErrorMatch = errorMessage.match(
+                        /MoveAbort\(MoveLocation \{ module: ModuleId \{ address: ([^,]+), name: Identifier\("([^"]+)"\) \}, function: (\d+), instruction: (\d+), function_name: Some\("([^"]+)"\) \}, (\d+)\)/
+                    );
+
+                    if (moveErrorMatch) {
+                        const moduleAddress = moveErrorMatch[1];  // Address of the module (not needed for display)
+                        const moduleName = moveErrorMatch[2];      // Module name (e.g., "srmV1")
+                        const functionIndex = moveErrorMatch[3];   // Function index in module (not usually needed)
+                        const instructionIndex = moveErrorMatch[4]; // Instruction index in function
+                        const functionName = moveErrorMatch[5];     // Function name (e.g., "swap_a_for_b")
+                        const abortCode = parseInt(moveErrorMatch[6]); // Abort Code (e.g., 3)
+
+                        console.error(`❌ Move Abort in module ${moduleName} (Function: ${functionName}), Code ${abortCode}`);
+                        addLog(`❌ Move Abort in module ${moduleName}, Code ${abortCode}`);
+
+                        // 🔹 **Map Error Codes to User-Friendly Messages**
+                        let userErrorMessage = `Swap failed in ${moduleName}::${functionName} with code ${abortCode}.`;
+
+                        if (abortCode === 3) userErrorMessage = "⚠️ Swap failed: Excessive slippage.";
+                        if (abortCode === 4) userErrorMessage = "⚠️ Not enough liquidty available for the swap.";
+                        if (abortCode === 1001) userErrorMessage = "⚠️ Swap failed due to price impact.";
+
+                        alert(userErrorMessage);
+                        return null; // Stop retrying, exit function
+                    }
+
+                    console.error("❌ Transaction Failed:", errorMessage);
+                    addLog(`❌ Transaction Failed: ${errorMessage}`);
+                    alert(`Swap failed: ${errorMessage}`); // Show user-friendly message
+                    return null; // Stop retrying, exit function
+                }
+
+                // ⏳ If transaction is still pending, retry
+                console.warn(`⚠️ Transaction not confirmed yet (Attempt ${attempt})`, txnDetails);
             } catch (error) {
                 if (error.message.includes("Could not find the referenced transaction")) {
                     console.warn(`⏳ Transaction not yet indexed. Retrying... (Attempt ${attempt})`);
                 } else {
                     console.error(`❌ Error fetching transaction (Attempt ${attempt}):`, error);
+                    alert(`Error fetching transaction: ${error.message}`);
+                    return null; // Stop retrying, return error
                 }
             }
 
@@ -677,6 +718,7 @@ export default function Swap() {
 
         console.error("❌ Transaction failed after multiple attempts.");
         addLog("❌ Transaction failed after multiple attempts.");
+        alert("Transaction failed after multiple attempts. Please check your swap settings.");
         return null;
     };
 

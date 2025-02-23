@@ -487,7 +487,28 @@ export default function Pools() {
 
         } catch (error) {
             console.error("❌ Transaction failed:", error);
-            alert("Transaction failed. Check console for details.");
+
+            // 🔍 Detect MoveAbort errors
+            const moveErrorMatch = error.message.match(
+                /MoveAbort\(MoveLocation \{ module: ModuleId \{ address: ([^,]+), name: Identifier\("([^"]+)"\) \}, function: (\d+), instruction: (\d+), function_name: Some\("([^"]+)"\) \}, (\d+)\)/
+            );
+
+            if (moveErrorMatch) {
+                const moduleName = moveErrorMatch[2]; // Module name (e.g., "srmV1")
+                const functionName = moveErrorMatch[5]; // Function name (e.g., "create_pool")
+                const abortCode = parseInt(moveErrorMatch[6]); // Abort Code
+
+                let userErrorMessage = `Pool creation failed in ${moduleName}::${functionName} with code ${abortCode}.`;
+
+                if (abortCode === 1) userErrorMessage = "⚠️ Invalid token pair.";
+                if (abortCode === 2) userErrorMessage = "⚠️ Pool already exists.";
+                if (abortCode === 5) userErrorMessage = "⚠️ Fee exceeds maximum allowed";
+                if (abortCode === 1001) userErrorMessage = "⚠️ Failed due to fee settings.";
+
+            alert(userErrorMessage);
+            } else {
+            alert("Transaction failed. Check the console for details.");
+            }
             dispatch({ type: "SET_LOADING", payload: false });
         } finally {
             setTimeout(() => setIsModalOpen(false), 5000); // Close modal after 5s

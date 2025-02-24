@@ -59,7 +59,7 @@ export default function NavBar() {
           <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40">
             <Link href="/pools" className="block px-4 py-2 hover:bg-gray-700">Overview</Link>
             <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-gray-700">Create Pool</Link>
-            <Link href="/pools/liquidity" className="block px-4 py-2 hover:bg-gray-700">Liquidity</Link>
+            <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-gray-700">Add Liquidity</Link>
           </div>
         )}
       </div>

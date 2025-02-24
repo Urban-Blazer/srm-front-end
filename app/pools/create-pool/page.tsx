@@ -700,7 +700,7 @@ export default function Pools() {
                 )}
 
 
-                {/* Step 3: Token Deposit - Existing Logic is Kept */}
+                {/* Step 3: Token Deposit */}
                 {state.step === 3 && (
                     <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
 

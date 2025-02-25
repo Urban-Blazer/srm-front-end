@@ -8,6 +8,7 @@ import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../../config";
 import TransactionModal from "@components/TransactionModal";
+import { useSearchParams } from "next/navigation";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -69,6 +70,20 @@ export default function AddLiquidity() {
 
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const searchParams = useSearchParams();
+    const coinA = searchParams.get("coinA");
+    const coinB = searchParams.get("coinB");
+
+    useEffect(() => {
+        if (coinA && coinB) {
+            const predefinedCoin = predefinedCoins.find((c) => c.typeName === coinA) || predefinedCoins[0];
+
+            dispatch({ type: "SET_COIN", payload: predefinedCoin });
+            dispatch({ type: "SET_CUSTOM_COIN", payload: coinB });
+
+        }
+    }, [coinA, coinB]);
 
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
@@ -593,7 +608,6 @@ export default function AddLiquidity() {
                                     await fetchPoolStats(state.poolData.poolId);
 
                                     if (!state.poolStats) {
-                                        alert("⚠️ Pool stats missing. Retrying...");
                                         await fetchPoolStats(state.poolData.poolId); // Retry once
                                     }
 

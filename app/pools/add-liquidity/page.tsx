@@ -24,6 +24,7 @@ const initialState = {
     poolChecked: false, // ✅ Track if the pool check was done
     dropdownOpen: false, // ✅ Track dropdown state
     poolStats: null,
+    liquidityData: null,
 };
 
 function reducer(state: any, action: any) {
@@ -52,6 +53,8 @@ function reducer(state: any, action: any) {
             return { ...state, customCoin: action.payload };
         case "SET_POOL_STATS":
             return { ...state, poolStats: action.payload };
+        case "SET_LIQUIDITY_DATA":
+            return { ...state, liquidityData: action.payload };
         default:
             return state;
     }
@@ -395,6 +398,7 @@ export default function AddLiquidity() {
             addLog("✅ Transaction Confirmed!");
 
             // ✅ Extract LiquidityAdded Event
+            // ✅ Extract LiquidityAdded Event
             let liquidityEvent = txnDetails.events?.find((event) =>
                 event.type.includes("LiquidityAdded")
             );
@@ -412,7 +416,7 @@ export default function AddLiquidity() {
                 return;
             }
 
-            // ✅ Extract LP Token Details
+            // ✅ Extract Liquidity Event Data
             const liquidityData = liquidityEvent.parsedJson;
             if (!liquidityData) {
                 alert("⚠️ Event detected but no data available.");
@@ -422,13 +426,17 @@ export default function AddLiquidity() {
 
             console.log("✅ Liquidity Event Data:", liquidityData);
 
-            // ✅ Store LP Minted Data
+            // ✅ Store LP Minted Data in State
             dispatch({
                 type: "SET_LIQUIDITY_DATA",
                 payload: {
-                    lpMinted: parseFloat(liquidityData.lp_minted),
-                    depositA: parseFloat(liquidityData.amountin_a) / 1e9,
-                    depositB: parseFloat(liquidityData.amountin_b) / 1e9,
+                    poolId: liquidityData.pool_id, // Pool ID
+                    coinA: liquidityData.a, // Coin A Type
+                    coinB: liquidityData.b, // Coin B Type
+                    depositA: parseFloat(liquidityData.amountin_a) / 1e9, // Convert from MIST
+                    depositB: parseFloat(liquidityData.amountin_b) / 1e9, // Convert from MIST
+                    lpMinted: parseFloat(liquidityData.lp_minted) / 1e9, // Convert from MIST
+                    txnDigest: txnDigest, // Store Transaction Digest
                 },
             });
 
@@ -697,6 +705,46 @@ export default function AddLiquidity() {
                         </button>
                         <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} />
 
+                    </div>
+                )}
+
+                {/* Step 3: Liquidity Confirmation */}
+                {state.step === 3 && state.liquidityData && (
+                    <div className="pb-20 overflow-y-auto">
+                        <h2 className="text-xl font-semibold mb-4">Liquidity Successfully Added! 🎉</h2>
+
+                        <div className="bg-green-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Transaction Summary</h3>
+
+                            <p className="text-black text-sm font-semibold">Liquidity Pool:</p>
+                            <p className="text-gray-700 text-sm break-all">{state.liquidityData.poolId}</p>
+
+                            <h3 className="text-sm font-semibold text-black mt-2">Your Deposits:</h3>
+                            <p className="text-sm text-gray-700">
+                                {state.liquidityData.depositA.toFixed(4)} {state.dropdownCoinMetadata?.symbol}
+                            </p>
+                            <p className="text-sm text-gray-700">
+                                {state.liquidityData.depositB.toFixed(4)} {state.customCoinMetadata?.symbol}
+                            </p>
+
+                            <h3 className="text-sm font-semibold text-black mt-2">LP Tokens Minted:</h3>
+                            <p className="text-sm text-gray-700">{state.liquidityData.lpMinted.toFixed(4)} LP Tokens</p>
+
+                            <h3 className="text-sm font-semibold text-black mt-2">Transaction Digest:</h3>
+                            <p className="text-sm text-blue-700 break-all cursor-pointer"
+                                onClick={() => window.open(`https://suiexplorer.com/tx/${state.liquidityData.txnDigest}`, "_blank")}
+                            >
+                                {state.liquidityData.txnDigest}
+                            </p>
+                        </div>
+
+                        {/* Final Action */}
+                        <button
+                            className="bg-black text-white p-3 rounded-lg w-full mt-4"
+                            onClick={() => router.push("/pools")}
+                        >
+                            Back to Pools
+                        </button>
                     </div>
                 )}
 

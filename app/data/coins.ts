@@ -1,7 +1,7 @@
 export const predefinedCoins = [
     {
         symbol: "SUI",
-        typeName: "0xc59cd205c63b55b5f70669f0a25945870d88b3da69d2e3252e7d3473841f6da3::mock_sui::MOCK_SUI",
+        typeName: "0x5b3134d2cb7bab90f09c84881f40d7e8d23df7b762c5a32694ca45aad2bcff36::mock_sui::MOCK_SUI",
         decimals: 9,
         logo: "https://strapi-dev.scand.app/uploads/sui_c07df05f00.png",
     },

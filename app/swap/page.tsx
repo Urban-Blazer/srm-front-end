@@ -623,9 +623,8 @@ export default function Swap() {
                 return;
             }
 
-            addLog("✅ Transaction Successfully Confirmed");
-            console.log("✅ Transaction Successfully Confirmed:", txnDetails);
-            alert(`✅ Swap Successful! Transaction Digest: ${txnDigest}`);
+            // ✅ Update isActive in DynamoDB **AFTER SUCCESSFUL SWAP** with RETRIES
+            await updateIsActiveWithRetry(poolId, 3); // Retry up to 3 times
 
             // 🔄 Refresh balances after the swap
             await fetchBalance(sellToken, setSellBalance);
@@ -643,7 +642,46 @@ export default function Swap() {
             }
         }
     };
-    
+
+    const updateIsActiveWithRetry = async (poolId: string, maxRetries = 3) => {
+        let attempt = 0;
+        while (attempt < maxRetries) {
+            try {
+                console.log("🔍 Sending `poolId`:", poolId, "Type:", typeof poolId);
+
+                const response = await fetch("/api/update-pool-activity", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ poolId: String(poolId) }) // ✅ Ensure `poolId` is always a string
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${result.error || "Unknown error"}`);
+                }
+
+                console.log(`✅ isActive API Response (Attempt ${attempt + 1}):`, result);
+                addLog(result.message);
+                return; // ✅ Exit on success
+
+            } catch (error) {
+                console.error(`❌ Failed to update isActive (Attempt ${attempt + 1}):`, error);
+                addLog(`⚠️ Failed to update isActive (Attempt ${attempt + 1}) - ${error.message}`);
+                attempt++;
+
+                if (attempt < maxRetries) {
+                    const delay = Math.pow(2, attempt) * 1000; // Exponential backoff (2s, 4s, 8s)
+                    console.log(`⏳ Retrying isActive update in ${delay / 1000} seconds...`);
+                    await new Promise(res => setTimeout(res, delay));
+                }
+            }
+        }
+
+        console.error("❌ Max retries reached: isActive update failed.");
+        addLog("❌ Max retries reached: isActive update failed.");
+    };
+
     const fetchTransactionWithRetry = async (txnDigest, retries = 10, delay = 5000) => {
         await new Promise((res) => setTimeout(res, 3000)); // ⏳ Delay before first check
 

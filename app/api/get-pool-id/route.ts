@@ -13,7 +13,7 @@ const dynamoDB = new DynamoDBClient({
     },
 });
 
-const TABLE_NAME = process.env.DYNAMODB_TABLE || "PoolLookup";
+const TABLE_NAME = process.env.DYNAMODB_TABLE_POOLID || "PoolLookup";
 
 // ✅ Define GET handler (Edge API Route Format)
 export async function GET(req: NextRequest) {

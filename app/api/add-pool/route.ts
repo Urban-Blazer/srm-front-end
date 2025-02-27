@@ -11,7 +11,7 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const TABLE_NAME = process.env.DYNAMODB_TABLE || "PoolLookup";
+const TABLE_NAME = process.env.DYNAMODB_TABLE_POOLID || "PoolLookup";
 
 export async function POST(req: Request) {
     try {

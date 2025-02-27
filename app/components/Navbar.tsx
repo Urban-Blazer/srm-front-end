@@ -19,7 +19,7 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="bg-gray-900 text-white p-4 flex justify-between relative">
+    <nav className="bg-gray-900 text-white p-4 flex justify-between relative z-50">
       <Link href="/" className="text-lg font-bold">Sui Rewards Me App</Link>
 
       {/* Dashboard Menu */}
@@ -27,9 +27,11 @@ export default function NavBar() {
         onMouseEnter={() => handleMouseEnter("dashboard")}
         onMouseLeave={handleMouseLeave}
       >
+        <Link href="/dashboard">
         <button className="px-4 py-2">Dashboard</button>
+        </Link>
         {dropdown === "dashboard" && (
-          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40">
+          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
             <Link href="/dashboard" className="block px-4 py-2 hover:bg-gray-700">Overview</Link>
             <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-gray-700">Rewards</Link>
           </div>
@@ -41,9 +43,11 @@ export default function NavBar() {
         onMouseEnter={() => handleMouseEnter("swap")}
         onMouseLeave={handleMouseLeave}
       >
+        <Link href="/swap">
         <button className="px-4 py-2">Swap</button>
+        </Link>
         {dropdown === "swap" && (
-          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40">
+          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
             <Link href="/swap" className="block px-4 py-2 hover:bg-gray-700">Swap</Link>
           </div>
         )}
@@ -54,9 +58,11 @@ export default function NavBar() {
         onMouseEnter={() => handleMouseEnter("pools")}
         onMouseLeave={handleMouseLeave}
       >
+        <Link href="/pools">
         <button className="px-4 py-2">Pools</button>
+        </Link>
         {dropdown === "pools" && (
-          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40">
+          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
             <Link href="/pools" className="block px-4 py-2 hover:bg-gray-700">Overview</Link>
             <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-gray-700">Create Pool</Link>
             <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-gray-700">Add Liquidity</Link>
@@ -69,9 +75,11 @@ export default function NavBar() {
         onMouseEnter={() => handleMouseEnter("launchpad")}
         onMouseLeave={handleMouseLeave}
       >
+        <Link href="/launchpad">
         <button className="px-4 py-2">Launchpad</button>
+        </Link>
         {dropdown === "launchpad" && (
-          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40">
+          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
             <Link href="/launchpad" className="block px-4 py-2 hover:bg-gray-700">Overview</Link>
             <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-gray-700">Create Coin</Link>
             <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-gray-700">Coming Soon</Link>

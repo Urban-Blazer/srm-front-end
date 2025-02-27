@@ -26,6 +26,7 @@ const initialState = {
     dropdownOpen: false, // ✅ Track dropdown state
     poolStats: null,
     liquidityData: null,
+    slippageTolerance: 0.5,
 };
 
 function reducer(state: any, action: any) {
@@ -56,6 +57,8 @@ function reducer(state: any, action: any) {
             return { ...state, poolStats: action.payload };
         case "SET_LIQUIDITY_DATA":
             return { ...state, liquidityData: action.payload };
+        case "SET_SLIPPAGE":
+            return { ...state, slippageTolerance: action.payload };
         default:
             return state;
     }
@@ -205,6 +208,7 @@ export default function AddLiquidity() {
                     payload: {
                         balance_a: fields.balance_a || 0,
                         balance_b: fields.balance_b || 0,
+                        lp_supply: fields.lp_supply?.fields?.value || 0,
                         burn_balance_b: fields.burn_balance_b || 0,
                         burn_fee: fields.burn_fee || 0,
                         dev_royalty_fee: fields.dev_royalty_fee || 0,
@@ -240,6 +244,40 @@ export default function AddLiquidity() {
         }
     };
 
+    const calculateMinLP = (depositA_MIST, depositB_MIST, poolStats, slippageTolerance) => {
+        if (!poolStats || poolStats.lp_supply === 0) {
+            return BigInt(0); // If LP supply is 0, it's the first liquidity provider.
+        }
+
+        // ✅ Convert pool balances and LP supply to BigInt (since they are stored as numbers)
+        const lpSupply = BigInt(poolStats.lp_supply);
+        const poolA = BigInt(poolStats.balance_a);
+        const poolB = BigInt(poolStats.balance_b);
+
+        if (poolA === BigInt(0) || poolB === BigInt(0)) {
+            return BigInt(0); // Prevent division by zero if pool is empty.
+        }
+
+        // ✅ Ensure deposit amounts are also BigInt
+        const depositA = BigInt(depositA_MIST);
+        const depositB = BigInt(depositB_MIST);
+
+        // ✅ Calculate expected LP tokens for both coins
+        const expectedLP_A = (lpSupply * depositA) / poolA;
+        const expectedLP_B = (lpSupply * depositB) / poolB;
+
+        // ✅ Find the smaller value (to match the smallest contribution)
+        const minExpectedLP = BigInt(Math.min(Number(expectedLP_A), Number(expectedLP_B)));
+
+        // ✅ Convert slippageTolerance into a `BigInt`-compatible scaling factor
+        const slippageFactor = BigInt(Math.floor((1 - slippageTolerance / 100) * 1_000_000));
+
+        // ✅ Apply slippage tolerance correctly using only BigInt values
+        const minLP = (minExpectedLP * slippageFactor) / BigInt(1_000_000);
+
+        return minLP;
+    };
+
     // ✅ Handle CoinA Deposit Input
     const handleCoinAChange = (value: string) => {
         if (!state.poolStats) return;
@@ -268,7 +306,6 @@ export default function AddLiquidity() {
         dispatch({ type: "SET_DEPOSIT_DROPDOWN", payload: amountA.toFixed(4) });
     };
 
-    // ✅ Function to Handle Add Liquidity Transaction
     // ✅ Function to Handle Add Liquidity Transaction
     const handleAddLiquidity = async () => {
         setIsModalOpen(true);
@@ -355,6 +392,14 @@ export default function AddLiquidity() {
 
             addLog("✅ Balance Check Passed!");
 
+            // ✅ Get user-selected slippage
+            const userSlippageTolerance = state.slippageTolerance || 0.5;
+
+            // ✅ Calculate minimum LP tokens expected
+            const minLpOut = calculateMinLP(depositA_MIST, depositB_MIST, state.poolStats, userSlippageTolerance);
+            addLog("✅ Calculated min_lp_out:");
+            console.log("✅ Calculated min_lp_out:", minLpOut.toString());
+
             // ✅ Build Transaction Block
             const txb = new TransactionBlock();
             txb.setGasBudget(1_000_000_000);
@@ -365,8 +410,10 @@ export default function AddLiquidity() {
                 arguments: [
                     txb.object(state.poolData.poolId), // Pool ID
                     txb.object(coinA.objectId), // Coin A Object
+                    txb.pure.u64(depositA_MIST),
                     txb.object(coinB.objectId), // Coin B Object
-                    txb.pure.u64(0), // Minimum LP Tokens (0 for now)
+                    txb.pure.u64(depositB_MIST),
+                    txb.pure.u64(minLpOut), // Minimum LP Tokens (0 for now)
                 ],
             });
 
@@ -665,6 +712,29 @@ export default function AddLiquidity() {
                             </p>
                             <p className="text-sm text-gray-700">
                                 Creator Fee: {(state.poolStats.dev_royalty_fee / 100).toFixed(2)}%
+                            </p>
+                        </div>
+
+                        {/* Slippage Tolerance Input */}
+                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-black">Slippage Tolerance</h3>
+                            <div className="flex items-center space-x-2 mt-2">
+                                <input
+                                    type="number"
+                                    className="bg-white text-black text-2xl font-semibold p-2 rounded-lg w-20 border outline-none"
+                                    placeholder="0.5"
+                                    value={state.slippageTolerance}
+                                    onChange={(e) => {
+                                        let newSlippage = parseFloat(e.target.value);
+                                        if (isNaN(newSlippage) || newSlippage < 0) newSlippage = 0;
+                                        if (newSlippage > 5) newSlippage = 5; // Limit slippage between 0% and 5%
+                                        dispatch({ type: "SET_SLIPPAGE", payload: newSlippage });
+                                    }}
+                                />
+                                <span className="text-black text-lg font-medium">%</span>
+                            </div>
+                            <p className="text-gray-600 text-sm mt-1">
+                                Set the maximum slippage tolerance. Lower values reduce risk but increase failure rate.
                             </p>
                         </div>
 

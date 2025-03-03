@@ -36,7 +36,7 @@ export async function POST(req: Request) {
             TableName: TABLE_NAME,
             Key: { "poolId": poolId },
             UpdateExpression: "SET isActive = :trueVal",
-            ConditionExpression: "attribute_not_exists(poolId) OR isActive = :falseVal",
+            ConditionExpression: "attribute_exists(poolId) AND isActive = :falseVal",
             ExpressionAttributeValues: {
                 ":trueVal": 1,
                 ":falseVal": 0
@@ -56,13 +56,14 @@ export async function POST(req: Request) {
         } catch (error: any) {
             // ❌ If the update fails due to `poolId` not existing, we catch the error and create a new record
             if (error.code === "ConditionalCheckFailedException") {
-                console.log("🚀 `poolId` does not exist. Creating new entry...");
+                console.log("🚀 `poolId` does not exist OR is already active. Creating new entry...");
 
                 const putParams = {
                     TableName: TABLE_NAME,
                     Item: {
                         "poolId": poolId,
-                        "isActive": 1  // ✅ Normal attribute
+                        "isActive": 1,
+                        "isProcessing": 0
                     }
                 };
 

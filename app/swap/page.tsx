@@ -226,7 +226,7 @@ export default function Swap() {
                     burn_balance_b: fields.burn_balance_b || 0,
                     burn_fee: fields.burn_fee || 0,
                     dev_royalty_fee: fields.dev_royalty_fee || 0,
-                    dev_wallet: fields.dev_wallet || "",
+                    creator_royalty_wallet: fields.creator_royalty_wallet || "",
                     locked_lp_balance: fields.locked_lp_balance || 0,
                     lp_builder_fee: fields.lp_builder_fee || 0,
                     reward_balance_a: fields.reward_balance_a || 0,
@@ -236,7 +236,7 @@ export default function Swap() {
                 console.warn("Missing pool fields:", poolObject);
                 setPoolStats({
                     balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                    dev_royalty_fee: 0, dev_wallet: "", locked_lp_balance: 0,
+                    dev_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
                     lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
                 });
             }
@@ -244,7 +244,7 @@ export default function Swap() {
             console.error("Error fetching pool stats:", error);
             setPoolStats({
                 balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                dev_royalty_fee: 0, dev_wallet: "", locked_lp_balance: 0,
+                dev_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
                 lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
             });
         }
@@ -992,10 +992,10 @@ export default function Swap() {
                                     {/* ✅ Dev Wallet with Copy Button */}
                                     <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg overflow-x-auto">
                                         <p className="text-black truncate">
-                                            <strong>Deployer Royalty Wallet:</strong> {poolStats?.dev_wallet || ""}
+                                            <strong>Deployer Royalty Wallet:</strong> {poolStats?.creator_royalty_wallet || ""}
                                         </p>
                                         <button
-                                            onClick={() => navigator.clipboard.writeText(poolStats?.dev_wallet || "")}
+                                            onClick={() => navigator.clipboard.writeText(poolStats?.creator_royalty_wallet || "")}
                                             className="p-2 rounded-lg hover:bg-gray-200 transition"
                                         >
                                             <CopyIcon className="w-5 h-5" />

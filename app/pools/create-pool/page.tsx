@@ -430,7 +430,7 @@ export default function Pools() {
                 burnFee: parseFloat(poolDataFromEvent.burn_fee),
                 devRoyaltyFee: parseFloat(poolDataFromEvent.dev_royalty_fee),
                 rewardsFee: parseFloat(poolDataFromEvent.rewards_fee),
-                devWallet: poolDataFromEvent.dev_wallet,
+                devWallet: poolDataFromEvent.creator_royalty_wallet,
 
                 // ✅ Add Coin A Metadata
                 coinA_name: state.dropdownCoinMetadata.name || "Unknown",

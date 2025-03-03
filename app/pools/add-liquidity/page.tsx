@@ -212,7 +212,7 @@ export default function AddLiquidity() {
                         burn_balance_b: fields.burn_balance_b || 0,
                         burn_fee: fields.burn_fee || 0,
                         dev_royalty_fee: fields.dev_royalty_fee || 0,
-                        dev_wallet: fields.dev_wallet || "",
+                        creator_royalty_wallet: fields.creator_royalty_wallet || "",
                         locked_lp_balance: fields.locked_lp_balance || 0,
                         lp_builder_fee: fields.lp_builder_fee || 0,
                         reward_balance_a: fields.reward_balance_a || 0,
@@ -225,7 +225,7 @@ export default function AddLiquidity() {
                     type: "SET_POOL_STATS",
                     payload: {
                         balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                        dev_royalty_fee: 0, dev_wallet: "", locked_lp_balance: 0,
+                        dev_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
                         lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
                     },
                 });
@@ -237,7 +237,7 @@ export default function AddLiquidity() {
                 type: "SET_POOL_STATS",
                 payload: {
                     balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                    dev_royalty_fee: 0, dev_wallet: "", locked_lp_balance: 0,
+                    dev_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
                     lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
                 },
             });

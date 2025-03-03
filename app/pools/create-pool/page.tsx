@@ -428,7 +428,7 @@ export default function Pools() {
                 lockedLpBalance: parseFloat(poolDataFromEvent.locked_lp_balance),
                 lpBuilderFee: parseFloat(poolDataFromEvent.lp_builder_fee),
                 burnFee: parseFloat(poolDataFromEvent.burn_fee),
-                devRoyaltyFee: parseFloat(poolDataFromEvent.dev_royalty_fee),
+                devRoyaltyFee: parseFloat(poolDataFromEvent.creator_royalty_fee),
                 rewardsFee: parseFloat(poolDataFromEvent.rewards_fee),
                 devWallet: poolDataFromEvent.creator_royalty_wallet,
 

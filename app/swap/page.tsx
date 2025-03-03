@@ -225,7 +225,7 @@ export default function Swap() {
                     balance_b: fields.balance_b || 0,
                     burn_balance_b: fields.burn_balance_b || 0,
                     burn_fee: fields.burn_fee || 0,
-                    dev_royalty_fee: fields.dev_royalty_fee || 0,
+                    creator_royalty_fee: fields.creator_royalty_fee || 0,
                     creator_royalty_wallet: fields.creator_royalty_wallet || "",
                     locked_lp_balance: fields.locked_lp_balance || 0,
                     lp_builder_fee: fields.lp_builder_fee || 0,
@@ -236,7 +236,7 @@ export default function Swap() {
                 console.warn("Missing pool fields:", poolObject);
                 setPoolStats({
                     balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                    dev_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
+                    creator_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
                     lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
                 });
             }
@@ -244,7 +244,7 @@ export default function Swap() {
             console.error("Error fetching pool stats:", error);
             setPoolStats({
                 balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                dev_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
+                creator_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
                 lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
             });
         }
@@ -423,7 +423,7 @@ export default function Swap() {
                 swapFee: poolStats.swap_fee?.toString() || "0",
                 lpBuilderFee: poolStats.lp_builder_fee?.toString() || "0",
                 burnFee: poolStats.burn_fee?.toString() || "0",
-                devRoyaltyFee: poolStats.dev_royalty_fee?.toString() || "0",
+                devRoyaltyFee: poolStats.creator_royalty_fee?.toString() || "0",
                 rewardsFee: poolStats.rewards_fee?.toString() || "0",
             });
 
@@ -987,7 +987,7 @@ export default function Swap() {
                                     <p><strong>LP Builder Fee:</strong> {((poolStats?.lp_builder_fee || 0) / 100).toFixed(2)}%</p>
                                     <p><strong>Reward Fee:</strong> {((poolStats?.rewards_fee || 0) / 100).toFixed(2)}%</p>
                                     <p><strong>Burn Fee:</strong> {((poolStats?.burn_fee || 0) / 100).toFixed(2)}%</p>
-                                    <p><strong>Deployer Royalty Fee:</strong> {((poolStats?.dev_royalty_fee || 0) / 100).toFixed(2)}%</p>
+                                    <p><strong>Deployer Royalty Fee:</strong> {((poolStats?.creator_royalty_fee || 0) / 100).toFixed(2)}%</p>
                                     
                                     {/* ✅ Dev Wallet with Copy Button */}
                                     <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg overflow-x-auto">

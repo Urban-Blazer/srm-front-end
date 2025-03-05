@@ -428,9 +428,9 @@ export default function Pools() {
                 lockedLpBalance: parseFloat(poolDataFromEvent.locked_lp_balance),
                 lpBuilderFee: parseFloat(poolDataFromEvent.lp_builder_fee),
                 burnFee: parseFloat(poolDataFromEvent.burn_fee),
-                devRoyaltyFee: parseFloat(poolDataFromEvent.creator_royalty_fee),
+                creatorRoyaltyFee: parseFloat(poolDataFromEvent.creator_royalty_fee),
                 rewardsFee: parseFloat(poolDataFromEvent.rewards_fee),
-                devWallet: poolDataFromEvent.creator_royalty_wallet,
+                creatorWallet: poolDataFromEvent.creator_royalty_wallet,
 
                 // ✅ Add Coin A Metadata
                 coinA_name: state.dropdownCoinMetadata.name || "Unknown",
@@ -929,11 +929,11 @@ export default function Pools() {
                                     <ul className="ml-4">
                                         <li>LP Builder Fee: {state.poolData.lpBuilderFee}%</li>
                                         <li>Burn Fee: {state.poolData.burnFee}%</li>
-                                        <li>Developer Royalty Fee: {state.poolData.devRoyaltyFee}%</li>
+                                        <li>Creator Royalty Fee: {state.poolData.creatorRoyaltyFee}%</li>
                                         <li>Rewards Fee: {state.poolData.rewardsFee}%</li>
                                     </ul>
 
-                                    <li><strong>Developer Wallet:</strong> {state.poolData.devWallet}</li>
+                                    <li><strong>Creator Wallet:</strong> {state.poolData.creatorWallet}</li>
                                 </ul>
                             </div>
                         ) : (

@@ -423,7 +423,7 @@ export default function Swap() {
                 swapFee: poolStats.swap_fee?.toString() || "0",
                 lpBuilderFee: poolStats.lp_builder_fee?.toString() || "0",
                 burnFee: poolStats.burn_fee?.toString() || "0",
-                devRoyaltyFee: poolStats.creator_royalty_fee?.toString() || "0",
+                creatorRoyaltyFee: poolStats.creator_royalty_fee?.toString() || "0",
                 rewardsFee: poolStats.rewards_fee?.toString() || "0",
             });
 

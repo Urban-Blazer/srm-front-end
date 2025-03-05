@@ -40,7 +40,7 @@ export async function GET(req: Request) {
         const balanceB = searchParams.get("balanceB");
         const lpBuilderFee = searchParams.get("lpBuilderFee");
         const burnFee = searchParams.get("burnFee");
-        const devRoyaltyFee = searchParams.get("devRoyaltyFee");
+        const creatorRoyaltyFee = searchParams.get("creatorRoyaltyFee");
         const rewardsFee = searchParams.get("rewardsFee");
 
         if (!poolId || !amount || !balanceA || !balanceB) {
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
         const swapFeeValue = txb.pure.u64(SWAP_FEE_BPS);
         const lpBuilderFeeValue = txb.pure.u64(Number(lpBuilderFee) || 0);
         const burnFeeValue = txb.pure.u64(Number(burnFee) || 0);
-        const devRoyaltyFeeValue = txb.pure.u64(Number(devRoyaltyFee) || 0);
+        const creatorRoyaltyFeeValue = txb.pure.u64(Number(creatorRoyaltyFee) || 0);
         const rewardsFeeValue = txb.pure.u64(Number(rewardsFee) || 0);
 
         console.log("🔥 Swap Debug:");
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
         console.log("- Swap Fee:", swapFeeValue);
         console.log("- LP Fee:", lpBuilderFeeValue);
         console.log("- Burn Fee:", burnFeeValue);
-        console.log("- Dev Fee:", devRoyaltyFeeValue);
+        console.log("- Dev Fee:", creatorRoyaltyFeeValue);
         console.log("- Rewards Fee:", rewardsFeeValue);
 
         console.log("🚀 Checking API inputs before Move call:", {
@@ -84,7 +84,7 @@ export async function GET(req: Request) {
             swapFeeValue,
             lpBuilderFeeValue,
             burnFeeValue,
-            devRoyaltyFeeValue,
+            creatorRoyaltyFeeValue,
             rewardsFeeValue
         });
 
@@ -97,7 +97,7 @@ export async function GET(req: Request) {
             swapFeeValue,
             lpBuilderFeeValue,
             burnFeeValue,
-            devRoyaltyFeeValue,
+            creatorRoyaltyFeeValue,
             rewardsFeeValue
         ];
 

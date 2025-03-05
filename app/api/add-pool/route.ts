@@ -44,9 +44,9 @@ export async function POST(req: Request) {
                 lockedLpBalance: body.lockedLpBalance || 0,
                 lpBuilderFee: body.lpBuilderFee || 0,
                 burnFee: body.burnFee || 0,
-                devRoyaltyFee: body.devRoyaltyFee || 0,
+                creatorRoyaltyFee: body.creatorRoyaltyFee || 0,
                 rewardsFee: body.rewardsFee || 0,
-                devWallet: body.devWallet || "",
+                creatorWallet: body.creatorWallet || "",
 
                 // ✅ Store Coin A Metadata
                 coinA_name: body.coinA_name || "Unknown",

@@ -428,10 +428,10 @@ export default function MyPositions() {
                                     >
                                         {/* Coin Images & Symbols */}
                                         <div className="flex items-center space-x-2">
-                                            <Image src={lp.poolData?.coinA_metadata?.image || "https://via.placeholder.com/40"} alt={lp.poolData?.coinA_metadata?.symbol || "Coin A"} className="w-10 h-10 rounded-full" />
+                                            <Image src={lp.poolData?.coinA_metadata?.image || "https://via.placeholder.com/40"} alt={lp.poolData?.coinA_metadata?.symbol || "Coin A"} width={20} height={20} className="w-10 h-10 rounded-full" />
                                             <span className="text-xl font-semibold text-black">{lp.poolData?.coinA_metadata?.symbol || "Unknown"}</span>
                                             <span className="text-gray-500 text-lg">/</span>
-                                            <Image src={lp.poolData?.coinB_metadata?.image || "https://via.placeholder.com/40"} alt={lp.poolData?.coinB_metadata?.symbol || "Coin B"} className="w-10 h-10 rounded-full" />
+                                            <Image src={lp.poolData?.coinB_metadata?.image || "https://via.placeholder.com/40"} alt={lp.poolData?.coinB_metadata?.symbol || "Coin B"} width={20} height={20} className="w-10 h-10 rounded-full" />
                                             <span className="text-xl font-semibold text-black">{lp.poolData?.coinB_metadata?.symbol || "Unknown"}</span>
                                         </div>
 

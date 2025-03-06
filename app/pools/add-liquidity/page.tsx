@@ -598,7 +598,7 @@ export default function AddLiquidity() {
                                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
                             >
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} className="w-6 h-6 rounded-full" />
+                                    <Image src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                     <span>{state.selectedCoin.symbol}</span>
                                 </div>
                                 <span className="text-gray-600">▼</span>
@@ -610,7 +610,7 @@ export default function AddLiquidity() {
                                         <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer text-black"
                                             onClick={() => dispatch({ type: "SET_COIN", payload: coin })}
                                         >
-                                            <Image src={coin.logo} alt={coin.symbol} className="w-6 h-6 rounded-full" />
+                                            <Image src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                             <span className="ml-2">{coin.symbol}</span>
                                         </div>
                                     ))}
@@ -645,6 +645,7 @@ export default function AddLiquidity() {
                                                 <Image
                                                 src={state.selectedCoin.logo}
                                                 alt={state.selectedCoin.symbol}
+                                                    width={20} height={20}
                                                 className="w-6 h-6 rounded-full"
                                             />
                                             <span className="text-black text-sm font-medium">{state.selectedCoin.symbol}</span>
@@ -655,6 +656,7 @@ export default function AddLiquidity() {
                                                 <Image
                                                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                                                     alt={state.customCoinMetadata?.symbol || "Token"}
+                                                    width={20} height={20}
                                                     className="w-6 h-6 rounded-full"
                                                 />
                                                 <span className="text-black text-sm font-medium">
@@ -777,6 +779,7 @@ export default function AddLiquidity() {
                                 <Image
                                     src={state.dropdownCoinMetadata?.image || "/default-coin.png"}
                                     alt={state.dropdownCoinMetadata?.symbol || "Coin A"}
+                                    width={20} height={20}
                                     className="w-8 h-8 rounded-full mr-2"
                                 />
                                 <span className="text-black font-medium mr-2">
@@ -795,6 +798,7 @@ export default function AddLiquidity() {
                                 <Image
                                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                                     alt={state.customCoinMetadata?.symbol || "Coin B"}
+                                    width={20} height={20}
                                     className="w-8 h-8 rounded-full mr-2"
                                 />
                                 <span className="text-black font-medium mr-2">

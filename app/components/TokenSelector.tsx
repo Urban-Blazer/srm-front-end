@@ -191,7 +191,7 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                                     onClick={() => handleSelectToken(token)}
                                 >
                                     <div className="flex items-center">
-                                        <Image src={token.logo} alt={token.symbol} className="w-6 h-6 mr-2" />
+                                        <Image src={token.logo} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2" />
                                         <span className="text-gray-800">{token.symbol}</span>
                                     </div>
                                     {/* 🚀 Remove Token Button */}
@@ -221,7 +221,7 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                                 onClick={() => handleSelectToken(token)} // ✅ Allow selection directly
                             >
                                 <div className="flex items-center">
-                                    <Image src={token.logo} alt={token.symbol} className="w-6 h-6 mr-2" />
+                                    <Image src={token.logo} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2" />
                                     <span className="text-gray-800">{token.symbol}</span>
                                 </div>
                                 <button
@@ -265,7 +265,7 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
 
                         {customToken && (
                             <div className="flex items-center mt-3 text-black">
-                                <Image src={customToken.logo} alt={customToken.symbol} className="w-6 h-6 mr-2" />
+                                <Image src={customToken.logo} alt={customToken.symbol} width={20} height={20} className="w-6 h-6 mr-2" />
                                 <span>{customToken.symbol}</span>
                             </div>
                         )}

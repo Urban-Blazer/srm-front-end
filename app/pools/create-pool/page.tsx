@@ -571,7 +571,7 @@ export default function Pools() {
                                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
                             >
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} className="w-6 h-6 rounded-full" />
+                                    <Image src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                     <span>{state.selectedCoin.symbol}</span>
                                 </div>
                                 <span className="text-gray-600">▼</span>
@@ -583,7 +583,7 @@ export default function Pools() {
                                         <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer text-black"
                                             onClick={() => dispatch({ type: "SET_COIN", payload: coin })}
                                         >
-                                            <Image src={coin.logo} alt={coin.symbol} className="w-6 h-6 rounded-full" />
+                                            <Image src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                             <span className="ml-2">{coin.symbol}</span>
                                         </div>
                                     ))}
@@ -618,14 +618,14 @@ export default function Pools() {
                         {/* Selected Coins Display */}
                         <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
                             <div className="flex items-center space-x-2">
-                                <Image src={state.dropdownCoinMetadata.iconUrl || ""} alt={state.dropdownCoinMetadata.symbol} className="w-10 h-10 rounded-full" />
+                                <Image src={state.dropdownCoinMetadata.iconUrl || ""} alt={state.dropdownCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata.symbol}</span>
                             </div>
 
                             <span className="text-2xl font-bold text-black">/</span>
 
                             <div className="flex items-center space-x-2">
-                                <Image src={state.customCoinMetadata.iconUrl || ""} alt={state.customCoinMetadata.symbol} className="w-10 h-10 rounded-full" />
+                                <Image src={state.customCoinMetadata.iconUrl || ""} alt={state.customCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-black">{state.customCoinMetadata.symbol}</span>
                             </div>
                         </div>
@@ -713,14 +713,14 @@ export default function Pools() {
                         {/* Selected Coins */}
                         <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
                             <div className="flex items-center space-x-2">
-                                <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
+                                <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata?.symbol}</span>
                             </div>
 
                             <span className="text-2xl font-bold text-black">/</span>
 
                             <div className="flex items-center space-x-2">
-                                <Image src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
+                                <Image src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-black">{state.customCoinMetadata?.symbol}</span>
                             </div>
                         </div>
@@ -842,12 +842,12 @@ export default function Pools() {
                             <h3 className="text-lg font-semibold text-black">Selected Coins</h3>
                             <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg">
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
+                                    <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                     <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata?.symbol}</span>
                                 </div>
                                 <span className="text-2xl font-bold text-black">/</span>
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} className="w-10 h-10 rounded-full" />
+                                    <Image src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                     <span className="text-lg font-semibold text-black">{state.customCoinMetadata?.symbol}</span>
                                 </div>
                             </div>

@@ -815,7 +815,7 @@ export default function Swap() {
                             >
                                 {sellToken ? (
                                     <div className="flex items-center">
-                                        <Image src={sellToken.logo} alt={sellToken.symbol} className="w-5 h-5 mr-2" />
+                                        <Image src={sellToken.logo} alt={sellToken.symbol} width={20} height={20} className="w-5 h-5 mr-2" />
                                         <span className="text-black font-medium">{sellToken.symbol}</span>
                                     </div>
                                 ) : (
@@ -868,7 +868,7 @@ export default function Swap() {
                             >
                                 {buyToken ? (
                                     <div className="flex items-center">
-                                        <Image src={buyToken.logo} alt={buyToken.symbol} className="w-5 h-5 mr-2" />
+                                        <Image src={buyToken.logo} alt={buyToken.symbol} width={20} height={20} className="w-5 h-5 mr-2" />
                                         <span className="text-black font-medium">{buyToken.symbol}</span>
                                     </div>
                                 ) : (
@@ -927,7 +927,7 @@ export default function Swap() {
                                 <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-black">
                                     <div className="flex items-center space-x-3">
                                         {poolMetadata?.coinA?.image && (
-                                                <Image src={poolMetadata?.coinA?.image} alt={poolMetadata?.coinA?.symbol} className="w-8 h-8 rounded-full" />
+                                                <Image src={poolMetadata?.coinA?.image} alt={poolMetadata?.coinA?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
                                         )}
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinA?.symbol} ({poolMetadata?.coinA?.name})
@@ -948,7 +948,7 @@ export default function Swap() {
                                 <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-black">
                                     <div className="flex items-center space-x-3">
                                         {poolMetadata?.coinB?.image && (
-                                                <Image src={poolMetadata?.coinB?.image} alt={poolMetadata?.coinB?.symbol} className="w-8 h-8 rounded-full" />
+                                                <Image src={poolMetadata?.coinB?.image} alt={poolMetadata?.coinB?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
                                         )}
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinB?.symbol} ({poolMetadata?.coinB?.name})

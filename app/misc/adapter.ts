@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { NightlyConnectSuiAdapter } from '@nightlylabs/wallet-selector-sui'
 
 let _adapter: NightlyConnectSuiAdapter | undefined

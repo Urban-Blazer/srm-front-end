@@ -343,9 +343,17 @@ export default function Pools() {
                 ],
             });
 
-            // ✅ Estimate gas AFTER building the transaction
-            const gasBudget = await provider.getGasCostEstimation({ transactionBlock: txb });
-            txb.setGasBudget(gasBudget);
+            // ✅ Simulate the transaction to estimate gas
+            const dryRunResult = await provider.dryRunTransactionBlock({
+                transactionBlock: await txb.build({ provider }),
+            });
+
+            // ✅ Extract the estimated gas cost
+            const estimatedGas = dryRunResult.effects.gasUsed.totalGasUsed;
+            console.log("🔍 Estimated Gas:", estimatedGas);
+
+            // ✅ Set the estimated gas budget
+            txb.setGasBudget(estimatedGas);
 
             // ✅ Sign Transaction
             addLog("✍️ Signing transaction...");

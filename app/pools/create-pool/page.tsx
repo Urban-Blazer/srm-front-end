@@ -129,30 +129,25 @@ export default function Pools() {
                 });
 
                 setWalletAdapter(adapter);
+                await adapter.connect();
 
-                // ✅ Manually request connection before fetching accounts
-                await adapter.connect(); // 🔥 Ensure wallet is connected
-
-                // ✅ Fetch accounts after ensuring connection
                 const accounts = await adapter.getAccounts();
                 console.log("Nightly Connect Accounts:", accounts);
 
                 if (accounts.length > 0) {
-                    console.log("Wallet detected:", accounts[0]);
+                    console.log("Wallet detected:", accounts[0].address); // ✅ Use `.address`
                     setWalletConnected(true);
-                    setWalletAddress(accounts[0]); // Set wallet address properly
+                    setWalletAddress(accounts[0].address); // ✅ Store only the string address
                 } else {
                     console.warn("No accounts found from Nightly Connect.");
                 }
 
-                // ✅ Handle wallet connection events
                 adapter.on("connect", async (account) => {
-                    console.log("Wallet connected:", account);
+                    console.log("Wallet connected:", account.address);
                     setWalletConnected(true);
-                    setWalletAddress(account);
+                    setWalletAddress(account.address); // ✅ Store only the string address
                 });
 
-                // ✅ Handle wallet disconnection
                 adapter.on("disconnect", () => {
                     console.log("Wallet disconnected");
                     setWalletConnected(false);
@@ -166,7 +161,6 @@ export default function Pools() {
 
         initWallet();
     }, []);
-
 
     // ✅ Fetch Coin Metadata
     const fetchMetadata = async () => {
@@ -323,8 +317,8 @@ export default function Pools() {
             console.log(`${state.customCoinMetadata.symbol}:`, coinB.objectId, "Balance:", coinB.balance.toString());
 
             // ✅ Build Transaction Block
-            // ✅ Build Transaction Block
             const txb = new TransactionBlock();
+            txb.setSender(userAddress); // 🔥 Set the sender explicitly
 
             txb.moveCall({
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
@@ -343,16 +337,17 @@ export default function Pools() {
                 ],
             });
 
-            // ✅ Simulate the transaction to estimate gas
+            // ✅ Set the sender before estimating gas
+            txb.setSender(userAddress);
+
+            // ✅ Estimate Gas with Dry Run
             const dryRunResult = await provider.dryRunTransactionBlock({
                 transactionBlock: await txb.build({ provider }),
             });
 
-            // ✅ Extract the estimated gas cost
+            // ✅ Extract gas estimate and apply it
             const estimatedGas = dryRunResult.effects.gasUsed.totalGasUsed;
             console.log("🔍 Estimated Gas:", estimatedGas);
-
-            // ✅ Set the estimated gas budget
             txb.setGasBudget(estimatedGas);
 
             // ✅ Sign Transaction

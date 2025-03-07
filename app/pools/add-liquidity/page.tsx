@@ -2,7 +2,7 @@
 "use client";
 import { useReducer, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import StepIndicator from "@components/AddLiquidityStepIndicator"; // ✅ Step Indicator
+import StepIndicator from "@components/AddLiquidityStepIndicator";
 import { predefinedCoins } from "@data/coins";
 import { SuiClient } from "@mysten/sui.js/client";
 import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
@@ -453,7 +453,7 @@ export default function AddLiquidity() {
             const signedTx = await walletAdapter.signTransactionBlock({
                 transactionBlock: txb,
                 account: userAddress,
-                chain: "sui:devnet",
+                chain: "sui:testnet",
             });
 
             addLog("✅ Transaction Signed!");

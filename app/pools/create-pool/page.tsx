@@ -349,7 +349,7 @@ export default function Pools() {
             const signedTx = await walletAdapter.signTransactionBlock({
                 transactionBlock: txb,
                 account: userAddress,
-                chain: "sui:devnet",
+                chain: "sui:testnet",
             });
 
             addLog("✅ Transaction Signed!");

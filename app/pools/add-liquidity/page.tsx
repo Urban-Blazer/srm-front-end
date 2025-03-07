@@ -433,7 +433,6 @@ export default function AddLiquidity() {
 
             // ✅ Build Transaction Block
             const txb = new TransactionBlock();
-            txb.setGasBudget(1_000_000_000);
 
             txb.moveCall({
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::add_liquidity_with_coins_and_transfer_to_sender`,

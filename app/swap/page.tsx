@@ -554,7 +554,6 @@ export default function Swap() {
 
             // ✅ Build Transaction Block
             const txb = new TransactionBlock();
-            txb.setGasBudget(1_000_000_000);
 
             // Convert coin object ID to transaction object
             const coinObject = txb.object(matchingCoin.objectId);

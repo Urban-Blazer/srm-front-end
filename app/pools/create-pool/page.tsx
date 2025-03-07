@@ -318,7 +318,6 @@ export default function Pools() {
 
             // ✅ Build Transaction Block
             const txb = new TransactionBlock();
-            txb.setSender(userAddress); // 🔥 Set the sender explicitly
 
             txb.moveCall({
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
@@ -336,19 +335,6 @@ export default function Pools() {
                     txb.pure.address(state.deployerRoyaltyWallet),
                 ],
             });
-
-            // ✅ Set the sender before estimating gas
-            txb.setSender(userAddress);
-
-            // ✅ Estimate Gas with Dry Run
-            const dryRunResult = await provider.dryRunTransactionBlock({
-                transactionBlock: await txb.build({ provider }),
-            });
-
-            // ✅ Extract gas estimate and apply it
-            const estimatedGas = dryRunResult.effects.gasUsed.totalGasUsed;
-            console.log("🔍 Estimated Gas:", estimatedGas);
-            txb.setGasBudget(estimatedGas);
 
             // ✅ Sign Transaction
             addLog("✍️ Signing transaction...");

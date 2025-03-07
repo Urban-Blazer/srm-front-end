@@ -323,8 +323,8 @@ export default function Pools() {
             console.log(`${state.customCoinMetadata.symbol}:`, coinB.objectId, "Balance:", coinB.balance.toString());
 
             // ✅ Build Transaction Block
+            // ✅ Build Transaction Block
             const txb = new TransactionBlock();
-            txb.setGasBudget(1_000_000_000);
 
             txb.moveCall({
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
@@ -342,6 +342,10 @@ export default function Pools() {
                     txb.pure.address(state.deployerRoyaltyWallet),
                 ],
             });
+
+            // ✅ Estimate gas AFTER building the transaction
+            const gasBudget = await provider.getGasCostEstimation({ transactionBlock: txb });
+            txb.setGasBudget(gasBudget);
 
             // ✅ Sign Transaction
             addLog("✍️ Signing transaction...");

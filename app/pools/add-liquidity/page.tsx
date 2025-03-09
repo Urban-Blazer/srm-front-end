@@ -75,7 +75,7 @@ export default function AddLiquidity() {
 
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
+    const [isProcessing, setIsProcessing] = useState(false); // Track processing state
     const searchParams = useSearchParams();
     const coinA = searchParams.get("coinA");
     const coinB = searchParams.get("coinB");
@@ -144,6 +144,12 @@ export default function AddLiquidity() {
 
         initWallet();
     }, []);
+
+    useEffect(() => {
+        if (isProcessing) {
+            setIsModalOpen(true); // ✅ Ensures modal opens when processing starts
+        }
+    }, [isProcessing]); // ✅ Reacts when `isProcessing` changes
 
     // ✅ Fetch Pool Data
     const fetchPoolData = async () => {
@@ -339,6 +345,7 @@ export default function AddLiquidity() {
 
     // ✅ Function to Handle Add Liquidity Transaction
     const handleAddLiquidity = async () => {
+        setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true);
         setTimeout(() => setLogs([]), 100); // Slight delay to ensure UI updates
 
@@ -490,7 +497,6 @@ export default function AddLiquidity() {
             addLog("✅ Transaction Confirmed!");
 
             // ✅ Extract LiquidityAdded Event
-            // ✅ Extract LiquidityAdded Event
             let liquidityEvent = txnDetails.events?.find((event) =>
                 event.type.includes("LiquidityAdded")
             );
@@ -533,6 +539,7 @@ export default function AddLiquidity() {
             });
 
             addLog("✅ Liquidity Successfully Added!");
+            setIsProcessing(false); // ✅ Ensure modal does not close early
             dispatch({ type: "SET_STEP", payload: 3 });
 
         } catch (error) {
@@ -540,6 +547,7 @@ export default function AddLiquidity() {
             alert("Transaction failed. Check the console.");
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
+            setIsProcessing(false); // ✅ Ensure modal does not close early
             setTimeout(() => setIsModalOpen(false), 5000);
         }
     };
@@ -821,7 +829,7 @@ export default function AddLiquidity() {
                         >
                             {state.loading ? "Processing..." : "Add Liquidity ✅"}
                         </button>
-                        <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} />
+                        <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
 
                     </div>
                 )}

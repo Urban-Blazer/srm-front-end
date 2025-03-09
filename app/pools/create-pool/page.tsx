@@ -101,7 +101,7 @@ export default function Pools() {
     const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
     const [walletConnected, setWalletConnected] = useState(false);
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
-
+    const [isProcessing, setIsProcessing] = useState(false); // Track processing state
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -162,6 +162,12 @@ export default function Pools() {
         initWallet();
     }, []);
 
+    useEffect(() => {
+        if (isProcessing) {
+            setIsModalOpen(true); // ✅ Ensures modal opens when processing starts
+        }
+    }, [isProcessing]); // ✅ Reacts when `isProcessing` changes
+
     // ✅ Fetch Coin Metadata
     const fetchMetadata = async () => {
         if (!state.customCoin.trim()) {
@@ -211,6 +217,7 @@ export default function Pools() {
     // ✅ Create Pool Transaction
     const handleCreatePool = async () => {
         setLogs([]); // Clear previous logs
+        setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true); // Open modal
         console.log("🔍 Checking wallet connection:", walletConnected, walletAddress);
 
@@ -460,6 +467,8 @@ export default function Pools() {
                         addLog(`✅ Pool stored successfully in database (Attempt ${attempt})`);
                         console.log(`✅ Pool stored successfully in database (Attempt ${attempt})`);
 
+                        setIsProcessing(false); // ✅ Ensure modal does not close early
+
                         // ✅ Move to Step 5 after success
                         dispatch({ type: "SET_POOL_DATA", payload: poolData });
                         dispatch({ type: "SET_STEP", payload: 5 });
@@ -506,6 +515,7 @@ export default function Pools() {
             }
             dispatch({ type: "SET_LOADING", payload: false });
         } finally {
+            setIsProcessing(false); // ✅ Ensure modal does not close early
             setTimeout(() => setIsModalOpen(false), 5000); // Close modal after 5s
         }
     };
@@ -893,7 +903,7 @@ export default function Pools() {
                             >
                                 {state.loading ? "Processing..." : "Create Pool ✅"}
                             </button>
-                            <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} />
+                            <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                         </div>
                     </div>
                 )}

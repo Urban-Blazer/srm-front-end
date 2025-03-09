@@ -23,6 +23,7 @@ export default function MyPositions() {
 
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false); // Track processing state
 
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
@@ -73,6 +74,12 @@ export default function MyPositions() {
 
         initWallet();
     }, []);
+
+    useEffect(() => {
+        if (isProcessing) {
+            setIsModalOpen(true); // ✅ Ensures modal opens when processing starts
+        }
+    }, [isProcessing]); // ✅ Reacts when `isProcessing` changes
 
     // ✅ Toggle Remove Liquidity UI for a specific LP
     const handleRemoveLiquidity = (lp: any) => {
@@ -239,6 +246,7 @@ export default function MyPositions() {
 
     const handleRemoveLiquidityConfirm = async (lp: any) => {
         setLogs([]); // Clear previous logs
+        setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true); // Open modal
         
         if (!walletConnected || !walletAddress || !walletAdapter) {
@@ -357,12 +365,14 @@ export default function MyPositions() {
             console.log("✅ Transaction Confirmed!");
 
             alert(`✅ Successfully removed ${inputAmount} LP from ${lp.poolData?.poolId}`);
+            setIsProcessing(false); // ✅ Ensure modal does not close early
         } catch (error) {
             addLog("❌ Remove Liquidity Transaction failed:", error);
             console.error("❌ Remove Liquidity Transaction failed:", error);
             alert("Transaction failed. Check the console.");
         } finally {
             setLoading(false);
+            setIsProcessing(false); // ✅ Ensure modal does not close early
         }
     };
 
@@ -403,7 +413,7 @@ export default function MyPositions() {
 
     return (
         <div className="flex flex-col items-center h-screen p-6 pb-20 bg-gray-100 overflow-y-auto">
-            <h1 className="text-3xl font-bold mb-6">My Positions</h1>
+            <h1 className="text-3xl font-bold mb-6 text-black">My Positions</h1>
 
             {!walletConnected ? (
                 <p className="text-gray-700">🔌 Connect your wallet to view LP positions.</p>
@@ -510,7 +520,7 @@ export default function MyPositions() {
                                                 >
                                                     ✅ Confirm Withdraw LP
                                                 </button>
-                                                <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} />
+                                                <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                                             </div>
                                         )}
 

@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     try {
         // 🔍 Parse the request body
         body = await req.json();
-        console.log("🔍 API Request Body:", body);
+        console.info("🔍 Received API Request:", JSON.stringify(body));
 
         // ✅ Ensure `poolId` is present and correctly formatted
         if (!body.poolId || typeof body.poolId !== "string") {
@@ -29,45 +29,63 @@ export async function POST(req: Request) {
 
         // ✅ Trim and sanitize `poolId`
         const poolId = body.poolId.trim();
-        console.log("🔍 Validated `poolId`:", poolId);
+        console.info("🔍 Validated `poolId`:", poolId);
 
         // 🔥 Step 1: Attempt to update `isActive` conditionally
         const updateParams = {
             TableName: TABLE_NAME,
             Key: { "poolId": poolId },
             UpdateExpression: "SET isActive = :trueVal",
-            ConditionExpression: "attribute_exists(poolId) AND isActive = :falseVal",
+            ConditionExpression: "attribute_exists(poolId) AND isActive = :falseVal AND isProcessing = :falseProcessing",
             ExpressionAttributeValues: {
-                ":trueVal": 1,
-                ":falseVal": 0
+                ":trueVal": 1,  // ✅ Use raw numbers, DocumentClient handles it correctly
+                ":falseVal": 0, // ✅ Ensure DynamoDB gets correct types
+                ":falseProcessing": 0
             },
             ReturnValues: "ALL_NEW"
         };
 
         try {
-            console.log("📌 Attempting conditional update:", JSON.stringify(updateParams, null, 2));
+            console.info("📌 Attempting conditional update:", JSON.stringify(updateParams, null, 2));
             const updatedData = await dynamoDB.update(updateParams).promise();
 
             return NextResponse.json({
                 message: `✅ Pool ${poolId} is now active.`,
-                updatedItem: updatedData.Attributes
+                updatedItem: updatedData.Attributes ?? null // Ensure undefined values are not returned
             }, { status: 200 });
 
         } catch (error: any) {
-            // ❌ If the update fails due to `poolId` not existing, we catch the error and create a new record
             if (error.code === "ConditionalCheckFailedException") {
-                console.log("🚀 `poolId` does not exist OR is already active. Creating new entry...");
+                console.warn("⚠️ Conditional check failed. Checking if the pool exists...");
+
+                // ✅ Step 2: Check if the pool exists before deciding next action
+                const getParams = {
+                    TableName: TABLE_NAME,
+                    Key: { "poolId": poolId }
+                };
+
+                const existingPool = await dynamoDB.get(getParams).promise();
+
+                if (existingPool.Item) {
+                    console.warn("⚠️ Pool exists but does not meet conditions for update.");
+                    return NextResponse.json({
+                        message: `⚠️ Pool ${poolId} was not updated because it does not meet conditions (already active or isProcessing is not 0).`
+                    }, { status: 409 }); // 409 Conflict
+                }
+
+                // ✅ Step 3: If pool does not exist, create a new entry
+                console.info("🚀 `poolId` does not exist. Creating new entry...");
 
                 const putParams = {
                     TableName: TABLE_NAME,
                     Item: {
-                        "poolId": poolId,
-                        "isActive": 1,
-                        "isProcessing": 0
+                        "poolId": poolId,      // ✅ Store as plain string
+                        "isActive": 1,        // ✅ Store as plain number
+                        "isProcessing": 0     // ✅ Store as plain number
                     }
                 };
 
-                console.log("📌 Creating new entry:", JSON.stringify(putParams, null, 2));
+                console.info("📌 Creating new entry:", JSON.stringify(putParams, null, 2));
                 await dynamoDB.put(putParams).promise();
 
                 return NextResponse.json({

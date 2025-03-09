@@ -9,8 +9,12 @@ import TokenSelector from "@components/TokenSelector"
 import CopyIcon from "@svg/copy-icon.svg";
 import TransactionModal from "@components/TransactionModal";
 import Image from "next/image";
+import { predefinedCoins } from "../data/coins";
 
 const provider = new SuiClient({ url: GETTER_RPC });
+
+const SUI_REWARD_BALANCE = 250 * Math.pow(10, 9);  // 250 SUI
+const USDC_REWARD_BALANCE = 500 * Math.pow(10, 6); // 500 USDC
 
 export default function Swap() {
     const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
@@ -28,6 +32,7 @@ export default function Swap() {
     const [fetchingQuote, setFetchingQuote] = useState(false); // Track loading state for quote
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
+    const [isProcessing, setIsProcessing] = useState(false); // Track processing state
 
     // ✅ Debounce Timer Ref
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -56,6 +61,11 @@ export default function Swap() {
         console.log("✅ UI Updated - New Sell Amount:", sellAmount);
     }, [sellAmount]);
 
+    useEffect(() => {
+        if (isProcessing) {
+            setIsModalOpen(true); // ✅ Ensures modal opens when processing starts
+        }
+    }, [isProcessing]); // ✅ Reacts when `isProcessing` changes
 
     // ✅ Close dropdown when clicking outside
     useEffect(() => {
@@ -320,7 +330,9 @@ export default function Swap() {
         const amount = e.target.value;
         setSellAmount(amount);
 
-        if (!poolId || isAtoB === null || !amount || !sellToken || !buyToken || !poolStats) return;
+        if (!poolId || isAtoB === null || !sellToken || !buyToken || !poolStats || isNaN(Number(amount)) || Number(amount) <= 0) {
+            return;
+        }
 
         // ✅ Ensure poolStats contains balances
         if (!poolStats.balance_a || !poolStats.balance_b) {
@@ -464,6 +476,10 @@ export default function Swap() {
             setSellBalance(buyBalance);
             setBuyBalance(sellBalance);
 
+            // Reset Swap Amounts
+            setSellAmount("");
+            setBuyAmount("");
+
             console.log("🔄 Swapping Tokens...");
             console.log("  - New SellToken:", newSellToken.typeName);
             console.log("  - New BuyToken:", newBuyToken.typeName);
@@ -488,7 +504,10 @@ export default function Swap() {
 
     const handleSwap = async (attempt = 1) => {
         setLogs([]); // Clear previous logs
+        setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true); // Open modal
+
+        await new Promise(resolve => setTimeout(resolve, 50)); // ✅ Small delay to force re-render
         addLog(`⚡ Initiating Swap... (Attempt ${attempt})`);
         console.log(`⚡ Initiating Swap... (Attempt ${attempt})`);
 
@@ -507,7 +526,10 @@ export default function Swap() {
             // ✅ Select correct decimals from poolMetadata
             const decimals = poolMetadata.coinA.typeName === sellToken.typeName ? poolMetadata.coinA.decimals : poolMetadata.coinB.decimals;
             const sellAmountU64 = BigInt(Math.floor(Number(sellAmount) * Math.pow(10, decimals)));
-            const minOutU64 = BigInt(Math.floor((Number(buyAmount) * (1 - Number(maxSlippage) / 100)) * Math.pow(10, decimals)));
+            
+            const expectedOutU64 = BigInt(Math.floor(Number(buyAmount) * Math.pow(10, decimals)));
+
+            const minOutU64 = expectedOutU64 - (expectedOutU64 * BigInt(maxSlippage) / BigInt(100));
 
             if (minOutU64 <= 0n) {
                 alert("🚨 Slippage is too high. Adjust your settings.");
@@ -552,8 +574,33 @@ export default function Swap() {
             addLog(`✅ Using Coin ID: ${matchingCoin.objectId}`);
             console.log(`✅ Using Coin ID: ${matchingCoin.objectId}, Balance: ${matchingCoin.balance.toString()}`);
 
+            // ✅ Validate reward balance before deciding to update isActive
+            const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
+
+            // ✅ Retrieve trusted typeNames for SUI and USDC from predefinedCoins
+            const suiTypeName = predefinedCoins.find((coin) => coin.symbol === "SUI")?.typeName;
+            const usdcTypeName = predefinedCoins.find((coin) => coin.symbol === "USDC")?.typeName;
+            const poolCoinATypeName = poolMetadata?.coinA?.typeName;
+
+            let shouldUpdateIsActive = false;
+
+            // ✅ Check `sellToken.typeName` against predefined SUI/USDC typeNames
+            if (poolCoinATypeName === suiTypeName && rewardBalance >= SUI_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            } else if (poolCoinATypeName === usdcTypeName && rewardBalance >= USDC_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            }
+
+            console.log(`🔍 Checking isActive condition:
+                - Pool CoinA Type: ${poolCoinATypeName}
+                - SUI Type: ${suiTypeName}
+                - USDC Type: ${usdcTypeName}
+                - Reward Balance: ${rewardBalance}
+                - shouldUpdateIsActive: ${shouldUpdateIsActive}`);
+
             // ✅ Build Transaction Block
             const txb = new TransactionBlock();
+            txb.setGasBudget(500_000_000); // ✅ Restore explicit gas budget
 
             // Convert coin object ID to transaction object
             const coinObject = txb.object(matchingCoin.objectId);
@@ -571,9 +618,9 @@ export default function Swap() {
                 target: swapFunction,
                 typeArguments,
                 arguments: [
-                    txb.object(poolId),
+                    txb.object(poolId, { mutable: true }),
                     txb.object(CONFIG_ID),
-                    usedCoin,
+                    usedCoin, // ✅ Pass the split coin (not the full object)
                     txb.pure.u64(sellAmountU64),
                     txb.pure.u64(minOutU64),
                     txb.object("0x6"), // Clock object
@@ -625,12 +672,18 @@ export default function Swap() {
                 return;
             }
 
-            // ✅ Update isActive in DynamoDB **AFTER SUCCESSFUL SWAP** with RETRIES
-            await updateIsActiveWithRetry(poolId, 3); // Retry up to 3 times
+            // ✅ Call update API only if conditions are met
+            if (shouldUpdateIsActive) {
+                console.log(`🔹 Updating isActive for pool ${poolId}...`);
+                await updateIsActiveWithRetry(poolId, 3);
+            } else {
+                console.log("❌ Skipping isActive update due to insufficient reward balance.");
+            }
 
             // 🔄 Refresh balances after the swap
             await fetchBalance(sellToken, setSellBalance);
             await fetchBalance(buyToken, setBuyBalance);
+            setIsProcessing(false); // ✅ Ensure modal does not close early
 
         } catch (error) {
             addLog(`❌ Swap Failed (Attempt ${attempt}): ${error.message}`);
@@ -642,6 +695,8 @@ export default function Swap() {
             } else {
                 alert("❌ Swap failed after multiple attempts. Check console for details.");
             }
+        } finally {
+            setIsProcessing(false); // ✅ Ensure modal does not close early
         }
     };
 
@@ -657,6 +712,12 @@ export default function Swap() {
                     body: JSON.stringify({ poolId: String(poolId) }) // ✅ Ensure `poolId` is always a string
                 });
 
+                // ✅ Handle 409 Conflict Gracefully
+                if (response.status === 409) {
+                    console.log(`⚠️ Pool ${poolId} did not meet conditions for update (isActive already set or processing).`);
+                    return; // ✅ Exit without retrying
+                }
+
                 const result = await response.json();
 
                 if (!response.ok) {
@@ -667,9 +728,16 @@ export default function Swap() {
                 addLog(result.message);
                 return; // ✅ Exit on success
 
-            } catch (error) {
+            } catch (error: any) {
                 console.error(`❌ Failed to update isActive (Attempt ${attempt + 1}):`, error);
                 addLog(`⚠️ Failed to update isActive (Attempt ${attempt + 1}) - ${error.message}`);
+
+                // ✅ If the error is a 409 Conflict, exit gracefully
+                if (error.message.includes("HTTP 409")) {
+                    console.log("⚠️ Pool did not meet conditions, stopping retries.");
+                    return; // ✅ Stop retrying, no need to update
+                }
+
                 attempt++;
 
                 if (attempt < maxRetries) {
@@ -894,7 +962,7 @@ export default function Swap() {
                     >
                         {fetchingQuote ? "Fetching Quote..." : walletConnected ? "Swap" : "Connect Wallet"}
                     </button>
-                    <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} />
+                    <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                 </div>
             </div>
 

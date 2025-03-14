@@ -13,8 +13,8 @@ import { predefinedCoins } from "../data/coins";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
-const SUI_REWARD_BALANCE = 250 * Math.pow(10, 9);  // 250 SUI
-const USDC_REWARD_BALANCE = 500 * Math.pow(10, 6); // 500 USDC
+const SUI_REWARD_BALANCE = 500 * Math.pow(10, 9);  // 500 SUI
+const USDC_REWARD_BALANCE = 1000 * Math.pow(10, 6); // 1000 USDC
 
 export default function Swap() {
     const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);

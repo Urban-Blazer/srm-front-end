@@ -5,10 +5,11 @@ import StepIndicator from "@components/CreatePoolStepIndicator";
 import { SuiClient } from "@mysten/sui.js/client";
 import { predefinedCoins } from "@data/coins";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, FACTORY_ID } from "../../config";
+import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, FACTORY_ID, LOCK_ID } from "../../config";
 import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import TransactionModal from "@components/TransactionModal";
 import Image from "next/image";
+import CopyIcon from "@svg/copy-icon.svg";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -104,6 +105,7 @@ export default function Pools() {
     const [isProcessing, setIsProcessing] = useState(false); // Track processing state
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [copiedText, setCopiedText] = useState<string | null>(null);
 
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
@@ -330,6 +332,7 @@ export default function Pools() {
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
                 typeArguments: [state.dropdownCoinMetadata!.typeName, state.customCoinMetadata!.typeName],
                 arguments: [
+                    txb.object(LOCK_ID),
                     txb.object(FACTORY_ID),
                     txb.object(coinA.objectId),
                     txb.pure.u64(depositDropdownMIST),
@@ -507,7 +510,7 @@ export default function Pools() {
                 if (abortCode === 1) userErrorMessage = "⚠️ Invalid token pair.";
                 if (abortCode === 2) userErrorMessage = "⚠️ Pool already exists.";
                 if (abortCode === 5) userErrorMessage = "⚠️ Fee exceeds maximum allowed";
-                if (abortCode === 1001) userErrorMessage = "⚠️ Failed due to fee settings.";
+                if (abortCode === 6) userErrorMessage = "⚠️ Pool Creation Locked, Account Not Authorized.";
 
             alert(userErrorMessage);
             } else {
@@ -551,6 +554,14 @@ export default function Pools() {
         }
         console.error(`❌ All ${retries} attempts failed. Transaction might not be indexed yet.`);
         return null;
+    };
+
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedText(text);
+
+        // Hide the message after 2 seconds
+        setTimeout(() => setCopiedText(null), 2000);
     };
 
     return (
@@ -915,18 +926,75 @@ export default function Pools() {
                         {state.poolData ? (
                             <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
                                 <h3 className="text-lg font-semibold text-black">Pool Information</h3>
-                                <ul className="space-y-2 text-black">
-                                    <li><strong>Pool ID:</strong> {state.poolData.poolId}</li>
+                                <ul className="space-y-1 text-black">
+                                    {/* ✅ Pool ID with Copy Button */}
+                                    <li className="flex items-center justify-between bg-gray-100 rounded-lg overflow-x-auto">
+                                        <p className="text-black truncate">
+                                            <strong>Pool ID:</strong> {state.poolData.poolId}
+                                        </p>
+                                        <div className="flex items-center space-x-2">
+                                            {copiedText === state.poolData.poolId && <span className="text-green-500 text-sm">Copied!</span>}
+                                            <button
+                                                onClick={() => handleCopy(state.poolData.poolId)}
+                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                            >
+                                                <CopyIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </li>
 
-                                    {/* LP Pair Label */}
-                                    <li><strong>LP Pair:</strong> {state.poolData.coinA?.name || "Unknown"} / {state.poolData.coinB?.name || "Unknown"}</li>
+                                    {/* ✅ LP Pair with Copy Button */}
+                                    <li className="flex items-center justify-between bg-gray-100 rounded-lg overflow-x-auto">
+                                        <p className="text-black truncate">
+                                            <strong>LP Pair:</strong> {state.poolData.coinA?.name || "Unknown"} / {state.poolData.coinB?.name || "Unknown"}
+                                        </p>
+                                        <div className="flex items-center space-x-2">
+                                            {copiedText === `${state.poolData.coinA?.name || "Unknown"} / ${state.poolData.coinB?.name || "Unknown"}` && (
+                                                <span className="text-green-500 text-sm">Copied!</span>
+                                            )}
+                                            <button
+                                                onClick={() => handleCopy(`${state.poolData.coinA?.name || "Unknown"} / ${state.poolData.coinB?.name || "Unknown"}`)}
+                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                            >
+                                                <CopyIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </li>
 
                                     {/* Separate Coin A and Coin B */}
-                                    <li><strong>Coin A:</strong> {state.poolData.coinA?.name || "Unknown"}</li>
-                                    <li><strong>Initial Amount (A):</strong> {state.poolData.initA} {state.poolData.coinA?.name}</li>
+                                    {/* ✅ Coin A with Copy Button */}
+                                    <li className="flex items-center justify-between bg-gray-100 rounded-lg overflow-x-auto">
+                                        <p className="text-black truncate">
+                                            <strong>Coin A:</strong> {state.poolData.coinA?.name || "Unknown"}
+                                        </p>
+                                        <div className="flex items-center space-x-2">
+                                            {copiedText === state.poolData.coinA?.name && <span className="text-green-500 text-sm">Copied!</span>}
+                                            <button
+                                                onClick={() => handleCopy(state.poolData.coinA?.name || "Unknown")}
+                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                            >
+                                                <CopyIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </li>
+                                    <li><strong>Initial Amount (A):</strong> {state.poolData.initA} {state.dropdownCoinMetadata.symbol}</li>
 
-                                    <li><strong>Coin B:</strong> {state.poolData.coinB?.name || "Unknown"}</li>
-                                    <li><strong>Initial Amount (B):</strong> {state.poolData.initB} {state.poolData.coinB?.name}</li>
+                                    {/* ✅ Coin B with Copy Button */}
+                                    <li className="flex items-center justify-between bg-gray-100 rounded-lg overflow-x-auto">
+                                        <p className="text-black truncate">
+                                            <strong>Coin B:</strong> {state.poolData.coinB?.name || "Unknown"}
+                                        </p>
+                                        <div className="flex items-center space-x-2">
+                                            {copiedText === state.poolData.coinB?.name && <span className="text-green-500 text-sm">Copied!</span>}
+                                            <button
+                                                onClick={() => handleCopy(state.poolData.coinB?.name || "Unknown")}
+                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                            >
+                                                <CopyIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </li>
+                                    <li><strong>Initial Amount (B):</strong> {state.poolData.initB} {state.customCoinMetadata.symbol}</li>
 
                                     <li><strong>LP Minted:</strong> {state.poolData.lpMinted}</li>
                                     <li><strong>Locked LP Balance:</strong> {state.poolData.lockedLpBalance}</li>
@@ -940,7 +1008,21 @@ export default function Pools() {
                                         <li>Rewards Fee: {state.poolData.rewardsFee}%</li>
                                     </ul>
 
-                                    <li><strong>Creator Wallet:</strong> {state.poolData.creatorWallet}</li>
+                                    {/* ✅ Creator Wallet with Copy Button */}
+                                    <li className="flex items-center justify-between bg-gray-100 rounded-lg overflow-x-auto">
+                                        <p className="text-black truncate">
+                                            <strong>Creator Wallet:</strong> {state.poolData.creatorWallet}
+                                        </p>
+                                        <div className="flex items-center space-x-2">
+                                            {copiedText === state.poolData.creatorWallet && <span className="text-green-500 text-sm">Copied!</span>}
+                                            <button
+                                                onClick={() => handleCopy(state.poolData.creatorWallet)}
+                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                            >
+                                                <CopyIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </li>
                                 </ul>
                             </div>
                         ) : (

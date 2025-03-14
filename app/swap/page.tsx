@@ -33,6 +33,7 @@ export default function Swap() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
     const [isProcessing, setIsProcessing] = useState(false); // Track processing state
+    const [copiedText, setCopiedText] = useState<string | null>(null);
 
     // ✅ Debounce Timer Ref
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -830,6 +831,14 @@ export default function Swap() {
         return null;
     };
 
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedText(text);
+
+        // Hide the message after 2 seconds
+        setTimeout(() => setCopiedText(null), 2000);
+    };
+
     return (
         <div className="min-h-screen flex flex-col lg:flex-row justify-center items-center bg-gray-100 p-4 pb-20 overflow-y-auto">
 
@@ -979,12 +988,15 @@ export default function Swap() {
                             <p className="text-black truncate">
                                 <strong>Pool ID:</strong> {poolId}
                             </p>
-                            <button
-                                onClick={() => navigator.clipboard.writeText(poolId)}
-                                className="p-2 rounded-lg hover:bg-gray-200 transition"
-                            >
-                                <CopyIcon className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center space-x-2">
+                                {copiedText === poolId && <span className="text-green-500 text-sm">Copied!</span>}
+                                <button
+                                    onClick={() => handleCopy(poolId)}
+                                    className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                >
+                                    <CopyIcon className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* ✅ Prevent rendering if `poolStats` or `poolMetadata` is missing */}
@@ -1064,14 +1076,16 @@ export default function Swap() {
                                         <p className="text-black truncate">
                                             <strong>Deployer Royalty Wallet:</strong> {poolStats?.creator_royalty_wallet || ""}
                                         </p>
-                                        <button
-                                            onClick={() => navigator.clipboard.writeText(poolStats?.creator_royalty_wallet || "")}
-                                            className="p-2 rounded-lg hover:bg-gray-200 transition"
-                                        >
-                                            <CopyIcon className="w-5 h-5" />
-                                        </button>
+                                        <div className="flex items-center space-x-2">
+                                            {copiedText === poolStats?.creator_royalty_wallet && <span className="text-green-500 text-sm">Copied!</span>}
+                                            <button
+                                                onClick={() => handleCopy(poolStats?.creator_royalty_wallet || "")}
+                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                            >
+                                                <CopyIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
                                     </div>
-
                                     
                                 </div>
                             </div>

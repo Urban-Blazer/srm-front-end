@@ -1,6 +1,7 @@
 export const GETTER_RPC = "https://fullnode.testnet.sui.io:443";
-export const PACKAGE_ID = "0x879f8dab64dfe4be4da44b610a028d9441e23bfbcad3a269014a97c0c673a878";
+export const PACKAGE_ID = "0xf8897255272c78357934790599ba150ffee1c9b94735ca9a4ee6d16568e4c58e";
 export const DEX_MODULE_NAME = "srmV1";
 export const QUOTE_MODULE_NAME = "quote";
-export const FACTORY_ID = "0x2f4e57b4b71d992e9c3cc9ad637d2b655f64586db1584d38c55c743a6494fb88";
-export const CONFIG_ID = "0xd2210895d270fdc9426695758d9cd6caf6b61d2da9cacd8e31243f9fdb668c61";
+export const FACTORY_ID = "0x948eaf415f5057f4509858a5dabf6e1b39e00201dbfd36c1fa446c4783c66421";
+export const CONFIG_ID = "0xb8e6abe1987d9f8c5dd75f548d1084124e08d1314bda362a25a0dfac5dcb1d15";
+export const LOCK_ID = "0x9a361188c42320b5683c4258cdb31732d682448cae6782ddf7848825075d6e69";

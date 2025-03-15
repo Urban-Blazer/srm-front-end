@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import StickyHeader from "./StickyHeader";
+import Image from 'next/image';
 
 export default function NavBar() {
   const [dropdown, setDropdown] = useState<string | null>(null);
@@ -19,16 +20,26 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="bg-gray-900 text-white p-4 flex justify-between relative z-50">
-      <Link href="/" className="text-lg font-bold">Sui Rewards Me App</Link>
+    <nav className="navbar text-white p-4 flex justify-between relative z-50">
+      {/* Logo Link */}
+      <Link href="/" className="mr-6 flex items-center">
+        <Image
+          src="/logo_wide_2.png" // Replace with your actual image path
+          alt="Sui Rewards Me App Logo"
+          width={250} // Adjust width as needed
+          height={100} // Adjust height as needed
+          priority // Ensures faster loading
+        />
+      </Link>
 
+      <div className="flex space-x-4">
       {/* Dashboard Menu */}
       <div className="relative group"
         onMouseEnter={() => handleMouseEnter("dashboard")}
         onMouseLeave={handleMouseLeave}
       >
         <Link href="/dashboard">
-        <button className="px-4 py-2">Dashboard</button>
+          <button className="button-primary px-4 py-2">Dashboard</button>
         </Link>
         {dropdown === "dashboard" && (
           <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
@@ -44,7 +55,7 @@ export default function NavBar() {
         onMouseLeave={handleMouseLeave}
       >
         <Link href="/swap">
-        <button className="px-4 py-2">Swap</button>
+          <button className="button-primary px-4 py-2">Swap</button>
         </Link>
         {dropdown === "swap" && (
           <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
@@ -59,7 +70,7 @@ export default function NavBar() {
         onMouseLeave={handleMouseLeave}
       >
         <Link href="/pools">
-        <button className="px-4 py-2">Pools</button>
+          <button className="button-primary px-4 py-2">Pools</button>
         </Link>
         {dropdown === "pools" && (
           <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
@@ -76,7 +87,7 @@ export default function NavBar() {
         onMouseLeave={handleMouseLeave}
       >
         <Link href="/launchpad">
-        <button className="px-4 py-2">Launchpad</button>
+          <button className="button-primary px-4 py-2">Launchpad</button>
         </Link>
         {dropdown === "launchpad" && (
           <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
@@ -85,6 +96,7 @@ export default function NavBar() {
             <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-gray-700">Coming Soon</Link>
           </div>
         )}
+      </div>
       </div>
 
       {/* Wallet Connect Button */}

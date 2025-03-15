@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark">
       <body className={`${inter.className} bg-gray-900 text-white h-screen`}>
         <Navbar />
-        <main className="container mx-auto mt-8">{children}</main>
+        <main className="container mx-auto">{children}</main>
       </body>
     </html>
   );

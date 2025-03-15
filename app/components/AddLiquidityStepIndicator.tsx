@@ -14,7 +14,7 @@ const steps = [
 export default function StepIndicator({ step, setStep }: StepIndicatorProps) {
     return (
         <div className="w-1/4 bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-lg font-bold mb-4">New Position</h2>
+            <h1 className="text-lg font-bold mb-4">New Position</h1>
             <ul className="space-y-2"> {/* Ensures proper spacing without affecting layout */}
                 {steps.map((s) => (
                     <li
@@ -25,14 +25,14 @@ export default function StepIndicator({ step, setStep }: StepIndicatorProps) {
                         {/* Step Number Circle */}
                         <div
                             className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-white shrink-0
-                                ${step >= s.number ? "bg-black" : "bg-gray-300"}`}
+                                ${step >= s.number ? "bg-deepTeal" : "bg-gray-300"}`}
                         >
                             {s.number}
                         </div>
                         {/* Step Label */}
                         <span
                             className={`text-sm font-medium truncate
-                                ${step >= s.number ? "text-black font-semibold" : "text-gray-500"}`}
+                                ${step >= s.number ? "text-deepTeal font-semibold" : "text-lavenderGlow-500"}`}
                         >
                             {s.label}
                         </span>

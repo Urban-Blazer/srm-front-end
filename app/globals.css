@@ -2,12 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://rsms.me/inter/inter.css');
+/* 🎨 Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap');
+
+/* 🎨 Define Global Theme Variables */
+:root {
+  --color-deep-teal: #0D3B3E;
+  --color-emerald-green: #21B573;
+  --color-soft-mint: #9FFFCB;
+  --color-royal-purple: #6A1B9A;
+  --color-lavender-glow: #C77DFF;
+
+  --background-main: var(--color-deep-teal);
+  --primary-button: var(--color-emerald-green);
+  --secondary-button: var(--color-royal-purple);
+  --accent-links: var(--color-royal-purple);
+  --ui-elements: var(--color-soft-mint);
+  --highlight-glow: var(--color-lavender-glow);
+
+  /* Typography */
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Lato', sans-serif;
+  --font-cta: 'Montserrat', sans-serif;
+}
 
 * {
   box-sizing: border-box;
 }
 
+/* 🌍 Global Layout Styling */
 html,
 body,
 #root {
@@ -24,26 +49,115 @@ body,
   overflow: hidden;
 }
 
+/* 🌆 Background Styling */
 body {
-  font-family: 'Inter', sans-serif;
-}
-
-#root {
-  background: white;
-  background: radial-gradient(
-      ellipse at -200% 60%,
-      rgba(209, 209, 209, 0.48) 22%,
-      rgba(182, 182, 182, 0) 71%
-    ),
-    linear-gradient(160deg, rgb(233, 233, 233), hsl(0, 0%, 100%) 100%);
-  overflow: auto;
-}
-
-body {
-  position: fixed;
-  overflow: hidden;
+  font-family: var(--font-body);
+  background-color: var(--background-main);
+  color: white;
   overscroll-behavior-y: none;
-  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, helvetica neue, helvetica,
-    ubuntu, roboto, noto, segoe ui, arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* 🔹 Navbar Styling */
+.navbar {
+  background-color: var(--background-main);
+  padding: 16px;
+}
+
+/* 🎨 Headings */
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+}
+
+h1 {
+  color: var(--color-royal-purple);
+}
+
+h2 {
+  color: var(--color-lavender-glow);
+}
+
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+label {
+  color: var(--color-emerald-green);
+}
+
+p {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+/* ✅ Buttons */
+button {
+  font-family: var(--font-cta);
+  background-color: var(--primary-button);
+  color: white;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.3s ease-in-out;
+}
+
+button:hover {
+  background-color: var(--color-soft-mint);
+  color: var(--background-main);
+}
+
+/* 🔥 Secondary Buttons */
+.button-secondary {
+  background-color: var(--secondary-button);
+  color: white;
+}
+
+.button-secondary:hover {
+  background-color: var(--highlight-glow);
+}
+
+/* 🎨 Call-to-Action Elements */
+.cta {
+  font-family: var(--font-cta);
+  background-color: var(--color-royal-purple);
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+.cta:hover {
+  background-color: var(--highlight-glow);
+}
+
+/* 🌟 Links */
+a {
+  font-family: var(--font-cta);
+  color: var(--accent-links);
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+a:hover {
+  color: var(--highlight-glow);
+}
+
+/* 🔥 Typography & UI Highlights */
+.text-highlight {
+  font-family: var(--font-heading);
+  color: var(--ui-elements);
+}
+
+.ui-element {
+  background-color: var(--ui-elements);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
 }

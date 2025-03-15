@@ -569,8 +569,6 @@ export default function Pools() {
 
             <StepIndicator step={state.step} setStep={setStep} />
             <div className="flex-1 bg-white p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
-
-
                 <h1 className="text-2xl font-bold mb-6">Create a New Pool</h1>
 
                 {/* Step 1: Select Coins */}
@@ -616,7 +614,7 @@ export default function Pools() {
                         </div>
 
                         {/* Continue Button */}
-                        <button className="w-full bg-black text-white p-3 rounded-lg mt-4 disabled:opacity-50"
+                        <button className="w-full text-white p-3 rounded-lg mt-4 disabled:opacity-50"
                             onClick={fetchMetadata} disabled={state.loading}
                         >
                             {state.loading ? "Fetching..." : "Continue"}
@@ -627,20 +625,20 @@ export default function Pools() {
                 {/* Step 2: Configure Fees & Wallet */}
                 {state.step === 2 && state.dropdownCoinMetadata && state.customCoinMetadata && (
                     <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
-                        <h2 className="text-xl font-semibold mb-4 text-black">Set Pool Fees</h2>
+                        <h2 className="text-xl font-semibold mb-4">Set Pool Fees</h2>
 
                         {/* Selected Coins Display */}
                         <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
                             <div className="flex items-center space-x-2">
                                 <Image src={state.dropdownCoinMetadata.iconUrl || ""} alt={state.dropdownCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
-                                <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata.symbol}</span>
+                                <span className="text-lg font-semibold deepTeal">{state.dropdownCoinMetadata.symbol}</span>
                             </div>
 
-                            <span className="text-2xl font-bold text-black">/</span>
+                            <span className="text-2xl font-bold text-deepTeal">/</span>
 
                             <div className="flex items-center space-x-2">
                                 <Image src={state.customCoinMetadata.iconUrl || ""} alt={state.customCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
-                                <span className="text-lg font-semibold text-black">{state.customCoinMetadata.symbol}</span>
+                                <span className="text-lg font-semibold deepTeal">{state.customCoinMetadata.symbol}</span>
                             </div>
                         </div>
 
@@ -700,14 +698,14 @@ export default function Pools() {
 
                         {/* Navigation Buttons */}
                         <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex justify-between">
-                            <button className="bg-gray-500 text-white p-3 rounded-lg"
+                            <button className="button-secondary bg-500 text-white p-3 rounded-lg"
                                 onClick={() => dispatch({ type: "SET_STEP", payload: 1 })}
                             >
                                 ← Back to Step 1
                             </button>
 
                             <button
-                                className={`p-3 rounded-lg ${isValidSuiAddress(state.deployerRoyaltyWallet) && state.deployerRoyaltyWallet ? "bg-black text-white" : "bg-gray-300 text-gray-600 cursor-not-allowed"}`}
+                                className={`p-3 rounded-lg ${isValidSuiAddress(state.deployerRoyaltyWallet) && state.deployerRoyaltyWallet ? "button-primary" : "bg-gray-300 text-gray-600 cursor-not-allowed"}`}
                                 disabled={!isValidSuiAddress(state.deployerRoyaltyWallet) || !state.deployerRoyaltyWallet}
                                 onClick={() => dispatch({ type: "SET_STEP", payload: 3 })}
                             >
@@ -722,26 +720,26 @@ export default function Pools() {
                 {state.step === 3 && (
                     <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
 
-                        <h2 className="text-xl font-semibold mb-4 text-black">Set Deposit Amounts</h2>
+                        <h2 className="text-xl font-semibold mb-4">Set Deposit Amounts</h2>
 
                         {/* Selected Coins */}
                         <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
                             <div className="flex items-center space-x-2">
                                 <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
-                                <span className="text-lg font-semibold text-black">{state.dropdownCoinMetadata?.symbol}</span>
+                                <span className="text-lg font-semibold text-deepTeal">{state.dropdownCoinMetadata?.symbol}</span>
                             </div>
 
-                            <span className="text-2xl font-bold text-black">/</span>
+                            <span className="text-2xl font-bold text-deepTeal">/</span>
 
                             <div className="flex items-center space-x-2">
                                 <Image src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
-                                <span className="text-lg font-semibold text-black">{state.customCoinMetadata?.symbol}</span>
+                                <span className="text-lg font-semibold text-deepTeal">{state.customCoinMetadata?.symbol}</span>
                             </div>
                         </div>
 
                         {/* Fee Summary */}
                         <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Fees</h3>
+                            <h3 className="text-lg font-semibold text-deepTeal">Fees</h3>
                             <ul className="space-y-2 text-black">
                                 <li><strong>LP Builder Fee:</strong> {state.lpBuilderFee.toFixed(2)}%</li>
                                 <li><strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee.toFixed(2)}%</li>

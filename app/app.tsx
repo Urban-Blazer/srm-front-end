@@ -9,7 +9,6 @@ export default function Home() {
   return (
     <>
       <Background />
-      <Torus />
       <Toaster position="bottom-left" richColors />
       <Socials />
       <Loader />

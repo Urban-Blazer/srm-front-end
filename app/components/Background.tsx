@@ -1,18 +1,30 @@
-import React from 'react'
+import React from 'react';
 
 const Background: React.FC = () => {
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center -z-10" // Lower z-index to prevent overlap
-      style={{ pointerEvents: 'none', backgroundColor: '#272730' }}
-    >
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-white text-center" style={{ fontSize: '12em', fontWeight: 800 }}>
-          Sui Rewards
-        </div>
+    <div className="fixed inset-0 -z-20">
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      >
+        <source src="/background.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
+      {/* GIF Overlay */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <img
+          src="/maintext.gif"
+          alt="Animated Text"
+          className="w-auto h-auto max-w-full max-h-full"
+        />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Background
+export default Background;

@@ -845,18 +845,18 @@ export default function Swap() {
             {/* Swap Interface */}
             <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 relative">
                 <div className="flex flex-col space-y-4 pb-24">
-                    <h2 className="text-xl font-bold text-center">Swap Tokens</h2>
+                    <h1 className="text-xl font-bold text-center">Swap Tokens</h1>
 
                     {/* Max Slippage Input */}
                     <div className="bg-gray-100 p-3 rounded-lg">
                         <div className="flex justify-between items-center">
-                            <label className="text-gray-600 font-medium">Max Slippage</label>
+                            <label className="text-royalPurple font-medium"><strong>Max Slippage</strong></label>
                             <div className="flex items-center space-x-2">
                                 <input
                                     type="number"
                                     step="0.1"
                                     min="0"
-                                    max="10"
+                                    max="50"
                                     value={maxSlippage}
                                     onChange={(e) => setMaxSlippage(parseFloat(e.target.value))}
                                     className="bg-white text-black text-right font-semibold px-3 py-1 border border-gray-300 rounded-lg w-20 outline-none"
@@ -869,8 +869,8 @@ export default function Swap() {
                     {/* Sell Input */}
                     <div className="bg-gray-100 p-4 rounded-lg relative">
                         <div className="flex justify-between items-center">
-                            <label htmlFor="sellAmount" className="block text-gray-500">Sell</label>
-                            {sellToken && <span className="text-sm text-gray-600">Balance: {sellBalance}</span>}
+                            <label htmlFor="sellAmount" className="block text-royalPurple"><strong>Sell</strong></label>
+                            {sellToken && <span className="text-sm text-deepTeal"><strong>Balance:</strong> {sellBalance}</span>}
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -886,16 +886,16 @@ export default function Swap() {
                             />
                             {/* Sell Token Selection Button */}
                             <button
-                                className="flex items-center justify-between w-32 bg-white border rounded-lg px-3 py-2 shadow hover:bg-gray-100"
+                                className="flex items-center justify-between w-32 bg-white border rounded-lg px-3 py-2 shadow hover:bg-softMint"
                                 onClick={() => setDropdownOpen(dropdownOpen === "sell" ? null : "sell")}
                             >
                                 {sellToken ? (
                                     <div className="flex items-center">
                                         <Image src={sellToken.logo} alt={sellToken.symbol} width={20} height={20} className="w-5 h-5 mr-2" />
-                                        <span className="text-black font-medium">{sellToken.symbol}</span>
+                                        <span className="text-deepTeal font-medium"><strong>{sellToken.symbol}</strong></span>
                                     </div>
                                 ) : (
-                                    <span className="text-black font-medium">Select Token</span>
+                                        <span className="text-deepTeal font-medium"><strong>Select Token</strong></span>
                                 )}
                             </button>
                         </div>
@@ -912,7 +912,7 @@ export default function Swap() {
                     {/* Swap Arrow */}
                     <div className="flex justify-center">
                         <button
-                            className="bg-gray-200 p-2 rounded-full transition hover:bg-gray-300"
+                            className="bg-gray-200 p-2 rounded-full transition hover:bg-softMint"
                             onClick={handleSwapTokens}
                         >
                             ⬇️
@@ -922,8 +922,8 @@ export default function Swap() {
                     {/* Buy Input */}
                     <div className="bg-gray-100 p-4 rounded-lg relative">
                         <div className="flex justify-between items-center">
-                            <label htmlFor="buyAmount" className="block text-gray-500">Buy</label>
-                            {buyToken && <span className="text-sm text-gray-600">Balance: {buyBalance}</span>}
+                            <label htmlFor="buyAmount" className="block text-royalPurple"><strong>Buy</strong></label>
+                            {buyToken && <span className="text-sm text-deepTeal"><strong>Balance:</strong> {buyBalance}</span>}
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -939,16 +939,16 @@ export default function Swap() {
                             />
                             {/* Buy Token Selection Button */}
                             <button
-                                className="flex items-center justify-between w-32 bg-white border rounded-lg px-3 py-2 shadow hover:bg-gray-100"
+                                className="flex items-center justify-between w-32 bg-white border rounded-lg px-3 py-2 shadow hover:bg-softMint"
                                 onClick={() => setDropdownOpen(dropdownOpen === "buy" ? null : "buy")}
                             >
                                 {buyToken ? (
                                     <div className="flex items-center">
                                         <Image src={buyToken.logo} alt={buyToken.symbol} width={20} height={20} className="w-5 h-5 mr-2" />
-                                        <span className="text-black font-medium">{buyToken.symbol}</span>
+                                        <span className="text-deepTeal font-medium"><strong>{buyToken.symbol}</strong></span>
                                     </div>
                                 ) : (
-                                    <span className="text-black font-medium">Select Token</span>
+                                        <span className="text-deepTeal font-medium"><strong>Select Token</strong></span>
                                 )}
                             </button>
                         </div>
@@ -964,7 +964,7 @@ export default function Swap() {
 
                     {/* Swap Button */}
                     <button
-                        className={`w-full text-white p-3 rounded-lg ${walletConnected && sellToken && buyToken ? "bg-black" : "bg-gray-300 cursor-not-allowed"
+                        className={`button-secondary w-full text-white p-3 rounded-lg ${walletConnected && sellToken && buyToken ? "bg-royalPurple" : "bg-gray-300 cursor-not-allowed"
                             }`}
                         onClick={!walletConnected ? () => walletAdapter?.connect() : () => handleSwap(1)}
                         disabled={fetchingQuote || walletConnected && (!sellToken || !buyToken)}
@@ -977,7 +977,7 @@ export default function Swap() {
 
             {/* Pool Information Card */}
             <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6 lg:mt-0 lg:ml-6">
-                <h2 className="text-lg font-bold mb-4 text-black">Pool Information</h2>
+                <h1 className="text-lg font-bold mb-4">Pool Information</h1>
 
                 {poolLoading ? (
                     <p className="text-gray-500">Loading pool data...</p>
@@ -985,14 +985,14 @@ export default function Swap() {
                     <>
                         {/* ✅ Pool ID with Copy Button */}
                         <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg overflow-x-auto">
-                            <p className="text-black truncate">
+                            <p className="text-deepTeal truncate">
                                 <strong>Pool ID:</strong> {poolId}
                             </p>
                             <div className="flex items-center space-x-2">
-                                {copiedText === poolId && <span className="text-green-500 text-sm">Copied!</span>}
+                                    {copiedText === poolId && <span className="text-royalPurple text-sm"><strong>Copied!</strong></span>}
                                 <button
                                     onClick={() => handleCopy(poolId)}
-                                    className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                    className="bg-gray-300 p-2 rounded-lg hover:bg-softMint transition"
                                 >
                                     <CopyIcon className="w-5 h-5" />
                                 </button>
@@ -1003,7 +1003,7 @@ export default function Swap() {
                         {poolStats && poolMetadata ? (
                             <div className="mt-4 space-y-3 max-h-[500px] overflow-y-auto pb-20">
                                 {/* ✅ Display Coin A Metadata with Balance */}
-                                <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-black">
+                                <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-deepTeal">
                                     <div className="flex items-center space-x-3">
                                         {poolMetadata?.coinA?.image && (
                                                 <Image src={poolMetadata?.coinA?.image} alt={poolMetadata?.coinA?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
@@ -1024,7 +1024,7 @@ export default function Swap() {
                                 </div>
 
                                 {/* ✅ Display Coin B Metadata with Balance */}
-                                <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-black">
+                                <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-deepTeal">
                                     <div className="flex items-center space-x-3">
                                         {poolMetadata?.coinB?.image && (
                                                 <Image src={poolMetadata?.coinB?.image} alt={poolMetadata?.coinB?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
@@ -1045,7 +1045,7 @@ export default function Swap() {
                                 </div>
 
                                 {/* ✅ Pool Stats Section */}
-                                <div className="text-black space-y-2">
+                                <div className="text-deepTeal space-y-2">
                                     {/* ✅ LP Locked Balance Now Always Visible */}
                                     <p><strong>Pool Locked LP:</strong> {poolStats?.locked_lp_balance?.toLocaleString() || "0"}</p>
                                     
@@ -1069,18 +1069,18 @@ export default function Swap() {
                                     <p><strong>LP Builder Fee:</strong> {((poolStats?.lp_builder_fee || 0) / 100).toFixed(2)}%</p>
                                     <p><strong>Reward Fee:</strong> {((poolStats?.rewards_fee || 0) / 100).toFixed(2)}%</p>
                                     <p><strong>Burn Fee:</strong> {((poolStats?.burn_fee || 0) / 100).toFixed(2)}%</p>
-                                    <p><strong>Deployer Royalty Fee:</strong> {((poolStats?.creator_royalty_fee || 0) / 100).toFixed(2)}%</p>
+                                    <p><strong>Creator Royalty Fee:</strong> {((poolStats?.creator_royalty_fee || 0) / 100).toFixed(2)}%</p>
                                     
                                     {/* ✅ Dev Wallet with Copy Button */}
                                     <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg overflow-x-auto">
-                                        <p className="text-black truncate">
-                                            <strong>Deployer Royalty Wallet:</strong> {poolStats?.creator_royalty_wallet || ""}
+                                        <p className="text-deepTeal truncate">
+                                            <strong>Creator Royalty Wallet:</strong> {poolStats?.creator_royalty_wallet || ""}
                                         </p>
                                         <div className="flex items-center space-x-2">
-                                            {copiedText === poolStats?.creator_royalty_wallet && <span className="text-green-500 text-sm">Copied!</span>}
+                                                {copiedText === poolStats?.creator_royalty_wallet && <span className="text-royalPurple text-sm"><strong>Copied!</strong></span>}
                                             <button
                                                 onClick={() => handleCopy(poolStats?.creator_royalty_wallet || "")}
-                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                                className="bg-gray-300 p-2 rounded-lg hover:bg-softMint transition"
                                             >
                                                 <CopyIcon className="w-5 h-5" />
                                             </button>

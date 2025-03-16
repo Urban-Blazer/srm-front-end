@@ -571,6 +571,10 @@ export default function Pools() {
             <div className="flex-1 bg-white p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
                 <h1 className="text-2xl font-bold mb-6">Create a New Pool</h1>
 
+                <div className="flex items-center justify-center gap-4 p-4 bg-royalPurple rounded-lg mb-4">
+                    <p className="text-highlight text-m mt-1">Pool Creation Locked: Contact admin to claim your project's pool and start trading.</p>
+                </div>
+
                 {/* Step 1: Select Coins */}
                 {state.step === 1 && (
                     <div>

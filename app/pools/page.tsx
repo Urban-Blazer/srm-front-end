@@ -35,8 +35,8 @@ export default function MyPositions() {
             try {
                 const adapter = await NightlyConnectSuiAdapter.build({
                     appMetadata: {
-                        name: "Sui DEX",
-                        description: "DEX for trading tokens on Sui",
+                        name: "Sui Rewards Me",
+                        description: "Rewards DEX on Sui",
                         icon: "https://your-app-logo-url.com/icon.png",
                     },
                 });

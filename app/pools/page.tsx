@@ -413,14 +413,14 @@ export default function MyPositions() {
 
     return (
         <div className="flex flex-col items-center h-screen p-6 pb-20 bg-gray-100 overflow-y-auto">
-            <h1 className="text-3xl font-bold mb-6 text-black">My Positions</h1>
+            <h1 className="text-3xl font-bold mb-6">My Liquidity Positions</h1>
 
             {!walletConnected ? (
-                <p className="text-gray-700">🔌 Connect your wallet to view LP positions.</p>
+                <p className="text-deepTeal text-center "><strong>🔌 Connect your wallet to view your LP positions.</strong></p>
             ) : (
                 <>
                     <button
-                        className="bg-black text-white p-3 rounded-lg mt-4 disabled:opacity-50"
+                        className="button-primary p-3 rounded-lg mt-4 disabled:opacity-50"
                         onClick={fetchLPTokens}
                         disabled={loading}
                     >
@@ -438,22 +438,22 @@ export default function MyPositions() {
                                         {/* Coin Images & Symbols */}
                                         <div className="flex items-center space-x-2">
                                             <Image src={lp.poolData?.coinA_metadata?.image || "https://via.placeholder.com/40"} alt={lp.poolData?.coinA_metadata?.symbol || "Coin A"} width={20} height={20} className="w-10 h-10 rounded-full" />
-                                            <span className="text-xl font-semibold text-black">{lp.poolData?.coinA_metadata?.symbol || "Unknown"}</span>
-                                            <span className="text-gray-500 text-lg">/</span>
+                                            <span className="text-xl font-semibold text-deepTeal">{lp.poolData?.coinA_metadata?.symbol || "Unknown"}</span>
+                                            <span className="text-deepTeal text-lg">/</span>
                                             <Image src={lp.poolData?.coinB_metadata?.image || "https://via.placeholder.com/40"} alt={lp.poolData?.coinB_metadata?.symbol || "Coin B"} width={20} height={20} className="w-10 h-10 rounded-full" />
-                                            <span className="text-xl font-semibold text-black">{lp.poolData?.coinB_metadata?.symbol || "Unknown"}</span>
+                                            <span className="text-xl font-semibold text-deepTeal">{lp.poolData?.coinB_metadata?.symbol || "Unknown"}</span>
                                         </div>
 
                                         {/* Pool Information */}
                                         <div className="w-full">
-                                            <p className="text-gray-700 text-sm">
+                                            <p className="text-deepTeal text-sm">
                                                 <strong>Pool ID:</strong>
-                                                <span className="text-blue-600 break-all"> {lp.poolData?.poolId || "N/A"}</span>
+                                                <span className="text-royalPurple break-all"> {lp.poolData?.poolId || "N/A"}</span>
                                             </p>
-                                            <p className="text-sm text-gray-700">
+                                            <p className="text-sm text-deepTeal">
                                                 <strong>Balance:</strong> {(Number(lp.balance) / 1e9).toFixed(4)} LP
                                             </p>
-                                            <p className="text-sm text-green-700">
+                                            <p className="text-sm text-deepTeal">
                                                 <strong>Your Share:</strong> {lp.userCoinA.toFixed(4)} {lp.poolData?.coinA_metadata?.symbol} / {lp.userCoinB.toFixed(4)} {lp.poolData?.coinB_metadata?.symbol}
                                             </p>
                                         </div>
@@ -461,7 +461,7 @@ export default function MyPositions() {
                                         {/* 🚀 Action Buttons */}
                                         <div className="flex space-x-4 mt-3">
                                             {/* Add Liquidity Button */}
-                                            <a href={`/pools/add-liquidity?coinA=${encodeURIComponent(lp.poolData?.coinA_metadata?.typeName)}&coinB=${encodeURIComponent(lp.poolData?.coinB_metadata?.typeName)}`} className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                                            <a href={`/pools/add-liquidity?coinA=${encodeURIComponent(lp.poolData?.coinA_metadata?.typeName)}&coinB=${encodeURIComponent(lp.poolData?.coinB_metadata?.typeName)}`} className="bg-emeraldGreen text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-softMint transition">
                                                 ➕ Add Liquidity
                                             </a>
 
@@ -476,8 +476,8 @@ export default function MyPositions() {
 
                                         {/* 🔽 Remove Liquidity UI (if enabled) */}
                                         {removeOptions[lp.objectId] && (
-                                            <div className="mt-4 w-full bg-gray-50 p-4 rounded-lg">
-                                                <h3 className="text-lg font-semibold text-black">Select Withdrawal Amount</h3>
+                                            <div className="mt-4 w-full bg-softMint p-4 rounded-lg">
+                                                <h2 className="text-lg font-semibold">Select Withdrawal Amount</h2>
 
                                                 {/* Percentage Quick Select Buttons */}
                                                 <div className="flex space-x-2">
@@ -485,7 +485,7 @@ export default function MyPositions() {
                                                         <button
                                                             key={percent}
                                                             onClick={() => handlePercentageClick(lp, percent)}
-                                                            className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700 transition"
+                                                            className="button-secondary px-3 py-1 rounded-md text-sm transition"
                                                         >
                                                             {percent}%
                                                         </button>
@@ -503,7 +503,7 @@ export default function MyPositions() {
 
                                                 {/* ✅ Slippage Tolerance Input */}
                                                 <div className="mt-3">
-                                                    <label className="block text-black text-sm font-medium">Slippage Tolerance (%)</label>
+                                                    <h2 className="text-lg font-semibold">Slippage Tolerance (%)</h2>
                                                     <input
                                                         type="number"
                                                         className="w-full p-2 border rounded-lg text-black mt-1"
@@ -516,7 +516,7 @@ export default function MyPositions() {
                                                 {/* Confirm Button */}
                                                 <button
                                                     onClick={() => handleRemoveLiquidityConfirm(lp)}
-                                                    className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition mt-3 w-full"
+                                                    className="button-secondary px-4 py-2 rounded-md text-sm font-medium transition mt-3 w-full"
                                                 >
                                                     ✅ Confirm Withdraw LP
                                                 </button>
@@ -527,7 +527,7 @@ export default function MyPositions() {
                                         </div>
                                 ))
                             ) : (
-                                <p className="text-gray-700 mt-4">No LP positions found.</p>
+                                    <p className="text-deepTeal text-center mt-4"><strong>No LP positions found. Click View My Positions to check your wallet.</strong></p>
                             )}
 
                         </div>

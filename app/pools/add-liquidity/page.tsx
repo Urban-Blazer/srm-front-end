@@ -591,7 +591,7 @@ export default function AddLiquidity() {
             <StepIndicator step={state.step} setStep={(step) => dispatch({ type: "SET_STEP", payload: step })} />
 
             <div className="flex-1 bg-white p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
-                <h1 className="text-2xl font-bold mb-6">Create a New Pool</h1>
+                <h1 className="text-2xl font-bold mb-6">Create Liquidity</h1>
 
                 {/* Step 1: Select Coins */}
                 {state.step === 1 && (
@@ -600,7 +600,7 @@ export default function AddLiquidity() {
 
                         {/* Dropdown for Predefined Coins */}
                         <div className="mb-4 relative">
-                            <label className="block text-gray-700 mb-2">Select First Coin:</label>
+                            <label className="block text-gray-700 mb-2"><strong>Select First Coin:</strong></label>
                             <button className="w-full flex items-center justify-between p-2 border rounded-lg bg-white text-black"
                                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
                             >
@@ -614,7 +614,7 @@ export default function AddLiquidity() {
                             {state.dropdownOpen && (
                                 <div className="absolute left-0 mt-1 w-full bg-white border rounded-lg shadow-lg z-10">
                                     {predefinedCoins.map((coin) => (
-                                        <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer text-black"
+                                        <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-softMint cursor-pointer text-black"
                                             onClick={() => dispatch({ type: "SET_COIN", payload: coin })}
                                         >
                                             <Image src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
@@ -627,7 +627,7 @@ export default function AddLiquidity() {
 
                         {/* Input field for custom coin */}
                         <div className="mb-4">
-                            <label className="block text-gray-700">Enter Second Coin Type:</label>
+                            <label className="block text-gray-700"><strong>Enter Second Coin TypeName:</strong></label>
                             <input
                                 type="text"
                                 className="w-full p-2 border rounded-lg text-black placeholder-gray-500"
@@ -640,11 +640,11 @@ export default function AddLiquidity() {
                         {/* Display Pool Info */}
                         <div className="mt-6 p-4 border rounded-lg bg-gray-50 overflow-hidden">
                             {!state.poolChecked ? (
-                                <p className="text-gray-600">Select your coin pair</p>
+                                <p className="text-deepTeal">Select your coin pair</p>
                             ) : state.poolData ? (
                                 <div>
-                                    <p className="text-black text-sm font-semibold break-all">
-                                        Pool ID: <span className="text-gray-700 text-xs">{state.poolData.poolId}</span>
+                                    <p className="text-deepTeal text-m font-semibold break-all">
+                                        Pool ID: <span className="text-royalPurple text-m">{state.poolData.poolId}</span>
                                     </p>
                                     <div className="flex items-center space-x-4 mt-2">
                                         {/* CoinA */}
@@ -655,9 +655,9 @@ export default function AddLiquidity() {
                                                     width={20} height={20}
                                                 className="w-6 h-6 rounded-full"
                                             />
-                                            <span className="text-black text-sm font-medium">{state.selectedCoin.symbol}</span>
+                                            <span className="text-deepTeal text-m font-medium">{state.selectedCoin.symbol}</span>
                                         </div>
-                                        <span className="text-gray-500">+</span>
+                                            <span className="text-deepTeal text-m font-medium">/</span>
                                             {/* CoinB */}
                                             <div className="flex items-center space-x-2">
                                                 <Image
@@ -666,20 +666,20 @@ export default function AddLiquidity() {
                                                     width={20} height={20}
                                                     className="w-6 h-6 rounded-full"
                                                 />
-                                                <span className="text-black text-sm font-medium">
+                                                <span className="text-deepTeal text-m font-medium">
                                                     {state.customCoinMetadata?.symbol ? state.customCoinMetadata.symbol : "Unknown"}
                                                 </span>
                                             </div>
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-red-500">Pool not found. Create a new one.</p>
+                                <p className="text-royalPurple">Pool not found. Create a new one.</p>
                             )}
                         </div>
 
                         {/* Fetch Pool Data Button */}
                         <button
-                            className="w-full bg-black text-white p-3 rounded-lg mt-4 disabled:opacity-50"
+                            className="w-full button-secondary p-3 rounded-lg mt-4 disabled:opacity-50"
                             onClick={fetchPoolData}
                             disabled={state.loading}
                         >
@@ -705,7 +705,7 @@ export default function AddLiquidity() {
                             }}
                             disabled={!state.poolChecked}
                             style={{
-                                backgroundColor: state.poolChecked ? (state.poolData ? "black" : "blue") : "gray",
+                                backgroundColor: state.poolChecked ? (state.poolData ? "green" : "purple") : "gray",
                                 color: "white",
                             }}
                         >
@@ -721,43 +721,43 @@ export default function AddLiquidity() {
                         <h2 className="text-xl font-semibold mb-4">Deposit Liquidity</h2>
 
                         {/* Pool Stats */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Pool Stats</h3>
+                        <div className="bg-softMint p-4 rounded-lg shadow-md mb-4">
+                            <h2 className="text-lg font-semibold">Pool Stats</h2>
 
                             {/* Balances */}
-                            <h3 className="text-sm font-semibold text-black">Balances</h3>
+                            <h3 className="text-sm font-semibold text-black"><strong>Balances</strong></h3>
                             <p className="text-sm text-gray-700">
-                                Balance A: {(state.poolStats.balance_a / 1e9).toFixed(4)}
+                                <strong>Balance Coin A: {(state.poolStats.balance_a / 1e9).toFixed(4)}</strong>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Balance B: {(state.poolStats.balance_b / 1e9).toFixed(4)}
+                                <strong>Balance Coin B: {(state.poolStats.balance_b / 1e9).toFixed(4)}</strong>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Pool Locked Coins: {(state.poolStats.burn_balance_b / 1e9).toFixed(4)}
+                                <strong>Pool Locked Coins: {(state.poolStats.burn_balance_b / 1e9).toFixed(4)}</strong>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Pool Locked LP: {(state.poolStats.locked_lp_balance / 1e9).toFixed(4)}
+                                <strong>Pool Locked LP: {(state.poolStats.locked_lp_balance / 1e9).toFixed(4)}</strong>
                             </p>
 
                             {/* Fees */}
-                            <h3 className="text-sm font-semibold text-black mt-2">Fees</h3>
+                            <h3 className="text-sm font-semibold text-black mt-2"><strong>Fees</strong></h3>
                             <p className="text-sm text-gray-700">
-                                LP Builder Fee: {(state.poolStats.lp_builder_fee / 100).toFixed(2)}%
+                                <strong>LP Builder Fee: {(state.poolStats.lp_builder_fee / 100).toFixed(2)}%</strong>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Burn Fee: {(state.poolStats.burn_fee / 100).toFixed(2)}%
+                                <strong>Burn Fee: {(state.poolStats.burn_fee / 100).toFixed(2)}%</strong>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Rewards Fee: {(state.poolStats.rewards_fee / 100).toFixed(2)}%
+                                <strong>Rewards Fee: {(state.poolStats.rewards_fee / 100).toFixed(2)}%</strong>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Creator Fee: {(state.poolStats.creator_royalty_fee / 100).toFixed(2)}%
+                                <strong>Creator Royalty Fee: {(state.poolStats.creator_royalty_fee / 100).toFixed(2)}%</strong>
                             </p>
                         </div>
 
                         {/* Slippage Tolerance Input */}
                         <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Slippage Tolerance</h3>
+                            <h2 className="text-lg font-semibold">Slippage Tolerance</h2>
                             <div className="flex items-center space-x-2 mt-2">
                                 <input
                                     type="number"
@@ -774,13 +774,13 @@ export default function AddLiquidity() {
                                 <span className="text-black text-lg font-medium">%</span>
                             </div>
                             <p className="text-gray-600 text-sm mt-1">
-                                Set the maximum slippage tolerance. Lower values reduce risk but increase failure rate.
+                                Set the maximum slippage tolerance.
                             </p>
                         </div>
 
                         {/* Deposit Inputs */}
                         <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Deposit Tokens</h3>
+                            <h2 className="text-lg font-semibold">Deposit Tokens</h2>
 
                             <div className="flex items-center p-3 bg-gray-50 rounded-lg mb-2">
                                 <Image
@@ -789,8 +789,8 @@ export default function AddLiquidity() {
                                     width={20} height={20}
                                     className="w-8 h-8 rounded-full mr-2"
                                 />
-                                <span className="text-black font-medium mr-2">
-                                    {state.dropdownCoinMetadata?.symbol || "Coin A"}
+                                <span className="text-deepTeal font-medium mr-2">
+                                    <strong>{state.dropdownCoinMetadata?.symbol || "Coin A"}</strong>
                                 </span>
                                 <input
                                     type="number"
@@ -808,8 +808,8 @@ export default function AddLiquidity() {
                                     width={20} height={20}
                                     className="w-8 h-8 rounded-full mr-2"
                                 />
-                                <span className="text-black font-medium mr-2">
-                                    {state.customCoinMetadata?.symbol || "Coin B"}
+                                <span className="text-deepTeal font-medium mr-2">
+                                    <strong>{state.customCoinMetadata?.symbol || "Coin B"}</strong>
                                 </span>
                                 <input
                                     type="number"
@@ -823,7 +823,7 @@ export default function AddLiquidity() {
 
                         {/* Add Liquidity Button */}
                         <button
-                            className="bg-black text-white p-3 rounded-lg w-full mt-4 disabled:opacity-50"
+                            className="button-primary p-3 rounded-lg w-full mt-4 disabled:opacity-50"
                             onClick={handleAddLiquidity}
                             disabled={!state.depositDropdownCoin || !state.depositCustomCoin || state.loading}
                         >
@@ -840,12 +840,12 @@ export default function AddLiquidity() {
                         <h2 className="text-xl font-semibold mb-4">Liquidity Successfully Added! 🎉</h2>
 
                         <div className="bg-green-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Transaction Summary</h3>
+                            <h3 className="text-lg font-semibold text-deepTeal">Transaction Summary</h3>
 
-                            <p className="text-black text-sm font-semibold">Liquidity Pool:</p>
+                            <p className="text-deepTeal text-sm font-semibold">Liquidity Pool:</p>
                             <p className="text-gray-700 text-sm break-all">{state.liquidityData.poolId}</p>
 
-                            <h3 className="text-sm font-semibold text-black mt-2">Your Deposits:</h3>
+                            <h3 className="text-sm font-semibold text-deepTeal mt-2">Your Deposits:</h3>
                             <p className="text-sm text-gray-700">
                                 {state.liquidityData.depositA.toFixed(4)} {state.dropdownCoinMetadata?.symbol}
                             </p>
@@ -853,10 +853,10 @@ export default function AddLiquidity() {
                                 {state.liquidityData.depositB.toFixed(4)} {state.customCoinMetadata?.symbol}
                             </p>
 
-                            <h3 className="text-sm font-semibold text-black mt-2">LP Tokens Minted:</h3>
+                            <h3 className="text-sm font-semibold text-deepTeal mt-2">LP Tokens Minted:</h3>
                             <p className="text-sm text-gray-700">{state.liquidityData.lpMinted.toFixed(4)} LP Tokens</p>
 
-                            <h3 className="text-sm font-semibold text-black mt-2">Transaction Digest:</h3>
+                            <h3 className="text-sm font-semibold text-deepTeal mt-2">Transaction Digest:</h3>
                             <p className="text-sm text-blue-700 break-all cursor-pointer"
                                 onClick={() => window.open(`https://suiexplorer.com/tx/${state.liquidityData.txnDigest}`, "_blank")}
                             >
@@ -866,7 +866,7 @@ export default function AddLiquidity() {
 
                         {/* Final Action */}
                         <button
-                            className="bg-black text-white p-3 rounded-lg w-full mt-4"
+                            className="button-secondary p-3 rounded-lg w-full mt-4"
                             onClick={() => router.push("/pools")}
                         >
                             Back to Pools

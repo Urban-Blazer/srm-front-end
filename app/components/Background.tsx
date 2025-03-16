@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from "next/image";
 
 const Background: React.FC = () => {
   return (
@@ -17,9 +18,9 @@ const Background: React.FC = () => {
 
       {/* GIF Overlay */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <img
+        <IMAGE
           src="/maintext.gif"
-          alt="Animated Text"
+          alt="Sui Rewards Me"
           className="w-auto h-auto max-w-full max-h-full"
         />
       </div>

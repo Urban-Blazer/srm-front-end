@@ -27,7 +27,7 @@ export default function NavBar() {
       </Link>
 
       {/* Desktop Menu (Hidden on Mobile) */}
-      <div className="hidden md:flex space-x-4 ml-8">  {/* <-- Added ml-8 */}
+      <div className="hidden md:flex space-x-4 ml-8">
         {["dashboard", "swap", "pools", "launchpad"].map((menu) => (
           <div className="relative group" key={menu}>
             <Link href={`/${menu}`}>
@@ -94,11 +94,16 @@ export default function NavBar() {
               )}
             </div>
           ))}
+
+          {/* Wallet Connect Button for Mobile */}
+          <div className="w-full mt-4 flex justify-center">
+            <StickyHeader />
+          </div>
         </div>
       )}
 
-      {/* Wallet Connect Button */}
-      <div className="ml-auto hidden md:block">
+      {/* Wallet Connect Button (Always Visible Now) */}
+      <div className="ml-auto block">
         <StickyHeader />
       </div>
     </nav>

@@ -42,9 +42,9 @@ export default function NavBar() {
           <button className="button-primary px-4 py-2">Dashboard</button>
         </Link>
         {dropdown === "dashboard" && (
-          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
-            <Link href="/dashboard" className="block px-4 py-2 hover:bg-gray-700">Overview</Link>
-            <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-gray-700">Rewards</Link>
+          <div className="absolute bg-white p-2 rounded shadow-md w-40 z-50">
+            <Link href="/dashboard" className="block px-4 py-2 hover:bg-softMint">Overview</Link>
+            <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-softMint">Rewards</Link>
           </div>
         )}
       </div>
@@ -58,8 +58,8 @@ export default function NavBar() {
           <button className="button-primary px-4 py-2">Swap</button>
         </Link>
         {dropdown === "swap" && (
-          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
-            <Link href="/swap" className="block px-4 py-2 hover:bg-gray-700">Swap</Link>
+          <div className="absolute bg-white p-2 rounded shadow-md w-40 z-50">
+              <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap</Link>
           </div>
         )}
       </div>
@@ -73,10 +73,10 @@ export default function NavBar() {
           <button className="button-primary px-4 py-2">Pools</button>
         </Link>
         {dropdown === "pools" && (
-          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
-            <Link href="/pools" className="block px-4 py-2 hover:bg-gray-700">Overview</Link>
-            <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-gray-700">Create Pool</Link>
-            <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-gray-700">Add Liquidity</Link>
+          <div className="absolute bg-white p-2 rounded shadow-md w-40 z-50">
+            <Link href="/pools" className="block px-4 py-2 hover:bg-softMint">Overview</Link>
+            <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
+            <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>
           </div>
         )}
       </div>
@@ -90,10 +90,10 @@ export default function NavBar() {
           <button className="button-primary px-4 py-2">Launchpad</button>
         </Link>
         {dropdown === "launchpad" && (
-          <div className="absolute bg-gray-800 p-2 rounded shadow-md w-40 z-50">
-            <Link href="/launchpad" className="block px-4 py-2 hover:bg-gray-700">Overview</Link>
-            <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-gray-700">Create Coin</Link>
-            <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-gray-700">Coming Soon</Link>
+          <div className="absolute bg-white p-2 rounded shadow-md w-40 z-50">
+            <Link href="/launchpad" className="block px-4 py-2 hover:bg-softMint">Overview</Link>
+            <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint">Create Coin</Link>
+            <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>
           </div>
         )}
       </div>

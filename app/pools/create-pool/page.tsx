@@ -565,7 +565,7 @@ export default function Pools() {
     };
 
     return (
-        <div className="flex h-screen bg-gray-100 p-6 overflow-hidden">
+        <div className="flex h-screen bg-deepTeal p-6 overflow-hidden">
 
             <StepIndicator step={state.step} setStep={setStep} />
             <div className="flex-1 bg-white p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
@@ -578,7 +578,7 @@ export default function Pools() {
 
                         {/* Dropdown for Predefined Coins */}
                         <div className="mb-4 relative">
-                            <label className="block text-gray-700 mb-2">Select First Coin:</label>
+                            <label className="block text-gray-700 mb-2"><strong>Select First Coin:</strong></label>
                             <button className="w-full flex items-center justify-between p-2 border rounded-lg bg-white text-black"
                                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
                             >
@@ -592,7 +592,7 @@ export default function Pools() {
                             {state.dropdownOpen && (
                                 <div className="absolute left-0 mt-1 w-full bg-white border rounded-lg shadow-lg z-10">
                                     {predefinedCoins.map((coin) => (
-                                        <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer text-black"
+                                        <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-softMint cursor-pointer text-black"
                                             onClick={() => dispatch({ type: "SET_COIN", payload: coin })}
                                         >
                                             <Image src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
@@ -605,9 +605,9 @@ export default function Pools() {
 
                         {/* Input field for custom coin */}
                         <div className="mb-4">
-                            <label className="block text-gray-700">Enter Second Coin Type:</label>
+                            <label className="block text-gray-700"><strong>Enter Second Coin TypeName:</strong></label>
                             <input type="text" className="w-full p-2 border rounded-lg text-black placeholder-gray-500"
-                                placeholder="Enter coin type (e.g., 0x2::sui::SUI)"
+                                placeholder="Enter Coin TypeName (e.g., 0x2::sui::SUI)"
                                 value={state.customCoin}
                                 onChange={(e) => dispatch({ type: "SET_CUSTOM_COIN", payload: e.target.value })}
                             />
@@ -628,7 +628,7 @@ export default function Pools() {
                         <h2 className="text-xl font-semibold mb-4">Set Pool Fees</h2>
 
                         {/* Selected Coins Display */}
-                        <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
+                        <div className="flex items-center justify-center gap-4 p-4 bg-softMint rounded-lg mb-4">
                             <div className="flex items-center space-x-2">
                                 <Image src={state.dropdownCoinMetadata.iconUrl || ""} alt={state.dropdownCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-deepTeal">{state.dropdownCoinMetadata.symbol}</span>
@@ -651,7 +651,7 @@ export default function Pools() {
                                 { field: "rewardsFee", label: "Rewards Fee", max: 5 }
                             ].map(({ field, label, max }) => (
                                 <div key={field}>
-                                    <label className="block text-gray-700">{label} (0.00% - {max.toFixed(2)}%)</label>
+                                    <label className="block text-gray-700"><strong>{label} (0.00% - {max.toFixed(2)}%)</strong></label>
                                     <input
                                         type="number"
                                         className="w-full p-2 border rounded-lg text-black"
@@ -677,7 +677,7 @@ export default function Pools() {
 
                             {/* Deployer Royalty Wallet Address Validation */}
                             <div>
-                                <label className="block text-gray-700">Deployer Royalty Wallet Address *</label>
+                                <label className="block text-gray-700"><strong>Deployer Royalty Wallet Address *</strong></label>
                                 <input
                                     type="text"
                                     className={`w-full p-2 border rounded-lg text-black ${state.deployerRoyaltyWallet && !isValidSuiAddress(state.deployerRoyaltyWallet) ? "border-red-500" : ""}`}
@@ -723,7 +723,7 @@ export default function Pools() {
                         <h2 className="text-xl font-semibold mb-4">Set Deposit Amounts</h2>
 
                         {/* Selected Coins */}
-                        <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg mb-4">
+                        <div className="flex items-center justify-center gap-4 p-4 bg-softMint rounded-lg mb-4">
                             <div className="flex items-center space-x-2">
                                 <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-deepTeal">{state.dropdownCoinMetadata?.symbol}</span>
@@ -738,7 +738,7 @@ export default function Pools() {
                         </div>
 
                         {/* Fee Summary */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
+                        <div className="bg-softMint p-4 rounded-lg shadow-md mb-4">
                             <h3 className="text-lg font-semibold text-deepTeal">Fees</h3>
                             <ul className="space-y-2 text-black">
                                 <li><strong>LP Builder Fee:</strong> {state.lpBuilderFee.toFixed(2)}%</li>
@@ -749,15 +749,15 @@ export default function Pools() {
                         </div>
 
                         {/* Deployer Wallet */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Deployer Wallet</h3>
+                        <div className="bg-softMint p-4 rounded-lg shadow-md mb-4">
+                            <h2 className="text-lg font-semibold">Deployer Wallet</h2>
                             <p className="text-black">{state.deployerRoyaltyWallet || "Not set"}</p>
                         </div>
 
                         {/* Initial Price Input */}
                         <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Initial Price</h3>
-                            <p className="text-gray-500 mb-2">Set the starting exchange rate between the two tokens you are providing.</p>
+                            <h2 className="text-lg font-semibold">Initial Price</h2>
+                            <p className="text-gray-500 mb-2">Set the starting exchange rate between the two coins in your pool.</p>
 
                             {/* Toggle Button */}
                             <div className="flex items-center justify-between bg-white p-2 rounded-lg border w-48 mb-2">
@@ -796,8 +796,8 @@ export default function Pools() {
 
                         {/* ✅ Deposit Token Amount Section (NEW) */}
                         <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Deposit Tokens</h3>
-                            <p className="text-gray-500 mb-4">Specify the token amounts for your liquidity contribution.</p>
+                            <h2 className="text-lg font-semibold">Deposit Coins</h2>
+                            <p className="text-gray-500 mb-4">Specify the coin amounts for your initial liquidity.</p>
 
                             {/* First Token */}
                             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-2">
@@ -850,9 +850,9 @@ export default function Pools() {
                         <h2 className="text-xl font-semibold mb-4">Review & Create Pool</h2>
 
                         {/* Coin Pair Summary */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Selected Coins</h3>
-                            <div className="flex items-center justify-center gap-4 p-4 bg-gray-200 rounded-lg">
+                        <div className="bg-softMint p-4 rounded-lg shadow-md mb-4">
+                            <h2 className="text-lg font-semibold">Selected Coins</h2>
+                            <div className="flex items-center justify-center gap-4 p-4 bg-softMint rounded-lg">
                                 <div className="flex items-center space-x-2">
                                     <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                     <span className="text-lg font-semibold text-deepTeal">{state.dropdownCoinMetadata?.symbol}</span>
@@ -866,8 +866,8 @@ export default function Pools() {
                         </div>
 
                         {/* Fees Summary */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-deepTeal">Fees</h3>
+                        <div className="bg-softMint p-4 rounded-lg shadow-md mb-4">
+                            <h2 className="text-lg font-semibold">Fees</h2>
                             <ul className="space-y-2 text-black">
                                 <li><strong>LP Builder Fee:</strong> {state.lpBuilderFee.toFixed(2)}%</li>
                                 <li><strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee.toFixed(2)}%</li>
@@ -877,21 +877,21 @@ export default function Pools() {
                         </div>
 
                         {/* Deployer Wallet */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Deployer Wallet</h3>
+                        <div className="bg-softMint p-4 rounded-lg shadow-md mb-4">
+                            <h2 className="text-lg font-semibold">Deployer Wallet</h2>
                             <p className="text-black">{state.deployerRoyaltyWallet || "Not set"}</p>
                         </div>
 
                         {/* Initial Price & Deposit Amounts */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Initial Price</h3>
+                        <div className="bg-softMint p-4 rounded-lg shadow-md mb-4">
+                            <h2 className="text-lg font-semibold">Initial Price</h2>
                             <p className="text-black text-lg">
                                 1 {state.dropdownCoinMetadata?.symbol} = {state.initialPrice} {state.customCoinMetadata?.symbol}
                             </p>
                         </div>
 
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-black">Deposit Amounts</h3>
+                        <div className="bg-softMint p-4 rounded-lg shadow-md mb-4">
+                            <h2 className="text-lg font-semibold">Deposit Amounts</h2>
                             <p className="text-black text-lg">
                                 {state.depositDropdownCoin} {state.dropdownCoinMetadata?.symbol} / {state.depositCustomCoin} {state.customCoinMetadata?.symbol}
                             </p>
@@ -919,11 +919,11 @@ export default function Pools() {
 
                 {state.step === 5 && (
                     <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
-                        <h2 className="text-xl font-semibold mb-4 text-black">🎉 Pool Successfully Created!</h2>
+                        <h2 className="text-xl font-semibold mb-4">🎉 Pool Successfully Created!</h2>
 
                         {state.poolData ? (
                             <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                                <h3 className="text-lg font-semibold text-black">Pool Information</h3>
+                                <h2 className="text-lg font-semibold">Pool Information</h2>
                                 <ul className="space-y-1 text-black">
                                     {/* ✅ Pool ID with Copy Button */}
                                     <li className="flex items-center justify-between bg-gray-100 rounded-lg overflow-x-auto">
@@ -931,10 +931,10 @@ export default function Pools() {
                                             <strong>Pool ID:</strong> {state.poolData.poolId}
                                         </p>
                                         <div className="flex items-center space-x-2">
-                                            {copiedText === state.poolData.poolId && <span className="text-green-500 text-sm">Copied!</span>}
+                                            {copiedText === state.poolData.poolId && <span className="text-deepTeal text-sm">Copied!</span>}
                                             <button
                                                 onClick={() => handleCopy(state.poolData.poolId)}
-                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                                className="p-2 rounded-lg hover:bg-softMint transition"
                                             >
                                                 <CopyIcon className="w-5 h-5" />
                                             </button>
@@ -948,11 +948,11 @@ export default function Pools() {
                                         </p>
                                         <div className="flex items-center space-x-2">
                                             {copiedText === `${state.poolData.coinA?.name || "Unknown"} / ${state.poolData.coinB?.name || "Unknown"}` && (
-                                                <span className="text-green-500 text-sm">Copied!</span>
+                                                <span className="text-deepTeal text-sm">Copied!</span>
                                             )}
                                             <button
                                                 onClick={() => handleCopy(`${state.poolData.coinA?.name || "Unknown"} / ${state.poolData.coinB?.name || "Unknown"}`)}
-                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                                className="p-2 rounded-lg hover:bg-softMint transition"
                                             >
                                                 <CopyIcon className="w-5 h-5" />
                                             </button>
@@ -966,10 +966,10 @@ export default function Pools() {
                                             <strong>Coin A:</strong> {state.poolData.coinA?.name || "Unknown"}
                                         </p>
                                         <div className="flex items-center space-x-2">
-                                            {copiedText === state.poolData.coinA?.name && <span className="text-green-500 text-sm">Copied!</span>}
+                                            {copiedText === state.poolData.coinA?.name && <span className="text-deepTeal text-sm">Copied!</span>}
                                             <button
                                                 onClick={() => handleCopy(state.poolData.coinA?.name || "Unknown")}
-                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                                className="p-2 rounded-lg hover:bg-softMint transition"
                                             >
                                                 <CopyIcon className="w-5 h-5" />
                                             </button>
@@ -983,10 +983,10 @@ export default function Pools() {
                                             <strong>Coin B:</strong> {state.poolData.coinB?.name || "Unknown"}
                                         </p>
                                         <div className="flex items-center space-x-2">
-                                            {copiedText === state.poolData.coinB?.name && <span className="text-green-500 text-sm">Copied!</span>}
+                                            {copiedText === state.poolData.coinB?.name && <span className="text-deepTeal text-sm">Copied!</span>}
                                             <button
                                                 onClick={() => handleCopy(state.poolData.coinB?.name || "Unknown")}
-                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                                className="p-2 rounded-lg hover:bg-softMint transition"
                                             >
                                                 <CopyIcon className="w-5 h-5" />
                                             </button>
@@ -1012,10 +1012,10 @@ export default function Pools() {
                                             <strong>Creator Wallet:</strong> {state.poolData.creatorWallet}
                                         </p>
                                         <div className="flex items-center space-x-2">
-                                            {copiedText === state.poolData.creatorWallet && <span className="text-green-500 text-sm">Copied!</span>}
+                                            {copiedText === state.poolData.creatorWallet && <span className="text-deepTeal text-sm">Copied!</span>}
                                             <button
                                                 onClick={() => handleCopy(state.poolData.creatorWallet)}
-                                                className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                                className="p-2 rounded-lg hover:bg-softMint transition"
                                             >
                                                 <CopyIcon className="w-5 h-5" />
                                             </button>
@@ -1024,11 +1024,11 @@ export default function Pools() {
                                 </ul>
                             </div>
                         ) : (
-                            <div className="text-center text-gray-600 mt-10">⏳ Loading Pool Details...</div>
+                            <div className="text-center text-royalPurple mt-10">⏳ Loading Pool Details...</div>
                         )}
 
                         <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex justify-center">
-                            <button className="bg-black text-white p-3 rounded-lg"
+                            <button className="button-primary p-3 rounded-lg"
                                 onClick={() => dispatch({ type: "SET_STEP", payload: 1 })}>
                                 🔄 Create Another Pool
                             </button>

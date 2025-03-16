@@ -530,7 +530,8 @@ export default function Swap() {
             
             const expectedOutU64 = BigInt(Math.floor(Number(buyAmount) * Math.pow(10, decimals)));
 
-            const minOutU64 = expectedOutU64 - (expectedOutU64 * BigInt(maxSlippage) / BigInt(100));
+            const maxSlippageInt = BigInt(Math.floor(Number(maxSlippage) * 100)); // Convert 0.5 to 50
+            const minOutU64 = expectedOutU64 - (expectedOutU64 * maxSlippageInt / BigInt(10000));
 
             if (minOutU64 <= 0n) {
                 alert("🚨 Slippage is too high. Adjust your settings.");

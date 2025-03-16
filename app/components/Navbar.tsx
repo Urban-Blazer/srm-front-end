@@ -14,27 +14,50 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="navbar text-white p-4 flex justify-between items-center relative z-50">
-      {/* Logo Link */}
-      <Link href="/" className="flex items-center">
-        <Image
-          src="/images/logo_wide_1.png"
-          alt="Sui Rewards Me App Logo"
-          width={180}
-          height={80}
-          priority
-        />
-      </Link>
+    <nav className="navbar text-white p-4 flex items-center justify-between relative z-50">
+      {/* Left Section: Logo */}
+      <div className="flex items-center gap-x-4">
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/images/logo_wide_1.png"
+            alt="Sui Rewards Me App Logo"
+            width={150} /* Reduced size for better mobile fit */
+            height={60}
+            priority
+          />
+        </Link>
+      </div>
+
+      {/* Center Section: Mobile Menu Button + Mobile Wallet Connect */}
+      <div className="flex items-center gap-x-4">
+        {/* Mobile Menu Button */}
+        <button
+          className="md:hidden text-white text-2xl"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          ☰
+        </button>
+
+        {/* Mobile Wallet Connect Button (Visible on Small Screens) */}
+        <div className="sm:hidden flex">
+          <StickyHeader />
+        </div>
+      </div>
 
       {/* Desktop Menu (Hidden on Mobile) */}
       <div className="hidden md:flex space-x-4 ml-8">
         {["dashboard", "swap", "pools", "launchpad"].map((menu) => (
-          <div className="relative group" key={menu}>
+          <div
+            key={menu}
+            className="relative group"
+            onMouseEnter={() => setDropdown(menu)}
+            onMouseLeave={() => setDropdown(null)}
+          >
             <Link href={`/${menu}`}>
               <button className="button-primary px-4 py-2">{menu.charAt(0).toUpperCase() + menu.slice(1)}</button>
             </Link>
             {dropdown === menu && (
-              <div className="absolute bg-white text-black p-2 rounded shadow-md w-40 z-50">
+              <div className="absolute left-0 mt-2 bg-white text-black p-2 rounded shadow-md w-40 z-50">
                 <Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>
                 {menu === "dashboard" && <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-softMint">Rewards</Link>}
                 {menu === "pools" && (
@@ -54,14 +77,6 @@ export default function NavBar() {
           </div>
         ))}
       </div>
-
-      {/* Mobile Menu Button */}
-      <button
-        className="md:hidden text-white text-2xl"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      >
-        ☰
-      </button>
 
       {/* Mobile Menu (Slide-in) */}
       {isMobileMenuOpen && (
@@ -95,15 +110,15 @@ export default function NavBar() {
             </div>
           ))}
 
-          {/* Wallet Connect Button for Mobile */}
+          {/* Wallet Connect Button for Mobile Menu */}
           <div className="w-full mt-4 flex justify-center">
             <StickyHeader />
           </div>
         </div>
       )}
 
-      {/* Wallet Connect Button (Always Visible Now) */}
-      <div className="ml-auto block">
+      {/* Desktop Wallet Connect Button */}
+      <div className="hidden md:flex ml-auto">
         <StickyHeader />
       </div>
     </nav>

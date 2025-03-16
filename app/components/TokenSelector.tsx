@@ -154,9 +154,12 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
 
                     {/* Title & Close Button */}
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold">Select a Token</h2>
-                        <button onClick={onClose}>
-                            <X size={20} className="text-gray-500 hover:text-gray-800" />
+                        <h1 className="text-lg font-bold">Select a Token</h1>
+                        <button 
+                        onClick={onClose}
+                        className="bg-royalPurple hover:bg-lavenderGlow text-white p-2 rounded-lg"
+                        >
+                            <X size={20} className="text-white hover:text-gray-800" />
                         </button>
                     </div>
 
@@ -174,16 +177,42 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
 
                     {/* Add Custom Token Button */}
                     <button
-                        className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
+                        className="button-primary w-full p-2 rounded-lg hover: transition"
                         onClick={() => setShowAddTokenModal(true)}
                     >
-                        <Plus size={18} className="inline-block mr-2" /> Add Custom Token
+                        <Plus size={18} className="inline-block mr-2" /> Add Custom Coin
                     </button>
+
+                    {/* Featured Coin */}
+                    <div className="mt-2">
+                        <h3 className="text-sm text-deepTeal mb-1">Featured Coins</h3>
+                        {filteredTokens.map((token) => (
+                            <div
+                                key={token.typeName}
+                                className="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 rounded-md"
+                                onClick={() => handleSelectToken(token)} // ✅ Allow selection directly
+                            >
+                                <div className="flex items-center">
+                                    <Image src={token.logo} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2" />
+                                    <span className="text-deepTeal"><strong>{token.symbol}</strong></span>
+                                </div>
+                                <button
+                                    className="bg-royalPurple hover:bg-lavenderGlow text-white p-2 rounded-lg"
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // ✅ Prevents event bubbling
+                                        handleAddToken(token);
+                                    }}
+                                >
+                                    <PlusCircle size={18} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
 
                     {/* Saved Tokens (User Added) */}
                     {savedTokens.length > 0 ? (
                         <div className="mt-2">
-                            <h3 className="text-sm text-gray-600 mb-1">Your Tokens</h3>
+                            <h2 className="text-sm mb-1">Your Coin List</h2>
                             {savedTokens.map((token) => (
                                 <div
                                     key={token.typeName}
@@ -192,11 +221,11 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                                 >
                                     <div className="flex items-center">
                                         <Image src={token.logo} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2" />
-                                        <span className="text-gray-800">{token.symbol}</span>
+                                        <span className="text-deepTeal"><strong>{token.symbol}</strong></span>
                                     </div>
                                     {/* 🚀 Remove Token Button */}
                                     <button
-                                        className="text-red-500 hover:text-red-700"
+                                        className="bg-royalPurple text-white hover:bg-lavenderGlow p-2 rounded-lg"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleRemoveToken(token);
@@ -208,34 +237,8 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                             ))}
                         </div>
                     ) : (
-                        <p className="text-gray-500 text-sm mt-2">No custom tokens added yet.</p>
+                        <p className="text-royalPurple text-sm mt-2">No custom tokens added yet.</p>
                     )}
-
-                    {/* Common Tokens */}
-                    <div className="mt-2">
-                        <h3 className="text-sm text-gray-600 mb-1">Common Tokens</h3>
-                        {filteredTokens.map((token) => (
-                            <div
-                                key={token.typeName}
-                                className="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 rounded-md"
-                                onClick={() => handleSelectToken(token)} // ✅ Allow selection directly
-                            >
-                                <div className="flex items-center">
-                                    <Image src={token.logo} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2" />
-                                    <span className="text-gray-800">{token.symbol}</span>
-                                </div>
-                                <button
-                                    className="text-blue-500 hover:text-blue-700"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // ✅ Prevents event bubbling
-                                        handleAddToken(token);
-                                    }}
-                                >
-                                    <PlusCircle size={18} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
 
                 </div>
             </div>

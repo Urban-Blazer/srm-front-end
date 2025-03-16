@@ -25,11 +25,11 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ open, onClose, logs
                     disabled={isProcessing} // ✅ Keeps button disabled while processing
                     onClick={onClose}
                     sx={{
-                        backgroundColor: isProcessing ? "#6c757d" : "#28a745",
-                        color: "blue",
+                        backgroundColor: isProcessing ? "#6c757d" : "#21B573",
+                        color: "#6A1B9A",
                         minWidth: "200px",
                         "&:hover": {
-                            backgroundColor: isProcessing ? "#5a6268" : "#218838",
+                            backgroundColor: isProcessing ? "#5a6268" : "#9FFFCB",
                         },
                     }}
                 >

@@ -18,9 +18,11 @@ const Background: React.FC = () => {
 
       {/* GIF Overlay */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <IMAGE
+        <Image
           src="/maintext.gif"
           alt="Sui Rewards Me"
+          width={500} // Set an explicit width
+          height={300} // Set an explicit height
           className="w-auto h-auto max-w-full max-h-full"
         />
       </div>

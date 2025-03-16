@@ -40,13 +40,7 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* 🌆 Background Styling */
@@ -172,19 +166,22 @@ a:hover {
 /* Make dropdowns smooth */
 .navbar .absolute {
   transition: all 0.3s ease-in-out;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 /* Mobile menu background */
 @media (max-width: 768px) {
   .navbar {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 12px;
   }
 }
 
 @media (max-width: 640px) {
   .button-secondary {
-    font-size: 14px;
-    padding: 8px;
+    font-size: 12px;
+    padding: 6px;
   }
 
   input {

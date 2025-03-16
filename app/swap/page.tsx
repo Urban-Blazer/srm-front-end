@@ -841,10 +841,10 @@ export default function Swap() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col lg:flex-row justify-center items-center bg-gray-100 p-4 pb-20 overflow-y-auto">
+        <div className="min-h-screen flex flex-col md:flex-row justify-center items-center bg-gray-100 p-4 pb-20 overflow-y-auto">
 
             {/* Swap Interface */}
-            <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 relative">
+            <div className="w-full max-w-sm md:max-w-md bg-white shadow-lg rounded-xl p-6 relative">
                 <div className="flex flex-col space-y-4 pb-24">
                     <h1 className="text-xl font-bold text-center">Swap Tokens</h1>
 
@@ -879,7 +879,7 @@ export default function Swap() {
                                 id="sellAmount"
                                 name="sellAmount"
                                 type="number"
-                                className="bg-transparent text-2xl font-semibold text-black w-full outline-none"
+                                className="bg-transparent text-lg md:text-2xl font-semibold text-black w-full outline-none"
                                 placeholder="0"
                                 value={sellAmount}
                                 onChange={handleSellAmountChange}
@@ -887,7 +887,7 @@ export default function Swap() {
                             />
                             {/* Sell Token Selection Button */}
                             <button
-                                className="flex items-center justify-between w-32 bg-white border rounded-lg px-3 py-2 shadow hover:bg-softMint"
+                                className="flex items-center justify-between w-24 md:w-32 bg-white border rounded-lg px-2 py-1 md:px-3 md:py-2 shadow hover:bg-softMint"
                                 onClick={() => setDropdownOpen(dropdownOpen === "sell" ? null : "sell")}
                             >
                                 {sellToken ? (
@@ -932,7 +932,7 @@ export default function Swap() {
                                 id="buyAmount"
                                 name="buyAmount"
                                 type="number"
-                                className="bg-transparent text-2xl font-semibold text-black w-full outline-none"
+                                className="bg-transparent text-lg md:text-2xl font-semibold text-black w-full outline-none"
                                 placeholder="0"
                                 value={buyAmount}
                                 onChange={handleBuyAmountChange}
@@ -940,7 +940,7 @@ export default function Swap() {
                             />
                             {/* Buy Token Selection Button */}
                             <button
-                                className="flex items-center justify-between w-32 bg-white border rounded-lg px-3 py-2 shadow hover:bg-softMint"
+                                className="flex items-center justify-between w-24 md:w-32 bg-white border rounded-lg px-2 py-1 md:px-3 md:py-2 shadow hover:bg-softMint"
                                 onClick={() => setDropdownOpen(dropdownOpen === "buy" ? null : "buy")}
                             >
                                 {buyToken ? (
@@ -1002,7 +1002,7 @@ export default function Swap() {
 
                         {/* ✅ Prevent rendering if `poolStats` or `poolMetadata` is missing */}
                         {poolStats && poolMetadata ? (
-                            <div className="mt-4 space-y-3 max-h-[500px] overflow-y-auto pb-20">
+                                <div className="mt-4 space-y-3 max-h-[400px] md:max-h-[500px] overflow-y-auto pb-20">
                                 {/* ✅ Display Coin A Metadata with Balance */}
                                 <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-deepTeal">
                                     <div className="flex items-center space-x-3">

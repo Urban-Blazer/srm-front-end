@@ -24,7 +24,7 @@ export default function NavBar() {
       {/* Logo Link */}
       <Link href="/" className="mr-6 flex items-center">
         <Image
-          src="/logo_wide_2.png"
+          src="/images/logo_wide_1.png"
           alt="Sui Rewards Me App Logo"
           width={250} // Adjust width as needed
           height={100} // Adjust height as needed

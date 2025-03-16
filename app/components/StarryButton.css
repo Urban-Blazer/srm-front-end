@@ -28,7 +28,7 @@
 
 @media (max-width: 640px) {
   .stars-bg {
-    background-size: contain;
+    background-size: cover;
     /* Adjust for smaller screens */
   }
 }

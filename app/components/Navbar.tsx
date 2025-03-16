@@ -16,32 +16,16 @@ export default function NavBar() {
   return (
     <nav className="navbar text-white p-4 flex items-center justify-between relative z-50">
       {/* Left Section: Logo */}
-      <div className="flex items-center gap-x-4">
+      <div className="flex items-center">
         <Link href="/" className="flex items-center">
           <Image
             src="/images/logo_wide_1.png"
             alt="Sui Rewards Me App Logo"
-            width={150} /* Reduced size for better mobile fit */
+            width={150} /* Adjusted size for mobile fit */
             height={60}
             priority
           />
         </Link>
-      </div>
-
-      {/* Center Section: Mobile Menu Button + Mobile Wallet Connect */}
-      <div className="flex items-center gap-x-4">
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden text-white text-2xl"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          ☰
-        </button>
-
-        {/* Mobile Wallet Connect Button (Visible on Small Screens) */}
-        <div className="sm:hidden flex">
-          <StickyHeader />
-        </div>
       </div>
 
       {/* Desktop Menu (Hidden on Mobile) */}
@@ -76,6 +60,16 @@ export default function NavBar() {
             )}
           </div>
         ))}
+      </div>
+
+      {/* Right Section: Mobile Menu Button (Only Visible on Mobile) */}
+      <div className="md:hidden ml-auto">
+        <button
+          className="text-white text-2xl"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          ☰
+        </button>
       </div>
 
       {/* Mobile Menu (Slide-in) */}
@@ -117,7 +111,7 @@ export default function NavBar() {
         </div>
       )}
 
-      {/* Desktop Wallet Connect Button */}
+      {/* Desktop Wallet Connect Button (Hidden on Mobile) */}
       <div className="hidden md:flex ml-auto">
         <StickyHeader />
       </div>

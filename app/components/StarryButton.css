@@ -4,9 +4,31 @@
     0 0 25px #555, 0 0 35px #666, 0 0 40px #666, 0 0 50px #666, 0 0 75px #666;
 }
 
+/* Mobile-Friendly Button */
+@media (max-width: 640px) {
+  .connect-button {
+    width: 100%;
+    /* Full width on mobile */
+    max-width: 160px;
+    /* Prevents excessive stretching */
+    height: 45px;
+    /* Slightly smaller height for mobile */
+    font-size: 14px;
+    /* Adjust font size */
+  }
+}
+
+/* Background GIF Mobile Scaling */
 .stars-bg {
   background-image: url('/water_button.gif');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+@media (max-width: 640px) {
+  .stars-bg {
+    background-size: contain;
+    /* Adjust for smaller screens */
+  }
 }

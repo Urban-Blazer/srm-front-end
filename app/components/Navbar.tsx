@@ -1,106 +1,104 @@
 "use client";
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import StickyHeader from "./StickyHeader";
 import Image from 'next/image';
 
 export default function NavBar() {
   const [dropdown, setDropdown] = useState<string | null>(null);
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleMouseEnter = (menu: string) => {
-    if (timeoutId) clearTimeout(timeoutId); // Prevent accidental closing
-    setDropdown(menu);
-  };
-
-  const handleMouseLeave = () => {
-    const id = setTimeout(() => setDropdown(null), 300); // Delay closing by 300ms
-    setTimeoutId(id);
+  const toggleDropdown = (menu: string) => {
+    setDropdown(dropdown === menu ? null : menu);
   };
 
   return (
-    <nav className="navbar text-white p-4 flex justify-between relative z-50">
+    <nav className="navbar text-white p-4 flex justify-between items-center relative z-50">
       {/* Logo Link */}
-      <Link href="/" className="mr-6 flex items-center">
+      <Link href="/" className="flex items-center">
         <Image
           src="/images/logo_wide_1.png"
           alt="Sui Rewards Me App Logo"
-          width={250} // Adjust width as needed
-          height={100} // Adjust height as needed
-          priority // Ensures faster loading
+          width={180}
+          height={80}
+          priority
         />
       </Link>
 
-      <div className="flex space-x-4">
-      {/* Dashboard Menu */}
-      <div className="relative group"
-        onMouseEnter={() => handleMouseEnter("dashboard")}
-        onMouseLeave={handleMouseLeave}
-      >
-        <Link href="/dashboard">
-          <button className="button-primary px-4 py-2">Dashboard</button>
-        </Link>
-        {dropdown === "dashboard" && (
-          <div className="absolute bg-white p-2 rounded shadow-md w-40 z-50">
-            <Link href="/dashboard" className="block px-4 py-2 hover:bg-softMint">Overview</Link>
-            <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-softMint">Rewards</Link>
+      {/* Desktop Menu (Hidden on Mobile) */}
+      <div className="hidden md:flex space-x-4 ml-8">  {/* <-- Added ml-8 */}
+        {["dashboard", "swap", "pools", "launchpad"].map((menu) => (
+          <div className="relative group" key={menu}>
+            <Link href={`/${menu}`}>
+              <button className="button-primary px-4 py-2">{menu.charAt(0).toUpperCase() + menu.slice(1)}</button>
+            </Link>
+            {dropdown === menu && (
+              <div className="absolute bg-white text-black p-2 rounded shadow-md w-40 z-50">
+                <Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>
+                {menu === "dashboard" && <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-softMint">Rewards</Link>}
+                {menu === "pools" && (
+                  <>
+                    <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
+                    <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>
+                  </>
+                )}
+                {menu === "launchpad" && (
+                  <>
+                    <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint">Create Coin</Link>
+                    <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>
+                  </>
+                )}
+              </div>
+            )}
           </div>
-        )}
+        ))}
       </div>
 
-      {/* Swap Menu */}
-      <div className="relative group"
-        onMouseEnter={() => handleMouseEnter("swap")}
-        onMouseLeave={handleMouseLeave}
+      {/* Mobile Menu Button */}
+      <button
+        className="md:hidden text-white text-2xl"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
-        <Link href="/swap">
-          <button className="button-primary px-4 py-2">Swap</button>
-        </Link>
-        {dropdown === "swap" && (
-          <div className="absolute bg-white p-2 rounded shadow-md w-40 z-50">
-              <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap</Link>
-          </div>
-        )}
-      </div>
+        ☰
+      </button>
 
-      {/* Pools Menu */}
-      <div className="relative group"
-        onMouseEnter={() => handleMouseEnter("pools")}
-        onMouseLeave={handleMouseLeave}
-      >
-        <Link href="/pools">
-          <button className="button-primary px-4 py-2">Pools</button>
-        </Link>
-        {dropdown === "pools" && (
-          <div className="absolute bg-white p-2 rounded shadow-md w-40 z-50">
-            <Link href="/pools" className="block px-4 py-2 hover:bg-softMint">Overview</Link>
-            <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
-            <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>
-          </div>
-        )}
-      </div>
-
-      {/* Launchpad Menu */}
-      <div className="relative group"
-        onMouseEnter={() => handleMouseEnter("launchpad")}
-        onMouseLeave={handleMouseLeave}
-      >
-        <Link href="/launchpad">
-          <button className="button-primary px-4 py-2">Launchpad</button>
-        </Link>
-        {dropdown === "launchpad" && (
-          <div className="absolute bg-white p-2 rounded shadow-md w-40 z-50">
-            <Link href="/launchpad" className="block px-4 py-2 hover:bg-softMint">Overview</Link>
-            <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint">Create Coin</Link>
-            <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>
-          </div>
-        )}
-      </div>
-      </div>
+      {/* Mobile Menu (Slide-in) */}
+      {isMobileMenuOpen && (
+        <div className="absolute top-16 right-0 bg-darkBlue w-full sm:w-64 p-4 shadow-lg flex flex-col items-start md:hidden">
+          {["dashboard", "swap", "pools", "launchpad"].map((menu) => (
+            <div key={menu} className="w-full">
+              <button
+                className="text-white w-full text-left px-4 py-2 hover:bg-softMint"
+                onClick={() => toggleDropdown(menu)}
+              >
+                {menu.charAt(0).toUpperCase() + menu.slice(1)}
+              </button>
+              {dropdown === menu && (
+                <div className="bg-white text-black p-2 rounded w-full">
+                  <Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>
+                  {menu === "dashboard" && <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-softMint">Rewards</Link>}
+                  {menu === "pools" && (
+                    <>
+                      <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
+                      <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>
+                    </>
+                  )}
+                  {menu === "launchpad" && (
+                    <>
+                      <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint">Create Coin</Link>
+                      <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Wallet Connect Button */}
-      <div className="ml-auto">
+      <div className="ml-auto hidden md:block">
         <StickyHeader />
       </div>
     </nav>

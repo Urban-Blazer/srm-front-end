@@ -27,9 +27,10 @@ const StarryButton: React.FC<StarryButtonProps> = ({
         connected ? await onDisconnect() : await onConnect()
         setConnecting(false)
       }}
-      className="relative overflow-hidden bg-black text-royalPurple w-[180px] h-[50px] rounded-lg glow-effect hover:scale-110 transition-transform duration-250"
+      className="relative overflow-hidden text-royalPurple w-[200px] sm:w-[180px] h-[60px] sm:h-[50px] 
+                 rounded-xl glow-effect hover:scale-105 transition-transform duration-250 connect-button flex items-center justify-center"
     >
-      <span className="absolute inset-0 flex items-center justify-center z-10">
+      <span className="relative z-10 px-8 py-4 text-base font-bold">
         {hovering && connected
           ? 'Disconnect'
           : connected

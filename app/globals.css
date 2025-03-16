@@ -161,3 +161,22 @@ a:hover {
   border-radius: 5px;
   font-weight: bold;
 }
+
+/* Mobile Config */
+
+/* Fix overlapping dropdown issue */
+.navbar .relative {
+  position: relative;
+}
+
+/* Make dropdowns smooth */
+.navbar .absolute {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Mobile menu background */
+@media (max-width: 768px) {
+  .navbar {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+}

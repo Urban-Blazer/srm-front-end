@@ -572,7 +572,7 @@ export default function Pools() {
                 <h1 className="text-2xl font-bold mb-6">Create a New Pool</h1>
 
                 <div className="flex items-center justify-center gap-4 p-4 bg-royalPurple rounded-lg mb-4">
-                    <p className="text-highlight text-m mt-1">Pool Creation Locked: Contact admin to claim your project's pool and start trading.</p>
+                    <p className="text-highlight text-m mt-1">Pool Creation Locked: Contact admin to claim your project{"'"}s pool and start trading.</p>
                 </div>
 
                 {/* Step 1: Select Coins */}

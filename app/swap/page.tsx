@@ -1090,11 +1090,11 @@ export default function Swap() {
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-red-500 mt-4">Pool Data Not Available</p>
+                            <p className="text-red-500 mt-4">Pool Does Not Exist</p>
                         )}
                     </>
                 ) : (
-                    <p className="text-red-500">Pool Does Not Exist</p>
+                        <p className="text-royalPurple">Pool Does Not Exist: Select new coins</p>
                 )}
             </div>
 

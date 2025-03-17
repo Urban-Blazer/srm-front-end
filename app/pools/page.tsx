@@ -412,8 +412,8 @@ export default function MyPositions() {
 
 
     return (
-        <div className="flex flex-col items-center h-screen p-6 pb-20 bg-gray-100 overflow-y-auto">
-            <h1 className="text-3xl font-bold mb-6">My Liquidity Positions</h1>
+        <div className="flex flex-col items-center h-screen p-4 md:p-6 pb-20 bg-gray-100 overflow-y-auto">
+            <h1 className="text-2xl md:text-3xl font-bold mb-4 text-center">My Liquidity Positions</h1>
 
             {!walletConnected ? (
                 <p className="text-deepTeal text-center "><strong>🔌 Connect your wallet to view your LP positions.</strong></p>
@@ -428,7 +428,7 @@ export default function MyPositions() {
                     </button>
 
                         {/* Display LP Positions */}
-                        <div className="w-full max-w-3xl mt-6">
+                        <div className="w-full max-w-3xl mt-6 px-2 md:px-0">
                             {lpTokens.length > 0 ? (
                                 lpTokens.map((lp, index) => (
                                     <div
@@ -436,12 +436,12 @@ export default function MyPositions() {
                                         className="bg-white p-4 rounded-lg shadow-md mb-4 flex flex-col items-center text-center space-y-3"
                                     >
                                         {/* Coin Images & Symbols */}
-                                        <div className="flex items-center space-x-2">
-                                            <Image src={lp.poolData?.coinA_metadata?.image || "https://via.placeholder.com/40"} alt={lp.poolData?.coinA_metadata?.symbol || "Coin A"} width={20} height={20} className="w-10 h-10 rounded-full" />
-                                            <span className="text-xl font-semibold text-deepTeal">{lp.poolData?.coinA_metadata?.symbol || "Unknown"}</span>
+                                        <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">
+                                            <Image src={lp.poolData?.coinA_metadata?.image} alt="Coin A" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" />
+                                            <span className="text-lg md:text-xl font-semibold text-deepTeal">{lp.poolData?.coinA_metadata?.symbol}</span>
                                             <span className="text-deepTeal text-lg">/</span>
-                                            <Image src={lp.poolData?.coinB_metadata?.image || "https://via.placeholder.com/40"} alt={lp.poolData?.coinB_metadata?.symbol || "Coin B"} width={20} height={20} className="w-10 h-10 rounded-full" />
-                                            <span className="text-xl font-semibold text-deepTeal">{lp.poolData?.coinB_metadata?.symbol || "Unknown"}</span>
+                                            <Image src={lp.poolData?.coinB_metadata?.image} alt="Coin B" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" />
+                                            <span className="text-lg md:text-xl font-semibold text-deepTeal">{lp.poolData?.coinB_metadata?.symbol}</span>
                                         </div>
 
                                         {/* Pool Information */}
@@ -461,8 +461,8 @@ export default function MyPositions() {
                                         {/* 🚀 Action Buttons */}
                                         <div className="flex space-x-4 mt-3">
                                             {/* Add Liquidity Button */}
-                                            <a href={`/pools/add-liquidity?coinA=${encodeURIComponent(lp.poolData?.coinA_metadata?.typeName)}&coinB=${encodeURIComponent(lp.poolData?.coinB_metadata?.typeName)}`} className="bg-emeraldGreen text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-softMint transition">
-                                                ➕ Add Liquidity
+                                            <a href={`/pools/add-liquidity?coinA=${encodeURIComponent(lp.poolData?.coinA_metadata?.typeName)}&coinB=${encodeURIComponent(lp.poolData?.coinB_metadata?.typeName)}`} className="bg-emeraldGreen text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-xs md:text-sm font-medium hover:bg-softMint transition">
+                                                <strong>➕ ADD LIQUIDITY</strong>
                                             </a>
 
                                             {/* Remove Liquidity Button */}
@@ -470,13 +470,13 @@ export default function MyPositions() {
                                                 onClick={() => handleRemoveLiquidity(lp)}
                                                 className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition"
                                             >
-                                                ❌ Remove Liquidity
+                                                <strong>❌ Remove Liquidity</strong>
                                             </button>
                                         </div>
 
                                         {/* 🔽 Remove Liquidity UI (if enabled) */}
                                         {removeOptions[lp.objectId] && (
-                                            <div className="mt-4 w-full bg-softMint p-4 rounded-lg">
+                                            <div className="mt-4 w-full bg-softMint p-3 md:p-4 rounded-lg text-sm md:text-base">
                                                 <h2 className="text-lg font-semibold">Select Withdrawal Amount</h2>
 
                                                 {/* Percentage Quick Select Buttons */}
@@ -495,7 +495,7 @@ export default function MyPositions() {
                                                 {/* Input for LP Amount */}
                                                 <input
                                                     type="number"
-                                                    className="w-full p-2 border rounded-lg text-black mt-2"
+                                                    className="w-full p-1 md:p-2 border rounded-lg text-black mt-2 text-sm md:text-base"
                                                     placeholder="Enter LP amount"
                                                     value={withdrawAmount[lp.objectId] || ""}
                                                     onChange={(e) => setWithdrawAmount((prev) => ({ ...prev, [lp.objectId]: e.target.value }))}
@@ -506,7 +506,7 @@ export default function MyPositions() {
                                                     <h2 className="text-lg font-semibold">Slippage Tolerance (%)</h2>
                                                     <input
                                                         type="number"
-                                                        className="w-full p-2 border rounded-lg text-black mt-1"
+                                                        className="w-full md:w-1/2 p-1 md:p-2 border rounded-lg text-black mt-1 text-sm md:text-base"
                                                         placeholder="Enter slippage (e.g., 1.0)"
                                                         value={slippageTolerance[lp.objectId] || ""}
                                                         onChange={(e) => setSlippageTolerance((prev) => ({ ...prev, [lp.objectId]: e.target.value }))}

@@ -8,9 +8,18 @@ import Image from 'next/image';
 export default function NavBar() {
   const [dropdown, setDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  const toggleDropdown = (menu: string) => {
-    setDropdown(dropdown === menu ? null : menu);
+  const openDropdown = (menu: string) => {
+    if (hoverTimeout) clearTimeout(hoverTimeout); // Clear any previous timeout
+    setDropdown(menu);
+  };
+
+  const closeDropdown = () => {
+    const timeout = setTimeout(() => {
+      setDropdown(null);
+    }, 300); // Small delay prevents accidental closing
+    setHoverTimeout(timeout);
   };
 
   return (
@@ -34,14 +43,19 @@ export default function NavBar() {
           <div
             key={menu}
             className="relative group"
-            onMouseEnter={() => setDropdown(menu)}
-            onMouseLeave={() => setDropdown(null)}
+            onMouseEnter={() => openDropdown(menu)}
+            onMouseLeave={closeDropdown}
           >
             <Link href={`/${menu}`}>
               <button className="button-primary px-4 py-2">{menu.charAt(0).toUpperCase() + menu.slice(1)}</button>
             </Link>
             {dropdown === menu && (
-              <div className="absolute left-0 mt-2 bg-white text-black p-2 rounded shadow-md w-40 z-50">
+              <div className="absolute left-0 mt-2 bg-white text-black p-2 rounded shadow-md w-40 z-50"
+                onMouseEnter={() => {
+                  if (hoverTimeout) clearTimeout(hoverTimeout); // Prevent dropdown from closing
+                }}
+                onMouseLeave={closeDropdown}
+              >
                 <Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>
                 {menu === "dashboard" && <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-softMint">Rewards</Link>}
                 {menu === "pools" && (

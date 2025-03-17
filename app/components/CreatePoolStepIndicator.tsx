@@ -2,7 +2,7 @@ import React from "react";
 
 interface StepIndicatorProps {
     step: number;
-    setStep: (step: number) => void; // Added setStep for navigation
+    setStep: (step: number) => void; // Enables step navigation
 }
 
 const steps = [
@@ -15,9 +15,9 @@ const steps = [
 
 export default function StepIndicator({ step, setStep }: StepIndicatorProps) {
     return (
-        <div className="w-1/4 bg-white p-6 rounded-lg shadow-lg">
+        <div className="w-64 min-w-[250px] bg-white p-6 rounded-lg shadow-lg">
             <h1 className="text-lg font-bold mb-4">New Position</h1>
-            <ul className="space-y-2"> {/* Ensures proper spacing without affecting layout */}
+            <ul className="space-y-2">
                 {steps.map((s) => (
                     <li
                         key={s.number}
@@ -33,7 +33,7 @@ export default function StepIndicator({ step, setStep }: StepIndicatorProps) {
                         </div>
                         {/* Step Label */}
                         <span
-                            className={`text-sm font-medium truncate
+                            className={`text-sm font-medium whitespace-nowrap
                                 ${step >= s.number ? "text-deepTeal font-semibold" : "text-gray-500"}`}
                         >
                             {s.label}

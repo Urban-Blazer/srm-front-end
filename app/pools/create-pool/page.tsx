@@ -565,10 +565,13 @@ export default function Pools() {
     };
 
     return (
-        <div className="flex h-screen bg-deepTeal p-6 overflow-hidden">
+        <div className="flex min-h-screen bg-deepTeal p-4 sm:p-6 overflow-hidden">
 
-            <StepIndicator step={state.step} setStep={setStep} />
-            <div className="flex-1 bg-white p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
+            <div className="hidden md:block">
+                <StepIndicator step={state.step} setStep={setStep} />
+            </div>
+
+            <div className="flex-1 bg-white p-4 sm:p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
                 <h1 className="text-2xl font-bold mb-6">Create a New Pool</h1>
 
                 <div className="flex items-center justify-center gap-4 p-4 bg-royalPurple rounded-lg mb-4">
@@ -583,11 +586,11 @@ export default function Pools() {
                         {/* Dropdown for Predefined Coins */}
                         <div className="mb-4 relative">
                             <label className="block text-gray-700 mb-2"><strong>Select First Coin:</strong></label>
-                            <button className="w-full flex items-center justify-between p-2 border rounded-lg bg-white text-black"
+                            <button className="w-full flex items-center justify-between p-3 sm:p-2 border rounded-lg bg-white text-black"
                                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
                             >
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
+                                    <Image src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
                                     <span>{state.selectedCoin.symbol}</span>
                                 </div>
                                 <span className="text-gray-600">▼</span>
@@ -610,7 +613,7 @@ export default function Pools() {
                         {/* Input field for custom coin */}
                         <div className="mb-4">
                             <label className="block text-gray-700"><strong>Enter Second Coin TypeName:</strong></label>
-                            <input type="text" className="w-full p-2 border rounded-lg text-black placeholder-gray-500"
+                            <input type="text" className="w-full p-3 sm:p-2 border rounded-lg text-black placeholder-gray-500"
                                 placeholder="Enter Coin TypeName (e.g., 0x2::sui::SUI)"
                                 value={state.customCoin}
                                 onChange={(e) => dispatch({ type: "SET_CUSTOM_COIN", payload: e.target.value })}
@@ -618,7 +621,7 @@ export default function Pools() {
                         </div>
 
                         {/* Continue Button */}
-                        <button className="w-full text-white p-3 rounded-lg mt-4 disabled:opacity-50"
+                        <button className="w-full text-white p-4 sm:p-3 rounded-lg mt-4 disabled:opacity-50"
                             onClick={fetchMetadata} disabled={state.loading}
                         >
                             {state.loading ? "Fetching..." : "Continue"}
@@ -647,7 +650,7 @@ export default function Pools() {
                         </div>
 
                         {/* Fee Inputs - Scrollable */}
-                        <div className="flex-1 overflow-y-auto max-h-[calc(100vh-150px)] space-y-4 px-4">
+                        <div className="flex-1 overflow-y-auto max-h-[calc(100vh-50px)] space-y-4 px-4 sm:max-h-[calc(100vh-150px)]">
                             {[
                                 { field: "lpBuilderFee", label: "LP Builder Fee", max: 3 },
                                 { field: "buybackBurnFee", label: "Buyback and Burn Fee", max: 5 },
@@ -701,7 +704,7 @@ export default function Pools() {
                         </div>
 
                         {/* Navigation Buttons */}
-                        <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex justify-between">
+                        <div className="sticky bottom-0 bg-white p-4 shadow-lg w-full flex flex-col sm:flex-row gap-2">
                             <button className="button-secondary bg-500 text-white p-3 rounded-lg"
                                 onClick={() => dispatch({ type: "SET_STEP", payload: 1 })}
                             >

@@ -10,6 +10,10 @@ export default function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
+  const toggleDropdown = (menu: string) => {
+    setDropdown(dropdown === menu ? null : menu);
+  };
+
   const openDropdown = (menu: string) => {
     if (hoverTimeout) clearTimeout(hoverTimeout); // Clear any previous timeout
     setDropdown(menu);

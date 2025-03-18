@@ -118,43 +118,121 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
     }, [walletAddress]);
 
     /**
-     * ✅ Handle Coin Merging
-     */
+ * ✅ Handle Coin Merging
+ */
     const handleMerge = async (coinType: string) => {
-        if (!mergeableCoins[coinType] || mergeableCoins[coinType].length < 2) return;
+        if (!mergeableCoins[coinType] || mergeableCoins[coinType].length < 2) {
+            alert("⚠️ Not enough coins to merge.");
+            return;
+        }
 
         setLoading(true);
+
+        if (!adapter) {
+            alert("⚠️ Please connect your wallet first.");
+            setLoading(false);
+            return;
+        }
+
         try {
+            // ✅ Retrieve the user's wallet address
+            const accounts = await adapter.getAccounts();
+            const userAddress = accounts[0]?.address;
+
+            if (!userAddress) {
+                alert("⚠️ No accounts found. Please reconnect your wallet.");
+                setLoading(false);
+                return;
+            }
+
+            console.log("✅ User Address:", userAddress);
+            console.log("✅ Merging Coin Type:", coinType);
+
+            // ✅ Extract coins to merge
             const [primaryCoin, ...coinsToMerge] = mergeableCoins[coinType];
 
-            // ✅ Create Transaction Block
+            if (!primaryCoin || coinsToMerge.length === 0) {
+                alert("⚠️ Not enough coins to merge.");
+                setLoading(false);
+                return;
+            }
+
+            console.log("✅ Primary Coin:", primaryCoin.coinObjectId);
+            console.log("✅ Coins to Merge:", coinsToMerge.map((c) => c.coinObjectId));
+
+            // ✅ Build the Transaction Block
             const txb = new TransactionBlock();
             const primaryCoinInput = txb.object(primaryCoin.coinObjectId);
             const mergeCoinInputs = coinsToMerge.map((coin) => txb.object(coin.coinObjectId));
             txb.mergeCoins(primaryCoinInput, mergeCoinInputs);
 
-            // ✅ Sign and Execute Transaction
-            await adapter.signAndExecuteTransactionBlock({
-                // @ts-ignore
+            // ✅ Sign Transaction
+            console.log("✍️ Signing transaction...");
+            const signedTx = await adapter.signTransactionBlock({
                 transactionBlock: txb,
+                account: userAddress,
                 chain: "sui:testnet",
-                options: { showEffects: true },
             });
 
+            console.log("✅ Transaction Signed!");
+
+            // ✅ Submit Transaction
+            console.log("🚀 Submitting transaction...");
+            const executeResponse = await adapter.executeTransactionBlock({
+                transactionBlock: signedTx.transactionBlockBytes,
+                signature: signedTx.signature,
+                options: { showEffects: true, showEvents: true },
+            });
+
+            console.log("✅ Transaction Submitted!");
+
+            // ✅ Track Transaction Digest
+            const txnDigest = executeResponse.digest;
+            console.log(`🔍 Transaction Digest: ${txnDigest}`);
+
+            if (!txnDigest) {
+                alert("⚠️ Transaction failed. Please check the console.");
+                setLoading(false);
+                return;
+            }
+
+            // ✅ Wait for Confirmation
+            console.log("🕒 Waiting for confirmation...");
+            let txnDetails = await fetchTransactionWithRetry(txnDigest);
+
+            if (!txnDetails) {
+                alert("⚠️ Transaction not successful. Please retry.");
+                setLoading(false);
+                return;
+            }
+
+            console.log("✅ Transaction Confirmed!");
+
             // ✅ Refresh Coin List
+            console.log("🔄 Refreshing wallet balance...");
             await fetchCoins();
 
             // ✅ Remove merged coins from UI
             setMergeableCoins((prev) => {
                 const updated = { ...prev };
-                delete updated[coinType];
+                if (updated[coinType]) {
+                    updated[coinType] = updated[coinType].slice(1);
+                    if (updated[coinType].length < 2) delete updated[coinType];
+                }
+                if (Object.keys(updated).length === 0) {
+                    setIsOpen(false); // Close modal if no mergeable coins are left
+                }
                 return updated;
             });
 
+            alert("🎉 Coins successfully merged!");
+
         } catch (error) {
             console.error(`❌ Merge failed for ${coinType}:`, error);
+            alert("⚠️ Merge transaction failed. Please check the console.");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     return (

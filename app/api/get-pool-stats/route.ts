@@ -65,6 +65,11 @@ export async function GET(req: NextRequest) {
 
     } catch (error) {
         console.error("❌ DynamoDB Query Error:", error);
-        return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+
+        // ✅ Ensure error is an instance of Error before accessing `message`
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+        return NextResponse.json({ error: "Internal Server Error", details: errorMessage }, { status: 500 });
     }
+
 }

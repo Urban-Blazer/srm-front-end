@@ -458,8 +458,8 @@ export default function MyPositions() {
 
                                     {/* 🔽 Burn Liquidity UI (if enabled) */}
                                     {removeOptions[lp.objectId] && (
-                                        <div className="mt-4 w-full bg-softMint p-3 md:p-4 rounded-lg text-sm md:text-base">
-                                            <h2 className="text-lg font-semibold">Select Burn Amount</h2>
+                                        <div className="mt-4 w-full bg-red-300 p-3 md:p-4 rounded-lg text-sm md:text-base">
+                                            <h2 className="text-lg font-semibold pb-4"><strong>Burning LP will PERMANENTLY LOCK the Liquidity Coins in the pool. <br></br>THIS CAN NOT BE REVERSED!</strong></h2>
 
                                             {/* Percentage Quick Select Buttons */}
                                             <div className="flex space-x-2">
@@ -486,9 +486,9 @@ export default function MyPositions() {
                                             {/* Confirm Button */}
                                             <button
                                                 onClick={() => handleBurnLiquidityConfirm(lp)}
-                                                className="button-secondary px-4 py-2 rounded-md text-sm font-medium transition mt-3 w-full"
+                                                className="bg-red-600 text-white mt-4 px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition"
                                             >
-                                                🔥 Confirm Burn LP
+                                                🔥 Confirm Burn Liquidity
                                             </button>
                                             <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                                         </div>

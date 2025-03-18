@@ -110,12 +110,15 @@ export default function NavBar() {
                 }}
                 onMouseLeave={closeDropdown}
               >
-                <Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>
+                {/*<Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>*/}
                 {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint">My Royalties</Link>}
+                {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap Coins</Link>}
                 {menu === "pools" && (
                   <>
+                    <Link href="/pools" className="block px-4 py-2 hover:bg-softMint">My Positions</Link>
                     <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
                     <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>
+                    <Link href="/pools/burn-liquidity" className="block px-4 py-2 hover:bg-softMint">Burn Liquidity</Link>
                   </>
                 )}
                 {menu === "launchpad" && (

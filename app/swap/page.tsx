@@ -860,9 +860,9 @@ export default function Swap() {
                                     max="50"
                                     value={maxSlippage}
                                     onChange={(e) => setMaxSlippage(parseFloat(e.target.value))}
-                                    className="bg-white text-black text-right font-semibold px-3 py-1 border border-gray-300 rounded-lg w-20 outline-none"
+                                    className="bg-white text-deepTeal text-right font-semibold px-3 py-1 border border-gray-300 rounded-lg w-20 outline-none"
                                 />
-                                <span className="text-gray-500">%</span>
+                                <span className="text-deepTeal"><strong>%</strong></span>
                             </div>
                         </div>
                     </div>
@@ -871,7 +871,7 @@ export default function Swap() {
                     <div className="bg-gray-100 p-4 rounded-lg relative">
                         <div className="flex justify-between items-center">
                             <label htmlFor="sellAmount" className="block text-royalPurple"><strong>Sell</strong></label>
-                            {sellToken && <span className="text-sm text-deepTeal"><strong>Balance:</strong> {sellBalance}</span>}
+                            {sellToken && <span className="text-sm text-deepTeal"><strong style={{ color: "#6A1B9A" }}>Balance:</strong> <strong style={{ color: "#0D3B3E" }}>{sellBalance}</strong></span>}
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -924,7 +924,7 @@ export default function Swap() {
                     <div className="bg-gray-100 p-4 rounded-lg relative">
                         <div className="flex justify-between items-center">
                             <label htmlFor="buyAmount" className="block text-royalPurple"><strong>Buy</strong></label>
-                            {buyToken && <span className="text-sm text-deepTeal"><strong>Balance:</strong> {buyBalance}</span>}
+                            {buyToken && <span className="text-sm text-deepTeal"><strong style={{ color: "#6A1B9A" }}>Balance:</strong> <strong style={{ color: "#0D3B3E" }}>{buyBalance}</strong></span>}
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -987,7 +987,7 @@ export default function Swap() {
                         {/* ✅ Pool ID with Copy Button */}
                         <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg overflow-x-auto">
                             <p className="text-deepTeal truncate">
-                                <strong>Pool ID:</strong> {poolId}
+                                <strong style={{ color: "#6A1B9A" }}>Pool ID:</strong> <strong style={{ color: "#0D3B3E" }}>{poolId}</strong>
                             </p>
                             <div className="flex items-center space-x-2">
                                     {copiedText === poolId && <span className="text-royalPurple text-sm"><strong>Copied!</strong></span>}
@@ -1010,7 +1010,7 @@ export default function Swap() {
                                                 <Image src={poolMetadata?.coinA?.image} alt={poolMetadata?.coinA?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
                                         )}
                                         <p className="text-lg font-semibold">
-                                            {poolMetadata?.coinA?.symbol} ({poolMetadata?.coinA?.name})
+                                            {poolMetadata?.coinA?.symbol}
                                         </p>
                                     </div>
                                     <p className="text-lg font-semibold">
@@ -1031,7 +1031,7 @@ export default function Swap() {
                                                 <Image src={poolMetadata?.coinB?.image} alt={poolMetadata?.coinB?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
                                         )}
                                         <p className="text-lg font-semibold">
-                                            {poolMetadata?.coinB?.symbol} ({poolMetadata?.coinB?.name})
+                                            {poolMetadata?.coinB?.symbol}
                                         </p>
                                     </div>
                                     <p className="text-lg font-semibold">
@@ -1048,34 +1048,32 @@ export default function Swap() {
                                 {/* ✅ Pool Stats Section */}
                                 <div className="text-deepTeal space-y-2">
                                     {/* ✅ LP Locked Balance Now Always Visible */}
-                                    <p><strong>Pool Locked LP:</strong> {poolStats?.locked_lp_balance?.toLocaleString() || "0"}</p>
-                                    
-                                    <p><strong>Pool Locked Coins:</strong> {(
-                                        Number(poolStats?.burn_balance_b || 0) /
-                                        Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0))
-                                    ).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: Number(poolMetadata?.coinB?.decimals || 2),
-                                    })} {poolMetadata?.coinB?.symbol}</p>
+                                        <p><strong style={{ color: "#6A1B9A" }}>Pool Locked LP:</strong> <strong style={{ color: "#0D3B3E" }}>{(Number(poolStats?.locked_lp_balance || 0) / 1e9).toFixed(4)} LP</strong></p>
 
-                                    <p><strong>Reward Balance:</strong> {(
-                                        Number(poolStats?.reward_balance_a || 0) /
-                                        Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0))
-                                    ).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: Number(poolMetadata?.coinA?.decimals || 2),
-                                    })} {poolMetadata?.coinA?.symbol}</p>
+                                        <p><strong style={{ color: "#6A1B9A" }}>Pool Locked Coins:</strong> <strong style={{ color: "#0D3B3E" }}>{(
+                                            Math.floor(
+                                                Number(poolStats?.burn_balance_b || 0) /
+                                                Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0)) * 1e4
+                                            ) / 1e4
+                                        ).toFixed(4)} {poolMetadata?.coinB?.symbol}</strong></p>
+
+                                        <p><strong style={{ color: "#6A1B9A" }}>Reward Balance:</strong> <strong style={{ color: "#0D3B3E" }}>{(
+                                            Math.floor(
+                                                Number(poolStats?.reward_balance_a || 0) /
+                                                Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0)) * 1e4
+                                            ) / 1e4
+                                        ).toFixed(4)} {poolMetadata?.coinA?.symbol}</strong></p>
 
                                     {/* ✅ Correctly formatted fees as percentages */}
-                                    <p><strong>LP Builder Fee:</strong> {((poolStats?.lp_builder_fee || 0) / 100).toFixed(2)}%</p>
-                                    <p><strong>Reward Fee:</strong> {((poolStats?.rewards_fee || 0) / 100).toFixed(2)}%</p>
-                                    <p><strong>Burn Fee:</strong> {((poolStats?.burn_fee || 0) / 100).toFixed(2)}%</p>
-                                    <p><strong>Creator Royalty Fee:</strong> {((poolStats?.creator_royalty_fee || 0) / 100).toFixed(2)}%</p>
+                                    <p><strong style={{ color: "#6A1B9A" }}>LP Builder Fee:</strong> <strong style={{ color: "#0D3B3E" }}>{((poolStats?.lp_builder_fee || 0) / 100).toFixed(2)} %</strong></p>
+                                    <p><strong style={{ color: "#6A1B9A" }}>Reward Fee:</strong> <strong style={{ color: "#0D3B3E" }}>{((poolStats?.rewards_fee || 0) / 100).toFixed(2)} %</strong></p>
+                                    <p><strong style={{ color: "#6A1B9A" }}>Burn Fee:</strong> <strong style={{ color: "#0D3B3E" }}>{((poolStats?.burn_fee || 0) / 100).toFixed(2)} %</strong></p>
+                                    <p><strong style={{ color: "#6A1B9A" }}>Creator Royalty Fee:</strong> <strong style={{ color: "#0D3B3E" }}>{((poolStats?.creator_royalty_fee || 0) / 100).toFixed(2)} %</strong></p>
                                     
                                     {/* ✅ Dev Wallet with Copy Button */}
                                     <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg overflow-x-auto">
                                         <p className="text-deepTeal truncate">
-                                            <strong>Creator Royalty Wallet:</strong> {poolStats?.creator_royalty_wallet || ""}
+                                                <strong style={{ color: "#6A1B9A" }}>Creator Royalty Wallet:</strong> <strong style={{ color: "#0D3B3E" }}>{poolStats?.creator_royalty_wallet || ""}</strong>
                                         </p>
                                         <div className="flex items-center space-x-2">
                                                 {copiedText === poolStats?.creator_royalty_wallet && <span className="text-royalPurple text-sm"><strong>Copied!</strong></span>}

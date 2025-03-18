@@ -89,7 +89,7 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
             do {
                 const result = await suiClient.getAllCoins({ owner: walletAddress, cursor });
                 allCoins = [...allCoins, ...result.data];
-                cursor = result.nextCursor;
+                cursor = result.nextCursor ?? null;
             } while (cursor);
 
             setCoins(allCoins);
@@ -102,10 +102,10 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
 
             // ✅ Only keep coins that can be merged
             const mergeCandidates = Object.fromEntries(
-                Object.entries(groupedCoins).filter(([, coins]) => coins.length > 1)
+                Object.entries(groupedCoins).filter(([, coins]) => (coins as any[]).length > 1) // ✅ FIXED HERE
             );
 
-            setMergeableCoins(mergeCandidates);
+            setMergeableCoins(mergeCandidates as Record<string, any[]>);
             fetchMetadata(Object.keys(groupedCoins));
         } catch (error) {
             console.error("❌ Error fetching coins:", error);
@@ -135,6 +135,7 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
 
             // ✅ Sign and Execute Transaction
             await adapter.signAndExecuteTransactionBlock({
+                // @ts-ignore
                 transactionBlock: txb,
                 chain: "sui:testnet",
                 options: { showEffects: true },

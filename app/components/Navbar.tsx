@@ -59,7 +59,7 @@ export default function NavBar() {
         adapter.on("connect", async (account) => {
           console.log("🔗 Wallet connected:", account);
           setWalletConnected(true);
-          setWalletAddress(account.address); // 🔥 FIXED: Extract actual address
+          setWalletAddress(accounts[0].address); // 🔥 FIXED: Extract actual address
         });
 
         adapter.on("disconnect", () => {

@@ -56,12 +56,12 @@ export default function NavBar() {
             {dropdown === menu && (
               <div className="absolute left-0 mt-2 bg-white text-black p-2 rounded shadow-md w-40 z-50"
                 onMouseEnter={() => {
-                  if (hoverTimeout) clearTimeout(hoverTimeout); // Prevent dropdown from closing
+                  if (hoverTimeout) clearTimeout(hoverTimeout);
                 }}
                 onMouseLeave={closeDropdown}
               >
                 <Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>
-                {menu === "dashboard" && <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-softMint">Rewards</Link>}
+                {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint">My Royalties</Link>}
                 {menu === "pools" && (
                   <>
                     <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
@@ -70,7 +70,7 @@ export default function NavBar() {
                 )}
                 {menu === "launchpad" && (
                   <>
-                    <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint">Create Coin</Link>
+                    <Link href="/launchpad/creator-royalty" className="block px-4 py-2 hover:bg-softMint">My Royalties</Link>
                     <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>
                   </>
                 )}
@@ -104,7 +104,7 @@ export default function NavBar() {
               {dropdown === menu && (
                 <div className="bg-white text-black p-2 rounded w-full">
                   <Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>
-                  {menu === "dashboard" && <Link href="/dashboard/rewards" className="block px-4 py-2 hover:bg-softMint">Rewards</Link>}
+                  {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint">My Royalties</Link>}
                   {menu === "pools" && (
                     <>
                       <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>

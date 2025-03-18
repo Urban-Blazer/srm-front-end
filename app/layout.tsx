@@ -6,24 +6,24 @@ import Navbar from '../app/components/Navbar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Sui Template App',
+  title: 'Sui Rewards Me',
   description:
-    'Start your Sui journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
-  metadataBase: new URL('https://sui-web3-template.nightly.app'),
+    'The First Rewards Descentralized Exchange DEX Ever. It is time you got a piece',
+  metadataBase: new URL('https://SuiRewards.Me'),
   twitter: {
-    title: 'Sui Template App',
+    title: 'Sui Rewareds Me',
     description:
-      'Start your Sui journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
-    images: '/preview.png',
+      'The First Rewards Descentralized Exchange DEX Ever. It is time you got a piece',
+    images: '/banner.jpg',
     card: 'summary_large_image',
-    site: '@nightly_app',
+    site: '@SuiRewardsMe',
   },
   openGraph: {
-    title: 'Sui Template App',
+    title: 'Sui Rewards Me',
     description:
-      'Start your Sui journey here, without unnecessary configuration and setup. Just clone it and code on top of it. Powered by Nightly Wallet.',
+      'The First Rewards Descentralized Exchange DEX Ever. It is time you got a piece',
     images: '/preview.png',
-    url: 'https://sui-web3-template.nightly.app',
+    url: 'https://SuiRewards.Me',
     type: 'website',
   },
   viewport: {

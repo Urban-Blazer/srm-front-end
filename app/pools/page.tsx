@@ -410,6 +410,11 @@ export default function MyPositions() {
         return null;
     };
 
+    useEffect(() => {
+        if (walletAddress) {
+            fetchLPTokens(walletAddress);
+        }
+    }, [walletAddress]);
 
     return (
         <div className="flex flex-col items-center h-screen p-4 md:p-6 pb-20 bg-gray-100 overflow-y-auto">

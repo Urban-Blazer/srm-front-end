@@ -240,7 +240,7 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
         for (let i = 0; i < retries; i++) {
             try {
                 console.log(`🔄 Attempt ${i + 1}: Fetching transaction status for ${txnDigest}...`);
-                const txnDetails = await provider.getTransactionBlock({
+                const txnDetails = await suiClient.getTransactionBlock({
                     digest: txnDigest,
                     options: { showEffects: true, showEvents: true },
                 });

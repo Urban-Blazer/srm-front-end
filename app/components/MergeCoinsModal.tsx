@@ -178,8 +178,8 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
             {isOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 px-4">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md text-center">
-                        <h2 className="text-xl font-bold mb-4">Merge Coins</h2>
-                        <p className="text-sm mb-4">You have coins that can be merged.</p>
+                        <h1 className="text-xl font-bold mb-4">Merge Coins</h1>
+                        <p className="text-sm mb-4 text-deepTeal">You have coins that can be merged.</p>
 
                         {/* ✅ Scrollable List of Mergeable Coins */}
                         <ul className="max-h-60 overflow-y-auto space-y-2">
@@ -199,12 +199,12 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
                                                     className="rounded-full"
                                                 />
                                             )}
-                                            <span className="text-gray-700 text-sm w-full text-left">{displayName}</span>
+                                            <span className="text-deepTeal text-sm w-full text-left"><strong>{displayName}</strong></span>
                                         </div>
                                         <button
                                             onClick={() => handleMerge(coinType)}
                                             disabled={loading}
-                                            className="bg-green-500 text-white px-3 py-2 text-xs md:text-sm rounded-md hover:bg-green-600 disabled:bg-gray-400"
+                                            className="button-secondary px-3 py-2 text-xs md:text-sm rounded-md disabled:bg-gray-400"
                                         >
                                             {loading ? "Merging..." : `Merge ${mergeableCoins[coinType].length} Coins`}
                                         </button>
@@ -215,7 +215,7 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
 
                         {/* ✅ Close Button */}
                         <button
-                            className="mt-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 w-full"
+                            className="button-primary mt-4 px-4 py-2 rounded-md hover: w-full"
                             onClick={() => setIsOpen(false)}
                         >
                             Close

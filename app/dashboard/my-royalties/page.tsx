@@ -7,7 +7,6 @@ import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../../config
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import TransactionModal from "@components/TransactionModal";
 import Image from "next/image";
-import MergeCoinsModal from "../../components/MergeCoinsModal";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -297,9 +296,6 @@ export default function MyPositions() {
                     Alternatively, you can claim here at any time.
                 </p>
             </div>
-
-            {/* ✅ Merge Coins Modal */}
-            {walletAdapter && walletConnected && <MergeCoinsModal adapter={walletAdapter} />}
 
             {/* ✅ Center Loading and Messages Below <h1> */}
             {!walletConnected && <p className="text-center text-base sm:text-lg text-royalPurple">🔌 Please connect your wallet</p>}

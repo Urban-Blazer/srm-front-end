@@ -19,6 +19,7 @@ export default function MyPositions() {
 
     const [removeOptions, setRemoveOptions] = useState<{ [key: string]: boolean }>({});
     const [burnAmount, setBurnAmount] = useState<{ [key: string]: string }>({});
+    const [burnAgreement, setBurnAgreement] = useState<{ [key: string]: boolean }>({});
 
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -483,13 +484,32 @@ export default function MyPositions() {
                                                 onChange={(e) => setBurnAmount((prev) => ({ ...prev, [lp.objectId]: e.target.value }))}
                                             />
 
-                                            {/* Confirm Button */}
+                                            {/* ✅ Checkbox for Agreement */}
+                                            <div className="flex items-center mt-3">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`burn-agreement-${lp.objectId}`} // Unique ID for each LP
+                                                    className="mr-2 cursor-pointer"
+                                                    checked={burnAgreement[lp.objectId] || false}
+                                                    onChange={(e) =>
+                                                        setBurnAgreement((prev) => ({ ...prev, [lp.objectId]: e.target.checked }))
+                                                    }
+                                                />
+                                                <label htmlFor={`burn-agreement-${lp.objectId}`} className="text-base text-deepTeal">
+                                                    <strong>I confirm that I understand that this action is irreversible and wish to proceed with permanently locking my Liquidity Coins.
+                                                    </strong></label>
+                                            </div>
+
+                                            {/* Confirm Button (Disabled Until Checkbox is Checked) */}
                                             <button
                                                 onClick={() => handleBurnLiquidityConfirm(lp)}
-                                                className="bg-red-600 text-white mt-4 px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition"
+                                                className={`mt-4 px-4 py-2 rounded-md text-sm font-medium transition 
+                                                ${burnAgreement[lp.objectId] ? "bg-red-600 text-white hover:bg-red-700" : "bg-gray-400 text-gray-200 cursor-not-allowed"}`}
+                                                disabled={!burnAgreement[lp.objectId]} // ✅ Disable when unchecked
                                             >
                                                 🔥 Confirm Burn Liquidity
                                             </button>
+
                                             <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                                         </div>
                                     )}

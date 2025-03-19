@@ -123,8 +123,8 @@ export default function NavBar() {
                 )}
                 {menu === "launchpad" && (
                   <>
-                    <Link href="/launchpad/creator-royalty" className="block px-4 py-2 hover:bg-softMint">My Royalties</Link>
-                    <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>
+                    <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint">Create Coin</Link>
+                    {/*<Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>*/}
                   </>
                 )}
               </div>
@@ -161,18 +161,21 @@ export default function NavBar() {
               </button>
               {dropdown === menu && (
                 <div className="bg-white text-black p-2 rounded w-full">
-                  <Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>
+                  {/*<Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>*/}
                   {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint">My Royalties</Link>}
+                  {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap Coins</Link>}
                   {menu === "pools" && (
                     <>
+                      <Link href="/pools" className="block px-4 py-2 hover:bg-softMint">My Positions</Link>
                       <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
                       <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>
+                      <Link href="/pools/burn-liquidity" className="block px-4 py-2 hover:bg-softMint">Burn Liquidity</Link>
                     </>
                   )}
                   {menu === "launchpad" && (
                     <>
                       <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint">Create Coin</Link>
-                      <Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>
+                      {/*<Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>*/}
                     </>
                   )}
                 </div>

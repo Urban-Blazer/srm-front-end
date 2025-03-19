@@ -871,7 +871,15 @@ export default function Swap() {
                     <div className="bg-gray-100 p-4 rounded-lg relative">
                         <div className="flex justify-between items-center">
                             <label htmlFor="sellAmount" className="block text-royalPurple"><strong>Sell</strong></label>
-                            {sellToken && <span className="text-sm text-deepTeal"><strong style={{ color: "#6A1B9A" }}>Balance:</strong> <strong style={{ color: "#0D3B3E" }}>{sellBalance}</strong></span>}
+                            {sellToken && <span className="text-sm text-deepTeal"><strong style={{ color: "#6A1B9A" }}>Balance:</strong> <strong style={{ color: "#0D3B3E" }}>
+                                {(
+                                    Math.floor(Number(sellBalance) * 1e4) / 1e4
+                                ).toLocaleString(undefined, {
+                                    minimumFractionDigits: 4, // ✅ Always show 4 decimal places
+                                    maximumFractionDigits: 4, // ✅ Ensure no extra decimal places
+                                })}
+                            </strong>
+                        </span>}
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -924,7 +932,15 @@ export default function Swap() {
                     <div className="bg-gray-100 p-4 rounded-lg relative">
                         <div className="flex justify-between items-center">
                             <label htmlFor="buyAmount" className="block text-royalPurple"><strong>Buy</strong></label>
-                            {buyToken && <span className="text-sm text-deepTeal"><strong style={{ color: "#6A1B9A" }}>Balance:</strong> <strong style={{ color: "#0D3B3E" }}>{buyBalance}</strong></span>}
+                            {buyToken && <span className="text-sm text-deepTeal"><strong style={{ color: "#6A1B9A" }}>Balance:</strong> <strong style={{ color: "#0D3B3E" }}>
+                                {(
+                                    Math.floor(Number(buyBalance) * 1e4) / 1e4
+                                ).toLocaleString(undefined, {
+                                    minimumFractionDigits: 4, // ✅ Always show 4 decimal places
+                                    maximumFractionDigits: 4, // ✅ Ensure no extra decimal places
+                                })}
+                            </strong>
+                        </span>}
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -981,7 +997,7 @@ export default function Swap() {
                 <h1 className="text-lg font-bold mb-4">Pool Information</h1>
 
                 {poolLoading ? (
-                    <p className="text-gray-500">Loading pool data...</p>
+                    <p className="text-royalPurple">Loading pool data...</p>
                 ) : poolId ? (
                     <>
                         {/* ✅ Pool ID with Copy Button */}
@@ -1013,15 +1029,17 @@ export default function Swap() {
                                             {poolMetadata?.coinA?.symbol}
                                         </p>
                                     </div>
-                                    <p className="text-lg font-semibold">
-                                        {(
-                                            Number(poolStats?.balance_a || 0) /
-                                            Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0))
-                                        ).toLocaleString(undefined, {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: Number(poolMetadata?.coinA?.decimals || 2),
-                                        })}
-                                    </p>
+                                        <p className="text-lg font-semibold">
+                                            {(
+                                                Math.floor(
+                                                    Number(poolStats?.balance_a || 0) /
+                                                    Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0)) * 1e4
+                                                ) / 1e4
+                                            ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 4, // ✅ Ensure at least 4 decimal places
+                                                maximumFractionDigits: 4, // ✅ Ensure at most 4 decimal places
+                                            })}
+                                        </p>
                                 </div>
 
                                 {/* ✅ Display Coin B Metadata with Balance */}
@@ -1034,35 +1052,55 @@ export default function Swap() {
                                             {poolMetadata?.coinB?.symbol}
                                         </p>
                                     </div>
-                                    <p className="text-lg font-semibold">
-                                        {(
-                                            Number(poolStats?.balance_b || 0) /
-                                            Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0))
-                                        ).toLocaleString(undefined, {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: Number(poolMetadata?.coinB?.decimals || 2),
-                                        })}
-                                    </p>
+                                        <p className="text-lg font-semibold">
+                                            {(
+                                                Math.floor(
+                                                    Number(poolStats?.balance_b || 0) /
+                                                    Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0)) * 1e4
+                                                ) / 1e4
+                                            ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 4, // ✅ Ensure at least 4 decimal places
+                                                maximumFractionDigits: 4, // ✅ Ensure at most 4 decimal places
+                                            })}
+                                        </p>
                                 </div>
 
                                 {/* ✅ Pool Stats Section */}
                                 <div className="text-deepTeal space-y-2">
                                     {/* ✅ LP Locked Balance Now Always Visible */}
-                                        <p><strong style={{ color: "#6A1B9A" }}>Pool Locked LP:</strong> <strong style={{ color: "#0D3B3E" }}>{(Number(poolStats?.locked_lp_balance || 0) / 1e9).toFixed(4)} LP</strong></p>
-
-                                        <p><strong style={{ color: "#6A1B9A" }}>Pool Locked Coins:</strong> <strong style={{ color: "#0D3B3E" }}>{(
-                                            Math.floor(
-                                                Number(poolStats?.burn_balance_b || 0) /
-                                                Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0)) * 1e4
-                                            ) / 1e4
-                                        ).toFixed(4)} {poolMetadata?.coinB?.symbol}</strong></p>
-
-                                        <p><strong style={{ color: "#6A1B9A" }}>Reward Balance:</strong> <strong style={{ color: "#0D3B3E" }}>{(
-                                            Math.floor(
-                                                Number(poolStats?.reward_balance_a || 0) /
-                                                Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0)) * 1e4
-                                            ) / 1e4
-                                        ).toFixed(4)} {poolMetadata?.coinA?.symbol}</strong></p>
+                                        <p><strong style={{ color: "#6A1B9A" }}>Pool Locked LP:</strong> <strong style={{ color: "#0D3B3E" }}>
+                                            {(
+                                                Number(poolStats?.locked_lp_balance || 0) / 1e9
+                                            ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 4, // ✅ Always show 4 decimal places
+                                                maximumFractionDigits: 4, // ✅ Prevent extra decimals
+                                            })} LP
+                                        </strong>
+                                        </p>
+                                        <p><strong style={{ color: "#6A1B9A" }}>Pool Locked Coins:</strong> <strong style={{ color: "#0D3B3E" }}>
+                                            {(
+                                                Math.floor(
+                                                    Number(poolStats?.burn_balance_b || 0) /
+                                                    Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0)) * 1e4
+                                                ) / 1e4
+                                            ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 4, // ✅ Always show 4 decimal places
+                                                maximumFractionDigits: 4, // ✅ Prevent extra decimals
+                                            })} {poolMetadata?.coinB?.symbol}
+                                        </strong>
+                                        </p>
+                                        <p><strong style={{ color: "#6A1B9A" }}>Reward Balance:</strong> <strong style={{ color: "#0D3B3E" }}>
+                                            {(
+                                                Math.floor(
+                                                    Number(poolStats?.reward_balance_a || 0) /
+                                                    Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0)) * 1e4
+                                                ) / 1e4
+                                            ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 4, // ✅ Always show 4 decimal places
+                                                maximumFractionDigits: 4, // ✅ Prevent extra decimals
+                                            })} {poolMetadata?.coinA?.symbol}
+                                        </strong>
+                                        </p>
 
                                     {/* ✅ Correctly formatted fees as percentages */}
                                     <p><strong style={{ color: "#6A1B9A" }}>LP Builder Fee:</strong> <strong style={{ color: "#0D3B3E" }}>{((poolStats?.lp_builder_fee || 0) / 100).toFixed(2)} %</strong></p>

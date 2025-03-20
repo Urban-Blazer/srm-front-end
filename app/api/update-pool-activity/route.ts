@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
-import AWS from "aws-sdk";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// ✅ Configure AWS DynamoDB
-const dynamoDB = new AWS.DynamoDB.DocumentClient({
-    region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+// ✅ Configure AWS DynamoDB Client
+const dynamoDBClient = new DynamoDBClient({
+    region: process.env.AWS_REGION as string,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+    },
 });
+
+// ✅ Use DocumentClient for JSON-like object handling
+const dynamoDB = DynamoDBDocumentClient.from(dynamoDBClient);
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE_ACTIVE_POOLS || "ActivePools";
 
@@ -17,7 +23,7 @@ export async function POST(req: Request) {
     let body;
 
     try {
-        // 🔍 Parse the request body
+        // 🔍 Parse request body
         body = await req.json();
         console.info("🔍 Received API Request:", JSON.stringify(body));
 
@@ -34,37 +40,37 @@ export async function POST(req: Request) {
         // 🔥 Step 1: Attempt to update `isActive` conditionally
         const updateParams = {
             TableName: TABLE_NAME,
-            Key: { "poolId": poolId },
+            Key: { poolId },
             UpdateExpression: "SET isActive = :trueVal",
             ConditionExpression: "attribute_exists(poolId) AND isActive = :falseVal AND isProcessing = :falseProcessing",
             ExpressionAttributeValues: {
-                ":trueVal": 1,  // ✅ Use raw numbers, DocumentClient handles it correctly
-                ":falseVal": 0, // ✅ Ensure DynamoDB gets correct types
-                ":falseProcessing": 0
+                ":trueVal": 1,  // ✅ Store as raw numbers (DynamoDBDocumentClient handles it)
+                ":falseVal": 0,
+                ":falseProcessing": 0,
             },
-            ReturnValues: "ALL_NEW"
+            ReturnValues: "ALL_NEW",
         };
 
         try {
             console.info("📌 Attempting conditional update:", JSON.stringify(updateParams, null, 2));
-            const updatedData = await dynamoDB.update(updateParams).promise();
+            const updatedData = await dynamoDB.send(new UpdateCommand(updateParams));
 
             return NextResponse.json({
                 message: `✅ Pool ${poolId} is now active.`,
-                updatedItem: updatedData.Attributes ?? null // Ensure undefined values are not returned
+                updatedItem: updatedData.Attributes ?? null, // Ensure undefined values are not returned
             }, { status: 200 });
 
-        } catch (error: any) {
-            if (error.code === "ConditionalCheckFailedException") {
+        } catch (error: unknown) {
+            if (error instanceof Error && error.name === "ConditionalCheckFailedException") {
                 console.warn("⚠️ Conditional check failed. Checking if the pool exists...");
 
                 // ✅ Step 2: Check if the pool exists before deciding next action
                 const getParams = {
                     TableName: TABLE_NAME,
-                    Key: { "poolId": poolId }
+                    Key: { poolId },
                 };
 
-                const existingPool = await dynamoDB.get(getParams).promise();
+                const existingPool = await dynamoDB.send(new GetCommand(getParams));
 
                 if (existingPool.Item) {
                     console.warn("⚠️ Pool exists but does not meet conditions for update.");
@@ -79,14 +85,14 @@ export async function POST(req: Request) {
                 const putParams = {
                     TableName: TABLE_NAME,
                     Item: {
-                        "poolId": poolId,      // ✅ Store as plain string
-                        "isActive": 1,        // ✅ Store as plain number
-                        "isProcessing": 0     // ✅ Store as plain number
-                    }
+                        poolId,
+                        isActive: 1,
+                        isProcessing: 0,
+                    },
                 };
 
                 console.info("📌 Creating new entry:", JSON.stringify(putParams, null, 2));
-                await dynamoDB.put(putParams).promise();
+                await dynamoDB.send(new PutCommand(putParams));
 
                 return NextResponse.json({
                     message: `✅ ${poolId} set to active.`,
@@ -97,14 +103,24 @@ export async function POST(req: Request) {
             throw error;
         }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("❌ Error updating isActive in DynamoDB:", error);
 
+        let errorMessage = "Failed to update pool activity";
+        let errorCode = "Unknown code";
+        let stackTrace = "No stack trace available";
+
+        if (error instanceof Error) {
+            errorMessage = error.message;
+            errorCode = (error as any).code ?? "Unknown code";
+            stackTrace = error.stack ?? "No stack trace available";
+        }
+
         return NextResponse.json({
-            error: error.message || "Failed to update pool activity",
+            error: errorMessage,
             receivedType: typeof body?.poolId,
-            stack: error.stack || "No stack trace available",
-            code: error.code || "Unknown code"
+            stack: stackTrace,
+            code: errorCode,
         }, { status: 500 });
     }
 }

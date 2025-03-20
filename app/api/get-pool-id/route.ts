@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// ✅ Configure AWS DynamoDB Client (v3 SDK)
-const dynamoDB = new DynamoDBClient({
-    region: process.env.AWS_REGION,
+// ✅ Use DynamoDBDocumentClient for simplified handling
+const dynamoDBClient = new DynamoDBClient({
+    region: process.env.AWS_REGION as string,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
     },
 });
+
+// ✅ Convert low-level client into document client for automatic type conversion
+const dynamoDB = DynamoDBDocumentClient.from(dynamoDBClient);
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE_POOLID || "PoolLookup";
 
@@ -28,51 +32,52 @@ export async function GET(req: NextRequest) {
         // Extract CoinA and CoinB from tokenPair
         const [coinA, coinB] = tokenPair.split("-");
 
-        // ✅ Create both possible pair orders
-        const pairKeys = [`${coinA}-${coinB}`, `${coinB}-${coinA}`]; // Try both orders
+        // ✅ Try both possible pair orders
+        const pairKeys = [`${coinA}-${coinB}`, `${coinB}-${coinA}`];
 
-        // ✅ Function to Fetch Pool Metadata from DynamoDB
+        // ✅ Fetch Pool Metadata in parallel
         const fetchPoolMetadata = async (pairKey: string) => {
             const params = {
                 TableName: TABLE_NAME,
-                Key: { "Pair": { S: pairKey } },
+                Key: { Pair: pairKey },
             };
 
-            const response = await dynamoDB.send(new GetItemCommand(params));
+            const response = await dynamoDB.send(new GetCommand(params));
 
-            if (response.Item && response.Item.poolId?.S) {
+            if (response.Item) {
                 return {
-                    poolId: response.Item.poolId.S,
+                    poolId: response.Item.poolId,
                     coinA_metadata: {
-                        typeName: response.Item.coinA?.S || "Unknown",
-                        name: response.Item.coinA_name?.S || "Unknown",
-                        symbol: response.Item.coinA_symbol?.S || "Unknown",
-                        description: response.Item.coinA_description?.S || "",
-                        decimals: parseInt(response.Item.coinA_decimals?.N || "0", 10),
-                        image: response.Item.coinA_image?.S || "",
+                        typeName: response.Item.coinA || "Unknown",
+                        name: response.Item.coinA_name || "Unknown",
+                        symbol: response.Item.coinA_symbol || "Unknown",
+                        description: response.Item.coinA_description || "",
+                        decimals: response.Item.coinA_decimals || 0,
+                        image: response.Item.coinA_image || "",
                     },
                     coinB_metadata: {
-                        typeName: response.Item.coinB?.S || "Unknown",
-                        name: response.Item.coinB_name?.S || "Unknown",
-                        symbol: response.Item.coinB_symbol?.S || "Unknown",
-                        description: response.Item.coinB_description?.S || "",
-                        decimals: parseInt(response.Item.coinB_decimals?.N || "0", 10),
-                        image: response.Item.coinB_image?.S || "",
-                    }
+                        typeName: response.Item.coinB || "Unknown",
+                        name: response.Item.coinB_name || "Unknown",
+                        symbol: response.Item.coinB_symbol || "Unknown",
+                        description: response.Item.coinB_description || "",
+                        decimals: response.Item.coinB_decimals || 0,
+                        image: response.Item.coinB_image || "",
+                    },
                 };
             }
             return null;
         };
 
-        // ✅ Try fetching the pool metadata using both token pair orders
-        for (const pairKey of pairKeys) {
-            const poolMetadata = await fetchPoolMetadata(pairKey);
-            if (poolMetadata) {
-                return NextResponse.json(poolMetadata, { status: 200 });
-            }
+        // ✅ Run both queries in parallel to improve performance
+        const results = await Promise.all(pairKeys.map(fetchPoolMetadata));
+
+        // ✅ Find the first non-null result
+        const poolMetadata = results.find((result) => result !== null);
+
+        if (poolMetadata) {
+            return NextResponse.json(poolMetadata, { status: 200 });
         }
 
-        // ✅ If neither order exists, return "Pool Not Found"
         return NextResponse.json({ message: "Pool not found" }, { status: 404 });
 
     } catch (error) {

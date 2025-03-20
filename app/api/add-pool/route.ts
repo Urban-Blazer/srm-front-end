@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
-import AWS from "aws-sdk";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// Configure AWS DynamoDB
-const dynamoDB = new AWS.DynamoDB.DocumentClient({
+// Configure AWS DynamoDB v3
+const dynamoDBClient = new DynamoDBClient({
     region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+    },
 });
+
+// Use the high-level DocumentClient for easier data manipulation
+const dynamoDB = DynamoDBDocumentClient.from(dynamoDBClient);
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE_POOLID || "PoolLookup";
 
@@ -34,10 +40,10 @@ export async function POST(req: Request) {
         const params = {
             TableName: TABLE_NAME,
             Item: {
-                Pair: pairKey, // ✅ Store with "0x" prefixes
+                Pair: pairKey,
                 poolId: body.poolId,
-                coinA: formattedCoinA, // ✅ Store formatted coinA
-                coinB: formattedCoinB, // ✅ Store formatted coinB
+                coinA: formattedCoinA,
+                coinB: formattedCoinB,
                 initA: body.initA || 0,
                 initB: body.initB || 0,
                 lpMinted: body.lpMinted || 0,
@@ -64,7 +70,8 @@ export async function POST(req: Request) {
             },
         };
 
-        await dynamoDB.put(params).promise();
+        // Use the PutCommand instead of `put().promise()`
+        await dynamoDB.send(new PutCommand(params));
 
         return NextResponse.json({ message: "Pool data stored successfully!" }, { status: 201 });
 

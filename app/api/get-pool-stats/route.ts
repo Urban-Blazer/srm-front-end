@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// ✅ Initialize AWS DynamoDB Client once (avoids re-instantiating on each request)
-const dynamoDB = new DynamoDBClient({
-    region: process.env.AWS_REGION,
+// ✅ Use DynamoDBDocumentClient for automatic type conversion
+const dynamoDBClient = new DynamoDBClient({
+    region: process.env.AWS_REGION as string,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
     },
 });
 
+const dynamoDB = DynamoDBDocumentClient.from(dynamoDBClient);
+
 // ✅ Constants for Table and Index
 const TABLE_NAME = process.env.DYNAMODB_TABLE_POOLID ?? "PoolLookup";
-const GSI_NAME = "creatorWallet-index"; // 🔥 Ensure this index exists
+const GSI_NAME = "creatorWallet-index"; // 🔥 Ensure this index exists in your table schema
 
 export async function GET(req: NextRequest) {
     try {
@@ -34,7 +37,7 @@ export async function GET(req: NextRequest) {
             IndexName: GSI_NAME,
             KeyConditionExpression: "creatorWallet = :walletAddress",
             ExpressionAttributeValues: {
-                ":walletAddress": { S: walletAddress },
+                ":walletAddress": walletAddress, // ✅ No need for `{ S: value }` (handled automatically)
             },
         };
 
@@ -49,16 +52,16 @@ export async function GET(req: NextRequest) {
 
         // ✅ Transform data into a clean format
         const pools = result.Items.map((item) => ({
-            poolId: item.poolId?.S,
-            creatorWallet: item.creatorWallet?.S,
-            creatorRoyaltyFee: item.creatorRoyaltyFee?.N ? parseFloat(item.creatorRoyaltyFee.N) : 0,
-            coinA: item.coinA?.S || "Unknown",
-            coinA_symbol: item.coinA_symbol?.S || "Unknown",
-            coinA_decimals: item.coinA_decimals?.N ? parseInt(item.coinA_decimals.N, 10) : 0,
-            coinA_image: item.coinA_image?.S || "",
-            coinB: item.coinB?.S || "Unknown",
-            coinB_symbol: item.coinB_symbol?.S || "Unknown",
-            coinB_image: item.coinB_image?.S || "",
+            poolId: item.poolId ?? "Unknown",
+            creatorWallet: item.creatorWallet ?? "Unknown",
+            creatorRoyaltyFee: item.creatorRoyaltyFee ? parseFloat(item.creatorRoyaltyFee) : 0,
+            coinA: item.coinA ?? "Unknown",
+            coinA_symbol: item.coinA_symbol ?? "Unknown",
+            coinA_decimals: item.coinA_decimals ? parseInt(item.coinA_decimals, 10) : 0,
+            coinA_image: item.coinA_image ?? "",
+            coinB: item.coinB ?? "Unknown",
+            coinB_symbol: item.coinB_symbol ?? "Unknown",
+            coinB_image: item.coinB_image ?? "",
         }));
 
         return NextResponse.json(pools, { status: 200 });
@@ -71,5 +74,4 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({ error: "Internal Server Error", details: errorMessage }, { status: 500 });
     }
-
 }

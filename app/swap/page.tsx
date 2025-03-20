@@ -13,7 +13,7 @@ import { predefinedCoins } from "../data/coins";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
-const SUI_REWARD_BALANCE = 500 * Math.pow(10, 9);  // 500 SUI
+const SUI_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 500 SUI
 const USDC_REWARD_BALANCE = 1000 * Math.pow(10, 6); // 1000 USDC
 
 export default function Swap() {

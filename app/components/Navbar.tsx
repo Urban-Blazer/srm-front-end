@@ -93,7 +93,7 @@ export default function NavBar() {
 
       {/* Desktop Menu (Hidden on Mobile) */}
       <div className="hidden md:flex space-x-4 ml-8">
-        {["dashboard", "swap", "pools", "launchpad", "bridge"].map((menu) => (
+        {["dashboard", "swap", "pools", "launchpad"].map((menu) => (
           <div
             key={menu}
             className="relative group"
@@ -127,21 +127,22 @@ export default function NavBar() {
                     {/*<Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>*/}
                   </>
                 )}
-                {menu === "bridge" && (
-                  <a
-                    href="https://bridge.sui.io/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-4 py-2 hover:bg-softMint"
-                  >
-                    Sui Bridge
-                  </a>
-                )}
 
               </div>
             )}
           </div>
-        ))}
+        )).concat([
+          // 🔥 Perfect clone of internal buttons, but with external <a> tag
+          <div key="external-link" className="relative group">
+            <a
+              href="https://bridge.sui.io/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button className="button-primary px-4 py-2">BRIDGE</button>
+            </a>
+          </div>
+        ])}
       </div>
 
       <div className="ml-4 mb-2 flex items-center">
@@ -162,7 +163,7 @@ export default function NavBar() {
       {/* Mobile Menu (Slide-in) */}
       {isMobileMenuOpen && (
         <div className="absolute top-16 right-0 bg-darkBlue w-full sm:w-64 p-4 shadow-lg flex flex-col items-start md:hidden">
-          {["dashboard", "swap", "pools", "launchpad", "bridge"].map((menu) => (
+          {["dashboard", "swap", "pools", "launchpad"].map((menu) => (
             <div key={menu} className="w-full">
               <button
                 className="text-white w-full text-left px-4 py-2 hover:bg-softMint"
@@ -189,20 +190,21 @@ export default function NavBar() {
                       {/*<Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>*/}
                     </>
                   )}
-                  {menu === "bridge" && (
-                    <a
-                      href="https://bridge.sui.io/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block px-4 py-2 hover:bg-softMint"
-                    >
-                      Sui Bridge
-                    </a>
-                  )}
                 </div>
               )}
             </div>
-          ))}
+          )).concat([
+            // 🔥 Perfect clone of internal buttons, but with external <a> tag
+            <div key="external-link" className="relative group">
+              <a
+                href="https://bridge.sui.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="button-primary px-4 py-2">BRIDGE</button>
+              </a>
+            </div>
+          ])}
 
           {/* Wallet Connect Button for Mobile Menu */}
           <div className="w-full mt-4 flex justify-center">

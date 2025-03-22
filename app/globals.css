@@ -50,12 +50,18 @@ body {
   color: white;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
+  padding-top: 80px;
 }
 
 /* 🔹 Navbar Styling */
 .navbar {
   background-color: var(--background-main);
   padding: 16px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
 }
 
 /* 🎨 Headings */

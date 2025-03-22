@@ -78,6 +78,7 @@ export default function NavBar() {
 
   return (
     <nav className="navbar text-white p-4 flex items-center justify-between relative z-50">
+      
       {/* Left Section: Logo */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
@@ -201,7 +202,7 @@ export default function NavBar() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <button className="button-primary px-4 py-2">BRIDGE</button>
+                <button className="block px-4 py-2 hover:bg-softMint">BRIDGE</button>
               </a>
             </div>
           ])}

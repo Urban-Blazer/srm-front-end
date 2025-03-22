@@ -841,7 +841,21 @@ export default function Swap() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row justify-center items-center bg-gray-100 p-4 pb-20 overflow-y-auto">
+        <div className="relative z-0 min-h-screen">
+            {/* 🔥 Background Video - Behind Everything */}
+            <div className="fixed inset-0 -z-20">
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover min-h-screen"
+                >
+                    <source src="/background.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        <div className="min-h-screen flex flex-col md:flex-row justify-center items-center p-4 pb-20 overflow-y-auto">
 
             {/* Swap Interface */}
             <div className="w-full max-w-sm md:max-w-md bg-white shadow-lg rounded-xl p-6 relative">
@@ -1134,6 +1148,8 @@ export default function Swap() {
                         <p className="text-royalPurple">Pool Does Not Exist: Select new coins</p>
                 )}
             </div>
+
+        </div>
 
         </div>
     );

@@ -16,7 +16,7 @@ const Socials: React.FC = () => {
           <TwitterIcon className='w-8 h-8' />
         </a>
         <a
-          href='https://discord.com'
+          href='https://discord.gg/suirewardsme'
           target='_blank'
           rel='noopener noreferrer'
           className='transform transition-transform duration-300 hover:-rotate-12'

@@ -17,7 +17,7 @@ const Background: React.FC = () => {
       </video>
 
       {/* Opening Banner Text */}
-      <div className="absolute top-10 sm:top-20 md:top-32 w-full flex justify-center z-50 pointer-events-none px-2">
+      <div className="absolute top-10 sm:top-30 md:top-40 w-full flex justify-center z-50 pointer-events-none px-2">
         <h1 className="text-white text-2xl sm:text-4xl md:text-5xl font-extrabold drop-shadow-md tracking-wide text-center bg-black bg-opacity-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl leading-tight max-w-[90%]">
           OPENING APRIL 2025
         </h1>

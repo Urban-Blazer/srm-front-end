@@ -80,6 +80,23 @@ export default function Swap() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const handlePercentageClick = (percentage: number) => {
+        if (!sellToken || sellBalance <= 0) return;
+
+        const decimals = sellToken.decimals ?? 9; // fallback to 9 if undefined
+        const divisor = Math.pow(10, decimals);
+
+        const rawAmount = sellBalance * (percentage / 100);
+        const formattedAmount = (Math.floor(rawAmount * 1e4) / 1e4).toFixed(4); // round to 4 decimal places
+
+        setSellAmount(formattedAmount);
+
+        // Trigger quote fetch
+        if (poolId && isAtoB !== null && poolStats && sellToken && buyToken) {
+            debouncedGetQuote(formattedAmount, true);
+        }
+    };
+
     useEffect(() => {
         const initWallet = async () => {
             try {
@@ -931,6 +948,19 @@ export default function Swap() {
                             />
                         )}
                     </div>
+
+                        {/* Percentage Quick Select Buttons */}
+                        <div className="flex space-x-2">
+                            {[25, 50, 75, 100].map((percent) => (
+                                <button
+                                    key={percent}
+                                    onClick={() => handlePercentageClick(percent)}
+                                    className="button-secondary px-3 py-1 rounded-md text-sm transition"
+                                >
+                                    {percent}%
+                                </button>
+                            ))}
+                        </div>
 
                     {/* Swap Arrow */}
                     <div className="flex justify-center">

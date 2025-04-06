@@ -17,10 +17,6 @@ const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9);  // 50 SUI
 const USDC_REWARD_BALANCE = 50 * Math.pow(10, 6); // 50 USDC
 const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 5 SRM
 
-const formatAtomicBalance = (rawBalance: number | string | bigint, decimals: number): number => {
-    return Number(rawBalance) / Math.pow(10, decimals);
-};
-
 export default function Swap() {
     const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
     const [walletConnected, setWalletConnected] = useState(false);
@@ -88,15 +84,20 @@ export default function Swap() {
     const handlePercentageClick = (percentage: number) => {
         if (!sellToken || sellBalance <= 0) return;
 
-        const decimals = sellToken.decimals ?? 9; // fallback to 9 if undefined
-        const divisor = Math.pow(10, decimals);
+        const decimals = sellToken.decimals ?? 9;
 
-        const rawAmount = sellBalance * (percentage / 100);
-        const formattedAmount = (Math.floor(rawAmount * 1e4) / 1e4).toFixed(4); // round to 4 decimal places
+        // Step 1: Convert atomic balance to human-readable value
+        const balanceReadable = Number(sellBalance) / Math.pow(10, decimals);
 
+        // Step 2: Calculate the percentage
+        const amount = balanceReadable * (percentage / 100);
+
+        // Step 3: Format the value
+        const formattedAmount = (Math.floor(amount * 1e4) / 1e4).toFixed(4);
+
+        // Step 4: Set and fetch quote
         setSellAmount(formattedAmount);
 
-        // Trigger quote fetch
         if (poolId && isAtoB !== null && poolStats && sellToken && buyToken) {
             debouncedGetQuote(formattedAmount, true);
         }
@@ -551,13 +552,21 @@ export default function Swap() {
             // ✅ Fetch correct type arguments from poolMetadata
             const typeArguments = [poolMetadata.coinA.typeName, poolMetadata.coinB.typeName];
 
-            // ✅ Select correct decimals from poolMetadata
-            const decimals = poolMetadata.coinA.typeName === sellToken.typeName ? poolMetadata.coinA.decimals : poolMetadata.coinB.decimals;
-            const sellAmountU64 = BigInt(Math.floor(Number(sellAmount) * Math.pow(10, decimals)));
-            
-            const expectedOutU64 = BigInt(Math.floor(Number(buyAmount) * Math.pow(10, decimals)));
+            // ✅ Use correct decimals for sell and buy tokens
+            const sellDecimals =
+                poolMetadata.coinA.typeName === sellToken.typeName
+                    ? poolMetadata.coinA.decimals
+                    : poolMetadata.coinB.decimals;
 
-            const maxSlippageInt = BigInt(Math.floor(Number(maxSlippage) * 100)); // Convert 0.5 to 50
+            const buyDecimals =
+                poolMetadata.coinA.typeName === buyToken.typeName
+                    ? poolMetadata.coinA.decimals
+                    : poolMetadata.coinB.decimals;
+
+            const sellAmountU64 = BigInt(Math.floor(Number(sellAmount) * Math.pow(10, sellDecimals)));
+            const expectedOutU64 = BigInt(Math.floor(Number(buyAmount) * Math.pow(10, buyDecimals)));
+
+            const maxSlippageInt = BigInt(Math.floor(Number(maxSlippage) * 100)); // e.g. 1.0 => 100 bps
             const minOutU64 = expectedOutU64 - (expectedOutU64 * maxSlippageInt / BigInt(10000));
 
             if (minOutU64 <= 0n) {
@@ -591,12 +600,14 @@ export default function Swap() {
 
             console.log("🔍 Extracted Coins with Balance:", coins);
 
-            // ✅ Find matching coin object
-            const matchingCoin = coins.find((c) => c.type === sellToken.typeName);
+            // ✅ Find a coin of the correct type with enough balance
+            const matchingCoin = coins.find(
+                (c) => c.type === sellToken.typeName && c.balance >= sellAmountU64
+            );
 
-            if (!matchingCoin || matchingCoin.balance < sellAmountU64) {
-                alert("⚠️ Insufficient tokens in wallet.");
-                console.error("❌ Missing or insufficient Coin Object:", { matchingCoin });
+            if (!matchingCoin) {
+                alert("⚠️ No single coin object has enough balance to cover the sell amount.");
+                console.error("❌ No sufficient Coin Object found:", { sellAmountU64, coins });
                 return;
             }
 

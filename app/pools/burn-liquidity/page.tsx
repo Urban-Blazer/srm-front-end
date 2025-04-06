@@ -175,16 +175,19 @@ export default function MyPositions() {
                             ? Number(userLpBalance) / Number(totalLpSupply)
                             : 0;
 
-                        const userCoinA = ownershipPercentage * Number(balanceA);
-                        const userCoinB = ownershipPercentage * Number(balanceB);
+                        const coinADecimals = poolData?.coinA_metadata?.decimals ?? 9;
+                        const coinBDecimals = poolData?.coinB_metadata?.decimals ?? 9;
+
+                        const userCoinA = ownershipPercentage * Number(balanceA) / Math.pow(10, coinADecimals);
+                        const userCoinB = ownershipPercentage * Number(balanceB) / Math.pow(10, coinBDecimals);
 
                         return {
                             objectId: obj.data?.objectId,
                             type: rawType, // Full LP type
                             balance: userLpBalance,
                             poolData: poolData || {},
-                            userCoinA: userCoinA / 1e9, // Convert from MIST
-                            userCoinB: userCoinB / 1e9, // Convert from MIST
+                            userCoinA: userCoinA, // Convert from MIST
+                            userCoinB: userCoinB, // Convert from MIST
                         };
                     } catch (apiError) {
                         console.error("⚠️ Error fetching pool metadata:", apiError);
@@ -399,8 +402,8 @@ export default function MyPositions() {
     }, [walletAddress]);
 
     return (
-        <div className="flex flex-col items-center h-screen p-4 md:p-6 pb-20 bg-gray-100 overflow-y-auto">
-            <h1 className="text-2xl md:text-3xl font-bold mb-4 text-center">My Liquidity Positions</h1>
+        <div className="flex flex-col items-center min-h-screen p-4 md:p-6 pt-20 pb-20 bg-gray-100">
+            <h1 className="pt-10 text-2xl md:text-3xl font-bold mb-4 text-center">My Liquidity Positions</h1>
 
             {!walletConnected ? (
                 <p className="text-deepTeal text-center "><strong>🔌 Connect your wallet to view your LP positions.</strong></p>

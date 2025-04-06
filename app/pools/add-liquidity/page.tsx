@@ -80,6 +80,9 @@ export default function AddLiquidity() {
     const coinA = searchParams.get("coinA");
     const coinB = searchParams.get("coinB");
 
+    const decimalsA = state.dropdownCoinMetadata?.decimals ?? 9;
+    const decimalsB = state.customCoinMetadata?.decimals ?? 9;
+
     useEffect(() => {
         if (coinA && coinB) {
             const predefinedCoin = predefinedCoins.find((c) => c.typeName === coinA) || predefinedCoins[0];
@@ -320,8 +323,8 @@ export default function AddLiquidity() {
         if (!state.poolStats) return;
 
         const amountA = parseFloat(value) || 0;
-        const balanceA = state.poolStats.balance_a / 1e9; // Convert from MIST
-        const balanceB = state.poolStats.balance_b / 1e9; // Convert from MIST
+        const balanceA = state.poolStats.balance_a / Math.pow(10, decimalsA);
+        const balanceB = state.poolStats.balance_b / Math.pow(10, decimalsB);
 
         const amountB = balanceA > 0 ? (amountA * balanceB) / balanceA : 0; // Formula
 
@@ -334,8 +337,8 @@ export default function AddLiquidity() {
         if (!state.poolStats) return;
 
         const amountB = parseFloat(value) || 0;
-        const balanceA = state.poolStats.balance_a / 1e9; // Convert from MIST
-        const balanceB = state.poolStats.balance_b / 1e9; // Convert from MIST
+        const balanceA = state.poolStats.balance_a / Math.pow(10, decimalsA);
+        const balanceB = state.poolStats.balance_b / Math.pow(10, decimalsB);
 
         const amountA = balanceB > 0 ? (amountB * balanceA) / balanceB : 0; // Formula
 
@@ -348,6 +351,8 @@ export default function AddLiquidity() {
         setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true);
         setTimeout(() => setLogs([]), 100); // Slight delay to ensure UI updates
+        const decimalsA = state.dropdownCoinMetadata?.decimals ?? 9;
+        const decimalsB = state.customCoinMetadata?.decimals ?? 9;
 
         if (!walletConnected || !walletAddress || !walletAdapter) {
             alert("⚠️ Please connect your wallet first.");
@@ -401,28 +406,44 @@ export default function AddLiquidity() {
 
             console.log("🔍 Extracted Coins with Balances:", coins);
 
-            // ✅ Find Matching Coin Objects
-            const expectedCoinA = state.dropdownCoinMetadata.typeName;
-            const expectedCoinB = state.customCoinMetadata.typeName;
-            const coinA = coins.find((c) => c.type === expectedCoinA);
-            const coinB = coins.find((c) => c.type === expectedCoinB);
+            // ✅ Convert Deposit Amounts to MIST
+            const depositA_U64 = BigInt(Math.floor(parseFloat(state.depositDropdownCoin) * Math.pow(10, decimalsA)));
+            const depositB_U64 = BigInt(Math.floor(parseFloat(state.depositCustomCoin) * Math.pow(10, decimalsB)));
 
-            if (!coinA || !coinB) {
-                alert("⚠️ Missing coin objects. Ensure you have the required tokens in your wallet.");
+            // ✅ Match a single coin object for CoinA with enough balance
+            const expectedCoinA = state.dropdownCoinMetadata.typeName;
+            const matchingCoinA = coins.find(
+                (c) => c.type === expectedCoinA && c.balance >= depositA_U64
+            );
+
+            // ✅ Match a single coin object for CoinB with enough balance
+            const expectedCoinB = state.customCoinMetadata.typeName;
+            const matchingCoinB = coins.find(
+                (c) => c.type === expectedCoinB && c.balance >= depositB_U64
+            );
+
+            if (!matchingCoinA || !matchingCoinB) {
+                alert("⚠️ No single coin object has enough balance for the deposit.");
+                console.error("❌ Insufficient Coin Objects:", {
+                    expectedCoinA,
+                    expectedCoinB,
+                    depositA_U64,
+                    depositB_U64,
+                    coins
+                });
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
 
-            console.log("✅ Selected Coin Objects:", { coinA, coinB });
+            console.log("✅ Selected Coin Objects:", {
+                coinA: matchingCoinA,
+                coinB: matchingCoinB
+            });
 
-            // ✅ Convert Deposit Amounts to MIST (Multiply by 1e9)
-            const depositA_MIST = BigInt(Math.floor(parseFloat(state.depositDropdownCoin) * 1_000_000_000));
-            const depositB_MIST = BigInt(Math.floor(parseFloat(state.depositCustomCoin) * 1_000_000_000));
-
-            console.log("💰 Deposit Amounts (in MIST):", depositA_MIST.toString(), depositB_MIST.toString());
+            console.log("💰 Deposit Amounts (in MIST):", depositA_U64.toString(), depositB_U64.toString());
 
             // ✅ Ensure User Has Enough Balance
-            if (coinA.balance < depositA_MIST || coinB.balance < depositB_MIST) {
+            if (coinA.balance < depositA_U64 || coinB.balance < depositB_U64) {
                 alert("⚠️ Insufficient token balance in wallet.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
@@ -434,7 +455,7 @@ export default function AddLiquidity() {
             const userSlippageTolerance = state.slippageTolerance || 0.5;
 
             // ✅ Calculate minimum LP tokens expected
-            const minLpOut = calculateMinLP(depositA_MIST, depositB_MIST, state.poolStats, userSlippageTolerance);
+            const minLpOut = calculateMinLP(depositA_U64, depositB_U64, state.poolStats, userSlippageTolerance);
             addLog("✅ Calculated min_lp_out:");
             console.log("✅ Calculated min_lp_out:", minLpOut.toString());
 
@@ -446,10 +467,10 @@ export default function AddLiquidity() {
                 typeArguments: [expectedCoinA, expectedCoinB],
                 arguments: [
                     txb.object(state.poolData.poolId), // Pool ID
-                    txb.object(coinA.objectId), // Coin A Object
-                    txb.pure.u64(depositA_MIST),
-                    txb.object(coinB.objectId), // Coin B Object
-                    txb.pure.u64(depositB_MIST),
+                    txb.object(matchingCoinA.objectId), // Coin A Object
+                    txb.pure.u64(depositA_U64),
+                    txb.object(matchingCoinB.objectId), // Coin B Object
+                    txb.pure.u64(depositB_U64),
                     txb.pure.u64(minLpOut), // Minimum LP Tokens (0 for now)
                 ],
             });
@@ -528,13 +549,13 @@ export default function AddLiquidity() {
             dispatch({
                 type: "SET_LIQUIDITY_DATA",
                 payload: {
-                    poolId: liquidityData.pool_id, // Pool ID
-                    coinA: liquidityData.a, // Coin A Type
-                    coinB: liquidityData.b, // Coin B Type
-                    depositA: parseFloat(liquidityData.amountin_a) / 1e9, // Convert from MIST
-                    depositB: parseFloat(liquidityData.amountin_b) / 1e9, // Convert from MIST
-                    lpMinted: parseFloat(liquidityData.lp_minted) / 1e9, // Convert from MIST
-                    txnDigest: txnDigest, // Store Transaction Digest
+                    poolId: liquidityData.pool_id,
+                    coinA: liquidityData.a,
+                    coinB: liquidityData.b,
+                    depositA: parseFloat(liquidityData.amountin_a) / Math.pow(10, decimalsA),
+                    depositB: parseFloat(liquidityData.amountin_b) / Math.pow(10, decimalsB),
+                    lpMinted: parseFloat(liquidityData.lp_minted) / 1e9,
+                    txnDigest: txnDigest,
                 },
             });
 
@@ -683,7 +704,7 @@ export default function AddLiquidity() {
 
                         {/* Fetch Pool Data Button */}
                         <button
-                            className="w-full md:w-auto button-secondary p-2 md:p-3 rounded-lg mt-4 text-sm md:text-base"
+                            className="w-full md:w-auto button-secondary mr-2 p-2 md:p-3 rounded-lg mt-4 text-sm md:text-base"
                             onClick={fetchPoolData}
                             disabled={state.loading}
                         >
@@ -693,7 +714,7 @@ export default function AddLiquidity() {
 
                 {/* Navigation Button */}
                         <button
-                            className="w-full md:w-1/3 p-2 md:p-3 rounded-lg mt-4 text-sm md:text-base"
+                            className="w-full ml-2 md:w-1/3 p-2 md:p-3 rounded-lg mt-4 text-sm md:text-base"
                             onClick={async () => {
                                 if (state.poolData) {
                                     await fetchPoolStats(state.poolData.poolId);
@@ -731,10 +752,10 @@ export default function AddLiquidity() {
                             {/* Balances */}
                             <h3 className="text-sm font-semibold text-black"><strong>Balances</strong></h3>
                             <p className="text-sm text-gray-700">
-                                <strong>Balance Coin A: {(state.poolStats.balance_a / 1e9).toFixed(4)}</strong>
+                                <strong>Balance Coin A: {(state.poolStats.balance_a / Math.pow(10, decimalsA)).toFixed(4)}</strong>
                             </p>
                             <p className="text-sm text-gray-700">
-                                <strong>Balance Coin B: {(state.poolStats.balance_b / 1e9).toFixed(4)}</strong>
+                                <strong>Balance Coin B: {(state.poolStats.balance_b / Math.pow(10, decimalsB)).toFixed(4)}</strong>
                             </p>
                             <p className="text-sm text-gray-700">
                                 <strong>Pool Locked Coins: {(state.poolStats.burn_balance_b / 1e9).toFixed(4)}</strong>

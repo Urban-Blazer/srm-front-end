@@ -17,10 +17,6 @@ const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9);  // 50 SUI
 const USDC_REWARD_BALANCE = 50 * Math.pow(10, 6); // 50 USDC
 const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 5 SRM
 
-const formatAtomicBalance = (rawBalance: number | string | bigint, decimals: number): number => {
-    return Number(rawBalance) / Math.pow(10, decimals);
-};
-
 export default function Swap() {
     const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
     const [walletConnected, setWalletConnected] = useState(false);

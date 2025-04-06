@@ -321,7 +321,7 @@ export default function MyPositions() {
             const signedTx = await walletAdapter.signTransactionBlock({
                 transactionBlock: txb,
                 account: userAddress,
-                chain: "sui:testnet",
+                chain: "sui:mainnet",
             });
 
             addLog("✅ Transaction Signed!");
@@ -442,10 +442,10 @@ export default function MyPositions() {
                                     >
                                         {/* Coin Images & Symbols */}
                                         <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">
-                                            <Image src={lp.poolData?.coinA_metadata?.image} alt="Coin A" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" />
+                                            <img src={lp.poolData?.coinA_metadata?.image} alt="Coin A" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" />
                                             <span className="text-lg md:text-xl font-semibold text-deepTeal">{lp.poolData?.coinA_metadata?.symbol}</span>
                                             <span className="text-deepTeal text-lg">/</span>
-                                            <Image src={lp.poolData?.coinB_metadata?.image} alt="Coin B" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" />
+                                            <img src={lp.poolData?.coinB_metadata?.image} alt="Coin B" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" />
                                             <span className="text-lg md:text-xl font-semibold text-deepTeal">{lp.poolData?.coinB_metadata?.symbol}</span>
                                         </div>
 

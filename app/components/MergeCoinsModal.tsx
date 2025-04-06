@@ -172,7 +172,7 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
             const signedTx = await adapter.signTransactionBlock({
                 // @ts-ignore
                 transactionBlock: txb,
-                chain: "sui:testnet",
+                chain: "sui:mainnet",
             });
 
             console.log("✅ Transaction Signed!");
@@ -294,7 +294,7 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
                                     <li key={coinType} className="flex items-center justify-between p-2 border rounded-lg">
                                         <div className="flex items-center space-x-3 w-full">
                                             {metadata.iconUrl && (
-                                                <Image
+                                                <img
                                                     src={metadata.iconUrl}
                                                     alt={displayName}
                                                     width={24}

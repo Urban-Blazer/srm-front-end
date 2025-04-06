@@ -207,7 +207,7 @@ export default function MyPositions() {
             const signedTx = await walletAdapter.signTransactionBlock({
                 transactionBlock: txb,
                 account: userAddress,
-                chain: "sui:testnet",
+                chain: "sui:mainnet",
             });
 
             addLog("✅ Transaction Signed!");
@@ -292,7 +292,7 @@ export default function MyPositions() {
 
             <div className="flex items-center justify-center gap-2 sm:gap-4 p-3 sm:p-4 bg-royalPurple rounded-lg mb-4 w-full max-w-2xl">
                 <p className="text-highlight text-center text-sm sm:text-m mt-1">
-                    Creator Rewards are automatically distributed once the balance exceeds 10 Coins.<br />
+                    Creator Rewards are automatically distributed once the balance exceeds 0.1 Sui or 100 USDC Coins.<br />
                     Alternatively, you can claim here at any time.
                 </p>
             </div>
@@ -326,7 +326,7 @@ export default function MyPositions() {
                         >
                             {/* Coin Images & Symbols */}
                             <div className="flex items-center justify-center space-x-1 sm:space-x-2 flex-wrap">
-                                <Image
+                                <img
                                     src={pool.coinA_image}
                                     alt={pool.coinA_symbol}
                                     width={20}
@@ -335,7 +335,7 @@ export default function MyPositions() {
                                 />
                                 <span className="text-md sm:text-lg md:text-xl font-semibold text-deepTeal">{pool.coinA_symbol}</span>
                                 <span className="text-deepTeal text-md sm:text-lg">/</span>
-                                <Image
+                                <img
                                     src={pool.coinB_image}
                                     alt={pool.coinB_symbol}
                                     width={20}

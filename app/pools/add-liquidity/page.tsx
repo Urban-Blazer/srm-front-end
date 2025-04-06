@@ -459,7 +459,7 @@ export default function AddLiquidity() {
             const signedTx = await walletAdapter.signTransactionBlock({
                 transactionBlock: txb,
                 account: userAddress,
-                chain: "sui:testnet",
+                chain: "sui:mainnet",
             });
 
             addLog("✅ Transaction Signed!");
@@ -609,7 +609,7 @@ export default function AddLiquidity() {
                                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
                             >
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
+                                    <img src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                     <span>{state.selectedCoin.symbol}</span>
                                 </div>
                                 <span className="text-gray-600">▼</span>
@@ -621,7 +621,7 @@ export default function AddLiquidity() {
                                         <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-softMint cursor-pointer text-black"
                                             onClick={() => dispatch({ type: "SET_COIN", payload: coin })}
                                         >
-                                            <Image src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
+                                            <img src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                             <span className="ml-2">{coin.symbol}</span>
                                         </div>
                                     ))}
@@ -653,7 +653,7 @@ export default function AddLiquidity() {
                                     <div className="flex items-center space-x-4 mt-2">
                                         {/* CoinA */}
                                         <div className="flex items-center space-x-2">
-                                                <Image
+                                                <img
                                                 src={state.selectedCoin.logo}
                                                 alt={state.selectedCoin.symbol}
                                                     width={20} height={20}
@@ -664,7 +664,7 @@ export default function AddLiquidity() {
                                             <span className="text-deepTeal text-m font-medium"><strong>/</strong></span>
                                             {/* CoinB */}
                                             <div className="flex items-center space-x-2">
-                                                <Image
+                                                <img
                                                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                                                     alt={state.customCoinMetadata?.symbol || "Token"}
                                                     width={20} height={20}
@@ -787,7 +787,7 @@ export default function AddLiquidity() {
                             <h2 className="text-lg font-semibold">Deposit Tokens</h2>
 
                             <div className="flex items-center p-3 bg-gray-50 rounded-lg mb-2">
-                                <Image
+                                <img
                                     src={state.dropdownCoinMetadata?.image || "/default-coin.png"}
                                     alt={state.dropdownCoinMetadata?.symbol || "Coin A"}
                                     width={20} height={20}
@@ -806,7 +806,7 @@ export default function AddLiquidity() {
                             </div>
 
                             <div className="flex items-center p-3 bg-gray-50 rounded-lg mb-2">
-                                <Image
+                                <img
                                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                                     alt={state.customCoinMetadata?.symbol || "Coin B"}
                                     width={20} height={20}

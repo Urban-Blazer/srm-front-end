@@ -13,8 +13,13 @@ import { predefinedCoins } from "../data/coins";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
-const SUI_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 500 SUI
-const USDC_REWARD_BALANCE = 1000 * Math.pow(10, 6); // 1000 USDC
+const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9);  // 50 SUI
+const USDC_REWARD_BALANCE = 50 * Math.pow(10, 6); // 50 USDC
+const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 5 SRM
+
+const formatAtomicBalance = (rawBalance: number | string | bigint, decimals: number): number => {
+    return Number(rawBalance) / Math.pow(10, decimals);
+};
 
 export default function Swap() {
     const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
@@ -27,7 +32,7 @@ export default function Swap() {
     const [sellBalance, setSellBalance] = useState(0);
     const [buyBalance, setBuyBalance] = useState(0);
     const [dropdownOpen, setDropdownOpen] = useState<"sell" | "buy" | null>(null);
-    const [maxSlippage, setMaxSlippage] = useState("0.5"); // Default slippage at 0.5%
+    const [maxSlippage, setMaxSlippage] = useState("1.0"); // Default slippage at 1.0%
     const [isAtoB, setIsAtoB] = useState<boolean | null>(null); // Track if swapping A -> B or B -> A
     const [fetchingQuote, setFetchingQuote] = useState(false); // Track loading state for quote
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,8 +108,8 @@ export default function Swap() {
                 if (!walletAdapterRef.current) {
                     const adapter = await NightlyConnectSuiAdapter.build({
                         appMetadata: {
-                            name: "Sui DEX",
-                            description: "DEX for trading tokens on Sui",
+                            name: "SuiRewards.Me",
+                            description: "It's time you got a piece",
                             icon: "https://your-app-logo-url.com/icon.png",
                         },
                     });
@@ -174,7 +179,7 @@ export default function Swap() {
             const response = await fetch(`/api/get-pool-id?tokenPair=${encodeURIComponent(tokenPairKey)}`);
             const data = await response.json();
 
-            console.log("🌐 Raw Pool Metadata Response:", data); // 🔍 Debugging Step
+            console.log("🌐 Raw Pool Metadata Response:", data);
 
             if (data?.poolId) {
                 console.log("✅ Pool ID found:", data.poolId);
@@ -291,8 +296,7 @@ export default function Swap() {
                 coinType: token.typeName,
             });
 
-            setBalance(Number(totalBalance) / 1_000_000_000); // Convert from MIST (10⁹)
-            console.log(`${token.symbol} Balance:`, Number(totalBalance) / 1_000_000_000);
+            setBalance(Number(totalBalance));
         } catch (error) {
             console.error(`Error fetching balance for ${token.symbol}:`, error);
             setBalance(0);
@@ -441,7 +445,10 @@ export default function Swap() {
 
             console.log("🛑 Before Conversion - amount:", amount);
 
-            const amountU64 = Number(amount) > 0 ? Math.floor(Number(amount) * 1_000_000_000) : 0;
+            const relevantToken = isSell ? sellToken : buyToken;
+            const amountU64 = Number(amount) > 0
+                ? Math.floor(Number(amount) * Math.pow(10, relevantToken.decimals))
+                : 0;
 
             console.log("🛑 After Conversion - amount:", amountU64);
 
@@ -458,6 +465,9 @@ export default function Swap() {
                 burnFee: poolStats.burn_fee?.toString() || "0",
                 creatorRoyaltyFee: poolStats.creator_royalty_fee?.toString() || "0",
                 rewardsFee: poolStats.rewards_fee?.toString() || "0",
+
+                // 🆕 Send output token decimals to the API
+                outputDecimals: (isSell ? buyToken.decimals : sellToken.decimals).toString(),
             });
 
             // ✅ Fetch Quote API
@@ -599,6 +609,7 @@ export default function Swap() {
             // ✅ Retrieve trusted typeNames for SUI and USDC from predefinedCoins
             const suiTypeName = predefinedCoins.find((coin) => coin.symbol === "SUI")?.typeName;
             const usdcTypeName = predefinedCoins.find((coin) => coin.symbol === "USDC")?.typeName;
+            const srmTypeName = predefinedCoins.find((coin) => coin.symbol === "MOCKSUI")?.typeName;
             const poolCoinATypeName = poolMetadata?.coinA?.typeName;
 
             let shouldUpdateIsActive = false;
@@ -608,18 +619,21 @@ export default function Swap() {
                 shouldUpdateIsActive = true;
             } else if (poolCoinATypeName === usdcTypeName && rewardBalance >= USDC_REWARD_BALANCE) {
                 shouldUpdateIsActive = true;
+            } else if (poolCoinATypeName === srmTypeName && rewardBalance >= SRM_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
             }
 
             console.log(`🔍 Checking isActive condition:
                 - Pool CoinA Type: ${poolCoinATypeName}
                 - SUI Type: ${suiTypeName}
                 - USDC Type: ${usdcTypeName}
+                - SRM Type: ${srmTypeName}
                 - Reward Balance: ${rewardBalance}
                 - shouldUpdateIsActive: ${shouldUpdateIsActive}`);
 
             // ✅ Build Transaction Block
             const txb = new TransactionBlock();
-            txb.setGasBudget(500_000_000); // ✅ Restore explicit gas budget
+            txb.setGasBudget(500_000_000);
 
             // Convert coin object ID to transaction object
             const coinObject = txb.object(matchingCoin.objectId);
@@ -652,7 +666,7 @@ export default function Swap() {
             const signedTx = await walletAdapter.signTransactionBlock({
                 transactionBlock: txb,
                 account: userAddress,
-                chain: "sui:testnet",
+                chain: "sui:mainnet",
             });
 
             addLog("✅ Transaction Signed!");
@@ -702,6 +716,7 @@ export default function Swap() {
             // 🔄 Refresh balances after the swap
             await fetchBalance(sellToken, setSellBalance);
             await fetchBalance(buyToken, setBuyBalance);
+            await fetchPoolStats(poolId);
             setIsProcessing(false); // ✅ Ensure modal does not close early
 
         } catch (error) {
@@ -904,21 +919,21 @@ export default function Swap() {
                             <label htmlFor="sellAmount" className="block text-royalPurple"><strong>Sell</strong></label>
                             {sellToken && <span className="text-sm text-deepTeal"><strong style={{ color: "#6A1B9A" }}>Balance:</strong> <strong style={{ color: "#0D3B3E" }}>
                                 {(
-                                    Math.floor(Number(sellBalance) * 1e4) / 1e4
+                                    Math.floor((Number(sellBalance) / Math.pow(10, sellToken.decimals ?? 9)) * 1e4) / 1e4
                                 ).toLocaleString(undefined, {
-                                    minimumFractionDigits: 4, // ✅ Always show 4 decimal places
-                                    maximumFractionDigits: 4, // ✅ Ensure no extra decimal places
+                                    minimumFractionDigits: 4,
+                                    maximumFractionDigits: 4,
                                 })}
                             </strong>
                         </span>}
                         </div>
 
-                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
                             <input
                                 id="sellAmount"
                                 name="sellAmount"
                                 type="number"
-                                className="bg-transparent text-lg md:text-2xl font-semibold text-black w-full outline-none"
+                                    className="flex-grow bg-transparent text-lg md:text-2xl font-semibold text-black w-0 outline-none"
                                 placeholder="0"
                                 value={sellAmount}
                                 onChange={handleSellAmountChange}
@@ -926,16 +941,16 @@ export default function Swap() {
                             />
                             {/* Sell Token Selection Button */}
                             <button
-                                className="flex items-center justify-between w-24 md:w-32 bg-white border rounded-lg px-2 py-1 md:px-3 md:py-2 shadow hover:bg-softMint"
+                                    className="flex items-center bg-white border rounded-lg px-3 py-2 shadow hover:bg-softMint"
                                 onClick={() => setDropdownOpen(dropdownOpen === "sell" ? null : "sell")}
                             >
                                 {sellToken ? (
                                     <div className="flex items-center">
-                                        <Image src={sellToken.logo} alt={sellToken.symbol} width={20} height={20} className="w-5 h-5 mr-2" />
-                                        <span className="text-deepTeal font-medium"><strong>{sellToken.symbol}</strong></span>
+                                            <img src={sellToken.logo} alt={sellToken.symbol} width={20} height={20} className="w-6 h-6 mr-2 sm:w-8 sm:h-8 rounded-full" />
+                                            <span className="text-deepTeal font-medium whitespace-nowrap"><strong>{sellToken.symbol}</strong></span>
                                     </div>
                                 ) : (
-                                        <span className="text-deepTeal font-medium"><strong>Select Token</strong></span>
+                                            <span className="text-deepTeal font-medium whitespace-nowrap"><strong>Select Token</strong></span>
                                 )}
                             </button>
                         </div>
@@ -978,21 +993,21 @@ export default function Swap() {
                             <label htmlFor="buyAmount" className="block text-royalPurple"><strong>Buy</strong></label>
                             {buyToken && <span className="text-sm text-deepTeal"><strong style={{ color: "#6A1B9A" }}>Balance:</strong> <strong style={{ color: "#0D3B3E" }}>
                                 {(
-                                    Math.floor(Number(buyBalance) * 1e4) / 1e4
+                                    Math.floor((Number(buyBalance) / Math.pow(10, buyToken.decimals ?? 9)) * 1e4) / 1e4
                                 ).toLocaleString(undefined, {
-                                    minimumFractionDigits: 4, // ✅ Always show 4 decimal places
-                                    maximumFractionDigits: 4, // ✅ Ensure no extra decimal places
+                                    minimumFractionDigits: 4,
+                                    maximumFractionDigits: 4,
                                 })}
                             </strong>
                         </span>}
                         </div>
 
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
                             <input
                                 id="buyAmount"
                                 name="buyAmount"
                                 type="number"
-                                className="bg-transparent text-lg md:text-2xl font-semibold text-black w-full outline-none"
+                                className="flex-grow bg-transparent text-lg md:text-2xl font-semibold text-black w-0 outline-none"
                                 placeholder="0"
                                 value={buyAmount}
                                 onChange={handleBuyAmountChange}
@@ -1000,16 +1015,16 @@ export default function Swap() {
                             />
                             {/* Buy Token Selection Button */}
                             <button
-                                className="flex items-center justify-between w-24 md:w-32 bg-white border rounded-lg px-2 py-1 md:px-3 md:py-2 shadow hover:bg-softMint"
+                                    className="flex items-center bg-white border rounded-lg px-3 py-2 shadow hover:bg-softMint"
                                 onClick={() => setDropdownOpen(dropdownOpen === "buy" ? null : "buy")}
                             >
                                 {buyToken ? (
                                     <div className="flex items-center">
-                                        <Image src={buyToken.logo} alt={buyToken.symbol} width={20} height={20} className="w-5 h-5 mr-2" />
-                                        <span className="text-deepTeal font-medium"><strong>{buyToken.symbol}</strong></span>
+                                            <img src={buyToken.logo} alt={buyToken.symbol} width={20} height={20} className="w-6 h-6 mr-2 sm:w-8 sm:h-8 rounded-full" />
+                                        <span className="text-deepTeal font-medium whitespace-nowrap"><strong>{buyToken.symbol}</strong></span>
                                     </div>
                                 ) : (
-                                        <span className="text-deepTeal font-medium"><strong>Select Token</strong></span>
+                                        <span className="text-deepTeal font-medium whitespace-nowrap"><strong>Select Token</strong></span>
                                 )}
                             </button>
                         </div>
@@ -1067,7 +1082,7 @@ export default function Swap() {
                                 <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-deepTeal">
                                     <div className="flex items-center space-x-3">
                                         {poolMetadata?.coinA?.image && (
-                                                <Image src={poolMetadata?.coinA?.image} alt={poolMetadata?.coinA?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
+                                                <img src={poolMetadata?.coinA?.image} alt={poolMetadata?.coinA?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
                                         )}
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinA?.symbol}
@@ -1080,8 +1095,8 @@ export default function Swap() {
                                                     Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0)) * 1e4
                                                 ) / 1e4
                                             ).toLocaleString(undefined, {
-                                                minimumFractionDigits: 4, // ✅ Ensure at least 4 decimal places
-                                                maximumFractionDigits: 4, // ✅ Ensure at most 4 decimal places
+                                                minimumFractionDigits: 4,
+                                                maximumFractionDigits: 4,
                                             })}
                                         </p>
                                 </div>
@@ -1090,7 +1105,7 @@ export default function Swap() {
                                 <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg text-deepTeal">
                                     <div className="flex items-center space-x-3">
                                         {poolMetadata?.coinB?.image && (
-                                                <Image src={poolMetadata?.coinB?.image} alt={poolMetadata?.coinB?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
+                                                <img src={poolMetadata?.coinB?.image} alt={poolMetadata?.coinB?.symbol} width={20} height={20} className="w-8 h-8 rounded-full" />
                                         )}
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinB?.symbol}
@@ -1103,8 +1118,8 @@ export default function Swap() {
                                                     Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0)) * 1e4
                                                 ) / 1e4
                                             ).toLocaleString(undefined, {
-                                                minimumFractionDigits: 4, // ✅ Ensure at least 4 decimal places
-                                                maximumFractionDigits: 4, // ✅ Ensure at most 4 decimal places
+                                                minimumFractionDigits: 4,
+                                                maximumFractionDigits: 4,
                                             })}
                                         </p>
                                 </div>
@@ -1112,24 +1127,24 @@ export default function Swap() {
                                 {/* ✅ Pool Stats Section */}
                                 <div className="text-deepTeal space-y-2">
                                     {/* ✅ LP Locked Balance Now Always Visible */}
-                                        <p><strong style={{ color: "#6A1B9A" }}>Pool Locked LP:</strong> <strong style={{ color: "#0D3B3E" }}>
+                                        <p><strong style={{ color: "#6A1B9A" }}>Burnt LP:</strong> <strong style={{ color: "#0D3B3E" }}>
                                             {(
                                                 Number(poolStats?.locked_lp_balance || 0) / 1e9
                                             ).toLocaleString(undefined, {
-                                                minimumFractionDigits: 4, // ✅ Always show 4 decimal places
-                                                maximumFractionDigits: 4, // ✅ Prevent extra decimals
+                                                minimumFractionDigits: 4,
+                                                maximumFractionDigits: 4,
                                             })} LP
                                         </strong>
                                         </p>
-                                        <p><strong style={{ color: "#6A1B9A" }}>Pool Locked Coins:</strong> <strong style={{ color: "#0D3B3E" }}>
+                                        <p><strong style={{ color: "#6A1B9A" }}>Burnt Coins:</strong> <strong style={{ color: "#0D3B3E" }}>
                                             {(
                                                 Math.floor(
                                                     Number(poolStats?.burn_balance_b || 0) /
                                                     Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0)) * 1e4
                                                 ) / 1e4
                                             ).toLocaleString(undefined, {
-                                                minimumFractionDigits: 4, // ✅ Always show 4 decimal places
-                                                maximumFractionDigits: 4, // ✅ Prevent extra decimals
+                                                minimumFractionDigits: 4,
+                                                maximumFractionDigits: 4,
                                             })} {poolMetadata?.coinB?.symbol}
                                         </strong>
                                         </p>
@@ -1140,8 +1155,8 @@ export default function Swap() {
                                                     Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0)) * 1e4
                                                 ) / 1e4
                                             ).toLocaleString(undefined, {
-                                                minimumFractionDigits: 4, // ✅ Always show 4 decimal places
-                                                maximumFractionDigits: 4, // ✅ Prevent extra decimals
+                                                minimumFractionDigits: 4,
+                                                maximumFractionDigits: 4,
                                             })} {poolMetadata?.coinA?.symbol}
                                         </strong>
                                         </p>

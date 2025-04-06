@@ -33,6 +33,15 @@ const initialState = {
     depositCustomCoin: "",
 };
 
+const formatCoinValue = (valueInAtomic: number, decimals: number): string => {
+    const factor = Math.pow(10, decimals);
+    const formatted = valueInAtomic / factor;
+    return formatted.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 4,
+    });
+};
+
 function isValidSuiAddress(address: string): boolean {
     return /^0x[a-fA-F0-9]{64}$/.test(address);
 }
@@ -193,7 +202,7 @@ export default function Pools() {
                 dispatch({
                     type: "SET_METADATA",
                     payload: {
-                        dropdown: { ...dropdownMetadata, typeName: state.selectedCoin?.typeName },
+                        dropdown: { ...dropdownMetadata, typeName: state.selectedCoin?.typeName, iconUrl: state.selectedCoin?.logo },
                         custom: { ...customMetadata, typeName: state.customCoin.trim() }
                     },
                 });
@@ -304,9 +313,16 @@ export default function Pools() {
                 return;
             }
 
-            // ✅ Convert Deposits from Whole Coins → MIST (Multiply by 10⁹)
-            const depositDropdownMIST = BigInt(Math.floor(parseFloat(state.depositDropdownCoin) * 1_000_000_000));
-            const depositCustomMIST = BigInt(Math.floor(parseFloat(state.depositCustomCoin) * 1_000_000_000));
+            // New (dynamic decimals)
+            const dropdownDecimals = state.dropdownCoinMetadata.decimals || 9;
+            const customDecimals = state.customCoinMetadata.decimals || 9;
+
+            const depositDropdownMIST = BigInt(
+                Math.floor(parseFloat(state.depositDropdownCoin) * Math.pow(10, dropdownDecimals))
+            );
+            const depositCustomMIST = BigInt(
+                Math.floor(parseFloat(state.depositCustomCoin) * Math.pow(10, customDecimals))
+            );
 
             console.log("💰 Deposit Amounts in MIST:");
             console.log(`${state.dropdownCoinMetadata.symbol}:`, depositDropdownMIST.toString());
@@ -352,7 +368,7 @@ export default function Pools() {
             const signedTx = await walletAdapter.signTransactionBlock({
                 transactionBlock: txb,
                 account: userAddress,
-                chain: "sui:testnet",
+                chain: "sui:mainnet",
             });
 
             addLog("✅ Transaction Signed!");
@@ -590,7 +606,7 @@ export default function Pools() {
                                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
                             >
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
+                                    <img src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
                                     <span>{state.selectedCoin.symbol}</span>
                                 </div>
                                 <span className="text-gray-600">▼</span>
@@ -602,7 +618,7 @@ export default function Pools() {
                                         <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-softMint cursor-pointer text-black"
                                             onClick={() => dispatch({ type: "SET_COIN", payload: coin })}
                                         >
-                                            <Image src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
+                                            <img src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                             <span className="ml-2">{coin.symbol}</span>
                                         </div>
                                     ))}
@@ -637,14 +653,14 @@ export default function Pools() {
                         {/* Selected Coins Display */}
                         <div className="flex items-center justify-center gap-4 p-4 bg-softMint rounded-lg mb-4">
                             <div className="flex items-center space-x-2">
-                                <Image src={state.dropdownCoinMetadata.iconUrl || ""} alt={state.dropdownCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
+                                <img src={state.dropdownCoinMetadata.iconUrl || ""} alt={state.dropdownCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-deepTeal">{state.dropdownCoinMetadata.symbol}</span>
                             </div>
 
                             <span className="text-2xl font-bold text-deepTeal">/</span>
 
                             <div className="flex items-center space-x-2">
-                                <Image src={state.customCoinMetadata.iconUrl || ""} alt={state.customCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
+                                <img src={state.customCoinMetadata.iconUrl || ""} alt={state.customCoinMetadata.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-deepTeal">{state.customCoinMetadata.symbol}</span>
                             </div>
                         </div>
@@ -732,14 +748,14 @@ export default function Pools() {
                         {/* Selected Coins */}
                         <div className="flex items-center justify-center gap-4 p-4 bg-softMint rounded-lg mb-4">
                             <div className="flex items-center space-x-2">
-                                <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
+                                <img src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-deepTeal">{state.dropdownCoinMetadata?.symbol}</span>
                             </div>
 
                             <span className="text-2xl font-bold text-deepTeal">/</span>
 
                             <div className="flex items-center space-x-2">
-                                <Image src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
+                                <img src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                 <span className="text-lg font-semibold text-deepTeal">{state.customCoinMetadata?.symbol}</span>
                             </div>
                         </div>
@@ -861,12 +877,12 @@ export default function Pools() {
                             <h2 className="text-lg font-semibold">Selected Coins</h2>
                             <div className="flex items-center justify-center gap-4 p-4 bg-softMint rounded-lg">
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
+                                    <img src={state.dropdownCoinMetadata?.iconUrl || ""} alt={state.dropdownCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                     <span className="text-lg font-semibold text-deepTeal">{state.dropdownCoinMetadata?.symbol}</span>
                                 </div>
                                 <span className="text-2xl font-bold text-deepTeal">/</span>
                                 <div className="flex items-center space-x-2">
-                                    <Image src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
+                                    <img src={state.customCoinMetadata?.iconUrl || ""} alt={state.customCoinMetadata?.symbol} width={20} height={20} className="w-10 h-10 rounded-full" />
                                     <span className="text-lg font-semibold text-deepTeal">{state.customCoinMetadata?.symbol}</span>
                                 </div>
                             </div>
@@ -982,7 +998,7 @@ export default function Pools() {
                                             </button>
                                         </div>
                                     </li>
-                                    <li><strong>Initial Amount (A):</strong> {state.poolData.initA} {state.dropdownCoinMetadata.symbol}</li>
+                                    <li><strong>Initial Amount (A):</strong> {formatCoinValue(state.poolData.initA, state.dropdownCoinMetadata.decimals)} {state.dropdownCoinMetadata.symbol}</li>
 
                                     {/* ✅ Coin B with Copy Button */}
                                     <li className="flex items-center justify-between bg-gray-100 rounded-lg overflow-x-auto">
@@ -999,11 +1015,10 @@ export default function Pools() {
                                             </button>
                                         </div>
                                     </li>
-                                    <li><strong>Initial Amount (B):</strong> {state.poolData.initB} {state.customCoinMetadata.symbol}</li>
+                                    <li><strong>Initial Amount (B):</strong> {formatCoinValue(state.poolData.initB, state.customCoinMetadata.decimals)} {state.customCoinMetadata.symbol}</li>
 
-                                    <li><strong>LP Minted:</strong> {state.poolData.lpMinted}</li>
-                                    <li><strong>Locked LP Balance:</strong> {state.poolData.lockedLpBalance}</li>
-
+                                    <li><strong>LP Minted:</strong> {formatCoinValue(state.poolData.lpMinted, 9)}</li>
+                                    
                                     {/* Fees Section */}
                                     <li><strong>Fees:</strong></li>
                                     <ul className="ml-4">

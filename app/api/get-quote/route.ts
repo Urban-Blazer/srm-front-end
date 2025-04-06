@@ -133,11 +133,16 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Invalid return values" }, { status: 400 });
         }
 
+        const outputDecimals = parseInt(searchParams.get("outputDecimals") || "9"); // default fallback
+
         const quote = rawReturnValues.map(([bytes, type]: any) => {
             if (type === "u64") {
-                const value = Number(decodeU64(bytes)) / 1_000_000_000;
-                console.log("Decoded Quote (Converted):", value);
-                return value.toFixed(6);
+                const value = decodeU64(bytes); // ← keep it BigInt
+                const divisor = 10n ** BigInt(outputDecimals);
+                const whole = value / divisor;
+                const fraction = (value % divisor) * 1_000_000n / divisor;
+
+                return `${whole.toString()}.${fraction.toString().padStart(6, '0')}`;
             }
             return "0.000000";
         });

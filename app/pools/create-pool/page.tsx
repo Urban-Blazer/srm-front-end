@@ -292,27 +292,6 @@ export default function Pools() {
 
             console.log("🔍 Extracted Coins with Balance:", coins);
 
-            // ✅ Find matching coin objects
-            const expectedCoinA = state.dropdownCoinMetadata.typeName;
-            const expectedCoinB = state.customCoinMetadata.typeName;
-            const coinA = coins.find((c) => c.type === expectedCoinA);
-            const coinB = coins.find((c) => c.type === expectedCoinB);
-
-            if (!coinA || !coinB) {
-                alert("⚠️ Insufficient tokens in wallet. Coin objects not found.");
-                console.error("❌ Missing Coin Objects:", { coinA, coinB });
-                dispatch({ type: "SET_LOADING", payload: false });
-                return;
-            }
-
-            // ✅ Check if balances are present
-            if (!coinA.balance || !coinB.balance) {
-                alert("⚠️ Insufficient token balance in wallet. Coin objects found but no balance.");
-                console.error("❌ Balance Missing:", { coinA, coinB });
-                dispatch({ type: "SET_LOADING", payload: false });
-                return;
-            }
-
             // New (dynamic decimals)
             const dropdownDecimals = state.dropdownCoinMetadata.decimals || 9;
             const customDecimals = state.customCoinMetadata.decimals || 9;
@@ -328,9 +307,26 @@ export default function Pools() {
             console.log(`${state.dropdownCoinMetadata.symbol}:`, depositDropdownMIST.toString());
             console.log(`${state.customCoinMetadata.symbol}:`, depositCustomMIST.toString());
 
+            // ✅ Find matching coin objects
+            const expectedCoinA = state.dropdownCoinMetadata.typeName;
+            const expectedCoinB = state.customCoinMetadata.typeName;
+            const coinA = coins.find(
+                (c) => c.type === expectedCoinA && c.balance >= depositDropdownMIST
+            );
+            const coinB = coins.find(
+                (c) => c.type === expectedCoinB && c.balance >= depositCustomMIST
+            );
+
+            if (!coinA || !coinB) {
+                alert("⚠️ Coin objects not found.");
+                console.error("❌ Missing Coin Objects:", { coinA, coinB });
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
             // ✅ Ensure user has enough balance
             if (coinA.balance < depositDropdownMIST || coinB.balance < depositCustomMIST) {
-                alert("⚠️ Insufficient token balance in wallet.");
+                alert("⚠️ Insufficient coin balance in wallet.");
                 console.error("❌ Balance Check Failed!");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;

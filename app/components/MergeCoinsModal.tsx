@@ -89,21 +89,32 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
 
             do {
                 const result = await suiClient.getAllCoins({ owner: walletAddress, cursor });
-                allCoins = [...allCoins, ...result.data];
+
+                // ✅ Preserve full ObjectRef for gas assignment
+                const coinsWithRefs = result.data.map((coin) => ({
+                    coinObjectId: coin.coinObjectId,
+                    coinType: coin.coinType,
+                    balance: coin.balance,
+                    digest: coin.digest,       // ✅ Required for txb.setGasPayment()
+                    version: coin.version,     // ✅ Required for txb.setGasPayment()
+                }));
+
+                allCoins = [...allCoins, ...coinsWithRefs];
                 cursor = result.nextCursor ?? null;
             } while (cursor);
 
             setCoins(allCoins);
 
+            // ✅ Group coins by type
             const groupedCoins = allCoins.reduce((acc, coin) => {
                 if (!acc[coin.coinType]) acc[coin.coinType] = [];
                 acc[coin.coinType].push(coin);
                 return acc;
             }, {} as Record<string, any[]>);
 
-            // ✅ Only keep coins that can be merged
+            // ✅ Only keep coin types with more than 1 coin to allow merging
             const mergeCandidates = Object.fromEntries(
-                Object.entries(groupedCoins).filter(([, coins]) => (coins as any[]).length > 1) // ✅ FIXED HERE
+                Object.entries(groupedCoins).filter(([, coins]) => coins.length > 1)
             );
 
             setMergeableCoins(mergeCandidates as Record<string, any[]>);
@@ -129,43 +140,51 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
 
         setLoading(true);
 
-        if (!adapter) {
-            alert("⚠️ Please connect your wallet first.");
-            setLoading(false);
-            return;
-        }
-
         try {
-            // ✅ Retrieve the user's wallet address
             const accounts = await adapter.getAccounts();
             const userAddress = accounts[0]?.address;
-
             if (!userAddress) {
-                alert("⚠️ No accounts found. Please reconnect your wallet.");
+                alert("⚠️ No wallet address found.");
                 setLoading(false);
                 return;
             }
 
-            console.log("✅ User Address:", userAddress);
-            console.log("✅ Merging Coin Type:", coinType);
+            const isSui = coinType === "0x2::sui::SUI";
+            const coinGroup = mergeableCoins[coinType];
 
-            // ✅ Extract coins to merge
-            const [primaryCoin, ...coinsToMerge] = mergeableCoins[coinType];
+            let primaryCoin;
+            let coinsToMerge = [];
 
-            if (!primaryCoin || coinsToMerge.length === 0) {
-                alert("⚠️ Not enough coins to merge.");
-                setLoading(false);
-                return;
+            if (isSui) {
+                const sorted = [...coinGroup].sort((a, b) => Number(b.balance) - Number(a.balance));
+                primaryCoin = sorted[0];
+                coinsToMerge = sorted.slice(1);
+
+                if (!primaryCoin || coinsToMerge.length === 0) {
+                    alert("⚠️ Need at least two SUI coins to merge.");
+                    setLoading(false);
+                    return;
+                }
+            } else {
+                [primaryCoin, ...coinsToMerge] = coinGroup;
             }
 
-            console.log("✅ Primary Coin:", primaryCoin.coinObjectId);
-            console.log("✅ Coins to Merge:", coinsToMerge.map((c) => c.coinObjectId));
-
-            // ✅ Build the Transaction Block
             const txb = new TransactionBlock();
-            const primaryCoinInput = txb.object(primaryCoin.coinObjectId);
-            const mergeCoinInputs = coinsToMerge.map((coin) => txb.object(coin.coinObjectId));
-            txb.mergeCoins(primaryCoinInput, mergeCoinInputs);
+
+            if (isSui) {
+                txb.setGasPayment([{
+                    objectId: primaryCoin.coinObjectId,
+                    digest: primaryCoin.digest,
+                    version: primaryCoin.version,
+                }]);
+
+                const mergeInputs = coinsToMerge.map((coin) => txb.object(coin.coinObjectId));
+                txb.mergeCoins(txb.gas, mergeInputs);
+            } else {
+                const primaryInput = txb.object(primaryCoin.coinObjectId);
+                const mergeInputs = coinsToMerge.map((coin) => txb.object(coin.coinObjectId));
+                txb.mergeCoins(primaryInput, mergeInputs);
+            }
 
             // ✅ Sign Transaction
             console.log("✍️ Signing transaction...");
@@ -235,6 +254,7 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
             setLoading(false);
         }
     };
+
 
     const fetchTransactionWithRetry = async (txnDigest, retries = 5, delay = 2000) => {
         for (let i = 0; i < retries; i++) {

@@ -400,6 +400,8 @@ export default function AddLiquidity() {
                         balance: obj.data?.content?.fields?.balance
                             ? BigInt(obj.data?.content?.fields?.balance)
                             : BigInt(0),
+                        digest: obj.data?.digest,       // 🔥 Add this
+                        version: obj.data?.version,     // 🔥 And this
                     };
                 })
                 .filter(Boolean);
@@ -443,7 +445,7 @@ export default function AddLiquidity() {
             console.log("💰 Deposit Amounts (in MIST):", depositA_U64.toString(), depositB_U64.toString());
 
             // ✅ Ensure User Has Enough Balance
-            if (coinA.balance < depositA_U64 || coinB.balance < depositB_U64) {
+            if (matchingCoinA.balance < depositA_U64 || matchingCoinB.balance < depositB_U64) {
                 alert("⚠️ Insufficient token balance in wallet.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
@@ -459,17 +461,58 @@ export default function AddLiquidity() {
             addLog("✅ Calculated min_lp_out:");
             console.log("✅ Calculated min_lp_out:", minLpOut.toString());
 
-            // ✅ Build Transaction Block
             const txb = new TransactionBlock();
+
+            const suiType = "0x2::sui::SUI";
+            const isCoinADepositSui = expectedCoinA === suiType;
+            const isCoinBDepositSui = expectedCoinB === suiType;
+            const onlyOneSui = coins.filter(c => c.type === suiType).length === 1;
+            const singleSuiCoin = coins.find(c => c.type === suiType);
+
+            let coinAInput, coinBInput;
+
+            if (onlyOneSui && (isCoinADepositSui || isCoinBDepositSui)) {
+                const suiDepositAmount = isCoinADepositSui ? depositA_U64 : depositB_U64;
+
+                if (singleSuiCoin.balance > suiDepositAmount + BigInt(250_000_000)) {
+                    txb.setGasPayment([
+                        {
+                            objectId: singleSuiCoin.objectId,
+                            digest: singleSuiCoin.digest,
+                            version: singleSuiCoin.version,
+                        }
+                    ]);
+                    txb.setGasOwner(userAddress);
+
+                    const [splitSui] = txb.splitCoins(txb.gas, [txb.pure(suiDepositAmount)]);
+
+                    if (isCoinADepositSui) {
+                        coinAInput = splitSui;
+                        coinBInput = txb.object(matchingCoinB.objectId);
+                    } else {
+                        coinAInput = txb.object(matchingCoinA.objectId);
+                        coinBInput = splitSui;
+                    }
+
+                    console.log("🧠 Used txb.gas for split SUI.");
+                } else {
+                    alert("⚠️ Not enough SUI to cover both gas and deposit.");
+                    dispatch({ type: "SET_LOADING", payload: false });
+                    return;
+                }
+            } else {
+                coinAInput = txb.object(matchingCoinA.objectId);
+                coinBInput = txb.object(matchingCoinB.objectId);
+            }
 
             txb.moveCall({
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::add_liquidity_with_coins_and_transfer_to_sender`,
                 typeArguments: [expectedCoinA, expectedCoinB],
                 arguments: [
                     txb.object(state.poolData.poolId), // Pool ID
-                    txb.object(matchingCoinA.objectId), // Coin A Object
+                    coinAInput,
                     txb.pure.u64(depositA_U64),
-                    txb.object(matchingCoinB.objectId), // Coin B Object
+                    coinBInput,
                     txb.pure.u64(depositB_U64),
                     txb.pure.u64(minLpOut), // Minimum LP Tokens (0 for now)
                 ],
@@ -608,14 +651,14 @@ export default function AddLiquidity() {
 
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-gray-100 p-4 md:p-6 pb-20 overflow-y-auto">
+        <div className="min-h-screen overflow-y-auto flex flex-col md:flex-row bg-gray-100 p-4 md:p-6 pb-20">
             <div className="hidden md:flex flex-col items-start justify-start w-72 min-w-[280px] h-full bg-white shadow-md p-6 rounded-lg">
                 <StepIndicator step={state.step} setStep={(step) => dispatch({ type: "SET_STEP", payload: step })} />
             </div>
 
 
 
-            <div className="flex-1 bg-white p-4 md:p-8 rounded-lg shadow-lg overflow-y-auto max-h-full">
+            <div className="flex-1 bg-white p-4 md:p-8 rounded-lg shadow-lg">
                 <h1 className="text-2xl font-bold mb-6">Create Liquidity</h1>
 
                 {/* Step 1: Select Coins */}
@@ -742,7 +785,7 @@ export default function AddLiquidity() {
 
                 {/* Step 2: Deposit Liquidity */}
                 {state.step === 2 && state.dropdownCoinMetadata && state.customCoinMetadata && state.poolStats && (
-                    <div className="pb-20 overflow-y-auto">
+                    <div className="pb-20">
                         <h2 className="text-xl font-semibold mb-4">Deposit Liquidity</h2>
 
                         {/* Pool Stats */}
@@ -861,7 +904,7 @@ export default function AddLiquidity() {
 
                 {/* Step 3: Liquidity Confirmation */}
                 {state.step === 3 && state.liquidityData && (
-                    <div className="pb-20 overflow-y-auto">
+                    <div className="pb-20">
                         <h2 className="text-xl font-semibold mb-4">Liquidity Successfully Added! 🎉</h2>
 
                         <div className="bg-green-100 p-4 rounded-lg shadow-md mb-4">

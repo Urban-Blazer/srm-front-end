@@ -224,7 +224,6 @@ export default function Pools() {
         dispatch({ type: "SET_LOADING", payload: false });
     };
 
-
     // ✅ Create Pool Transaction
     const handleCreatePool = async () => {
         setLogs([]); // Clear previous logs
@@ -286,9 +285,11 @@ export default function Pools() {
                         balance: obj.data?.content?.fields?.balance
                             ? BigInt(obj.data?.content?.fields?.balance)
                             : BigInt(0),
+                        digest: obj.data?.digest, // ✅ Add this
+                        version: obj.data?.version, // ✅ And this
                     };
                 })
-                .filter(Boolean); // Remove null values
+                .filter(Boolean);
 
             console.log("🔍 Extracted Coins with Balance:", coins);
 
@@ -337,8 +338,55 @@ export default function Pools() {
             console.log(`${state.dropdownCoinMetadata.symbol}:`, coinA.objectId, "Balance:", coinA.balance.toString());
             console.log(`${state.customCoinMetadata.symbol}:`, coinB.objectId, "Balance:", coinB.balance.toString());
 
-            // ✅ Build Transaction Block
             const txb = new TransactionBlock();
+
+            let coinAInput;
+            let coinBInput;
+
+            const suiType = "0x2::sui::SUI";
+            const isCoinADepositSui = expectedCoinA === suiType;
+            const isCoinBDepositSui = expectedCoinB === suiType;
+
+            const singleSuiCoin = coins.find(c => c.type === suiType);
+            const onlyOneSui = coins.filter(c => c.type === suiType).length === 1;
+
+            if (onlyOneSui && (isCoinADepositSui || isCoinBDepositSui)) {
+                const suiDepositAmount = isCoinADepositSui ? depositDropdownMIST : depositCustomMIST;
+
+                if (singleSuiCoin.balance > suiDepositAmount + BigInt(250_000_000)) {
+                    // Use the only SUI coin as gas
+                    txb.setGasPayment([
+                        {
+                            objectId: singleSuiCoin.objectId,
+                            digest: singleSuiCoin.digest,
+                            version: singleSuiCoin.version,
+                        }
+                    ]);
+
+                    txb.setGasOwner(userAddress);
+
+                    // Split deposit from gas coin
+                    const [splitSui] = txb.splitCoins(txb.gas, [txb.pure(suiDepositAmount)]);
+
+                    if (isCoinADepositSui) {
+                        coinAInput = splitSui;
+                        coinBInput = txb.object(coinB.objectId);
+                    } else {
+                        coinAInput = txb.object(coinA.objectId);
+                        coinBInput = splitSui;
+                    }
+
+                    console.log("🧠 Using txb.gas for split. Single SUI coin used for both gas + deposit.");
+                } else {
+                    alert("⚠️ Insufficient SUI to both deposit and pay for gas.");
+                    dispatch({ type: "SET_LOADING", payload: false });
+                    return;
+                }
+            } else {
+                // Normal case: SUI is not involved or not the only coin
+                coinAInput = txb.object(coinA.objectId);
+                coinBInput = txb.object(coinB.objectId);
+            }
 
             txb.moveCall({
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
@@ -346,9 +394,9 @@ export default function Pools() {
                 arguments: [
                     txb.object(LOCK_ID),
                     txb.object(FACTORY_ID),
-                    txb.object(coinA.objectId),
+                    coinAInput,
                     txb.pure.u64(depositDropdownMIST),
-                    txb.object(coinB.objectId),
+                    coinBInput,
                     txb.pure.u64(depositCustomMIST),
                     txb.pure.u64(Math.round(state.lpBuilderFee * 100)), // Convert % → basis points
                     txb.pure.u64(Math.round(state.buybackBurnFee * 100)),
@@ -524,9 +572,9 @@ export default function Pools() {
                 if (abortCode === 5) userErrorMessage = "⚠️ Fee exceeds maximum allowed";
                 if (abortCode === 6) userErrorMessage = "⚠️ Pool Creation Locked, Account Not Authorized.";
 
-            alert(userErrorMessage);
+                alert(userErrorMessage);
             } else {
-            alert("Transaction failed. Check the console for details.");
+                alert("Transaction failed. Check the console for details.");
             }
             dispatch({ type: "SET_LOADING", payload: false });
         } finally {

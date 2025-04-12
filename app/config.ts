@@ -1,4 +1,4 @@
-export const GETTER_RPC = "https://sui-mainnet.blastapi.io/9869b313-c92e-4bed-9bd6-4cfa31ce05fb";
+export const GETTER_RPC = "https://fullnode.mainnet.sui.io:443";
 export const PACKAGE_ID = "0xeec1a09ed99ee4fc302c1a93a16e4503f5cc87282a2c9474715356c892484ed7";
 export const DEX_MODULE_NAME = "srmV1";
 export const QUOTE_MODULE_NAME = "quote";

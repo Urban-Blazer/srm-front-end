@@ -19,6 +19,10 @@ const dynamoDB = DynamoDBDocumentClient.from(dynamoDBClient);
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE_POOLID || "PoolLookup";
 
+// Constants for address transformation
+const FULL_SUI_ADDRESS = "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI";
+const SHORT_SUI_ADDRESS = "0x2::sui::SUI";
+
 export async function POST(req: Request) {
     try {
         const body = await req.json();
@@ -28,12 +32,21 @@ export async function POST(req: Request) {
         }
 
         // ✅ Ensure coinA and coinB are stored as strings
-        const coinA = typeof body.coinA === "object" ? body.coinA.name || "" : body.coinA;
-        const coinB = typeof body.coinB === "object" ? body.coinB.name || "" : body.coinB;
 
-        // ✅ Ensure Pair key is properly formatted with "0x" prefix
-        const formattedCoinA = coinA.startsWith("0x") ? coinA : `0x${coinA}`;
-        const formattedCoinB = coinB.startsWith("0x") ? coinB : `0x${coinB}`;
+        let coinA = typeof body.coinA === "object" ? body.coinA.name || "" : body.coinA;
+        let coinB = typeof body.coinB === "object" ? body.coinB.name || "" : body.coinB;
+
+        // ✅ Ensure prefix first
+        let formattedCoinA = coinA.startsWith("0x") ? coinA : `0x${coinA}`;
+        let formattedCoinB = coinB.startsWith("0x") ? coinB : `0x${coinB}`;
+
+        // ✅ Normalize SUI address if matches full
+        if (formattedCoinA === FULL_SUI_ADDRESS) {
+            formattedCoinA = SHORT_SUI_ADDRESS;
+        }
+        if (formattedCoinB === FULL_SUI_ADDRESS) {
+            formattedCoinB = SHORT_SUI_ADDRESS;
+        }
 
         const pairKey = `${formattedCoinA}-${formattedCoinB}`;
 

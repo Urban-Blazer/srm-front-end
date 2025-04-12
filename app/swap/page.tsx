@@ -593,7 +593,11 @@ export default function Swap() {
                     return {
                         objectId: obj.data?.objectId,
                         type: rawType.replace("0x2::coin::Coin<", "").replace(">", "").trim(),
-                        balance: obj.data?.content?.fields?.balance ? BigInt(obj.data?.content?.fields?.balance) : BigInt(0),
+                        balance: obj.data?.content?.fields?.balance
+                            ? BigInt(obj.data?.content?.fields?.balance)
+                            : BigInt(0),
+                        digest: obj.data?.digest,
+                        version: obj.data?.version,
                     };
                 })
                 .filter(Boolean); // Remove null values
@@ -642,15 +646,43 @@ export default function Swap() {
                 - Reward Balance: ${rewardBalance}
                 - shouldUpdateIsActive: ${shouldUpdateIsActive}`);
 
+            const suiType = "0x2::sui::SUI";
+            const isSellingSui = sellToken.typeName === suiType;
+            const onlyOneSui = coins.filter((c) => c.type === suiType).length === 1;
+            const singleSuiCoin = coins.find((c) => c.type === suiType);
+
             // ✅ Build Transaction Block
             const txb = new TransactionBlock();
+            
+            let usedCoin;
+
+            if (isSellingSui && onlyOneSui) {
+                if (singleSuiCoin.balance > sellAmountU64 + BigInt(250_000_000)) {
+                    txb.setGasPayment([
+                        {
+                            objectId: singleSuiCoin.objectId,
+                            digest: singleSuiCoin.digest,
+                            version: singleSuiCoin.version,
+                        },
+                    ]);
+                    txb.setGasOwner(userAddress);
+
+                    const [splitSui] = txb.splitCoins(txb.gas, [txb.pure(sellAmountU64)]);
+                    usedCoin = splitSui;
+
+                    addLog("⚡️ Using txb.gas to split sell amount (SUI sell).");
+                } else {
+                    alert("⚠️ Not enough SUI to cover gas + sell amount.");
+                    setIsProcessing(false);
+                    return;
+                }
+            } else {
+                const coinObject = txb.object(matchingCoin.objectId);
+                const [splitCoin] = txb.splitCoins(coinObject, [txb.pure.u64(sellAmountU64)]);
+                usedCoin = splitCoin;
+            }
+
             txb.setGasBudget(500_000_000);
-
-            // Convert coin object ID to transaction object
-            const coinObject = txb.object(matchingCoin.objectId);
-
-            // 🔹 Split the required amount
-            const [usedCoin] = txb.splitCoins(coinObject, [txb.pure.u64(sellAmountU64)]);
 
             // 📌 Determine the correct swap function
             const swapFunction = isAtoB

@@ -97,7 +97,7 @@ export default function MyPositions() {
 
     // ✅ Handle Percentage Click
     const handlePercentageClick = (lp: any, percentage: number) => {
-        const calculatedAmount = ((Number(lp.balance) / 1e9) * (percentage / 100)).toFixed(4); // Convert from MIST
+        const calculatedAmount = ((Number(lp.balance) / 1e9) * (percentage / 100)); // Convert from MIST
         setWithdrawAmount((prev) => ({
             ...prev,
             [lp.objectId]: calculatedAmount,

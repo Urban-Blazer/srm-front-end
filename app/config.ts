@@ -1,7 +1,7 @@
-export const GETTER_RPC = "https://fullnode.mainnet.sui.io:443";
-export const PACKAGE_ID = "0xeec1a09ed99ee4fc302c1a93a16e4503f5cc87282a2c9474715356c892484ed7";
+export const GETTER_RPC = "https://sui-mainnet.blastapi.io/9869b313-c92e-4bed-9bd6-4cfa31ce05fb";
+export const PACKAGE_ID = "0xad77a02b9900105de234e7eeda8e2e28d730330a28b72295ee8c87969645782e";
 export const DEX_MODULE_NAME = "srmV1";
 export const QUOTE_MODULE_NAME = "quote";
-export const FACTORY_ID = "0xa21c841e4e5913facb6f3bb9d9283762bc6053a4c6c4e6dbf7f374adb3eca9c8";
-export const CONFIG_ID = "0xb5420dd656ebe0a47d4a79930ac46b25b46f77967f3399d99926355681d57151";
-export const LOCK_ID = "0xae5bee7c085ad2a133d6b73a09dc3a4140e8fb16e374b62d6ddaea96eed2e8d3";
+export const FACTORY_ID = "0x7275d6367fdd591db3cebcc0228cdbaa294f2849f24654a7f5853d6dc75d1122";
+export const CONFIG_ID = "0x85aea0feb28004d3adf44a25e182239e0441293d99684e8360554e46fe8b76b8";
+export const LOCK_ID = "0x6cc8cd4997881c4f7c84ba0d1ffa4e238742f65f5f298787eac2125f2f539f7c";

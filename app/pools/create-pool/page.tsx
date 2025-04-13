@@ -295,6 +295,8 @@ export default function Pools() {
 
             // New (dynamic decimals)
             const dropdownDecimals = state.dropdownCoinMetadata.decimals || 9;
+            console.log("💰 Dropdown Decimals");
+            console.log(`${state.dropdownCoinMetadata.decimals}:`);
             const customDecimals = state.customCoinMetadata.decimals || 9;
 
             const depositDropdownMIST = BigInt(
@@ -349,6 +351,7 @@ export default function Pools() {
 
             const singleSuiCoin = coins.find(c => c.type === suiType);
             const onlyOneSui = coins.filter(c => c.type === suiType).length === 1;
+            const GAS_BUDGET = 250_000_000;
 
             if (onlyOneSui && (isCoinADepositSui || isCoinBDepositSui)) {
                 const suiDepositAmount = isCoinADepositSui ? depositDropdownMIST : depositCustomMIST;
@@ -386,6 +389,7 @@ export default function Pools() {
                 // Normal case: SUI is not involved or not the only coin
                 coinAInput = txb.object(coinA.objectId);
                 coinBInput = txb.object(coinB.objectId);
+                txb.setGasBudget(GAS_BUDGET);
             }
 
             txb.moveCall({

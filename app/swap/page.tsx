@@ -682,7 +682,7 @@ export default function Swap() {
                 usedCoin = splitCoin;
             }
 
-            txb.setGasBudget(500_000_000);
+            txb.setGasBudget(250_000_000);
 
             // 📌 Determine the correct swap function
             const swapFunction = isAtoB

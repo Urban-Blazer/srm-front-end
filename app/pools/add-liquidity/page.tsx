@@ -468,6 +468,7 @@ export default function AddLiquidity() {
             const isCoinBDepositSui = expectedCoinB === suiType;
             const onlyOneSui = coins.filter(c => c.type === suiType).length === 1;
             const singleSuiCoin = coins.find(c => c.type === suiType);
+            const GAS_BUDGET = 250_000_000;
 
             let coinAInput, coinBInput;
 
@@ -503,6 +504,7 @@ export default function AddLiquidity() {
             } else {
                 coinAInput = txb.object(matchingCoinA.objectId);
                 coinBInput = txb.object(matchingCoinB.objectId);
+                txb.setGasBudget(GAS_BUDGET);
             }
 
             txb.moveCall({

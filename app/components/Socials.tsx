@@ -1,7 +1,6 @@
 import React from 'react';
 import TwitterIcon from '@svg/twitter.svg';
 import DiscordIcon from '@svg/discord.svg';
-import MediumIcon from '../../public/images/medium.png';
 import Image from 'next/image';
 
 const Socials: React.FC = () => {
@@ -30,7 +29,7 @@ const Socials: React.FC = () => {
           rel='noopener noreferrer'
           className='transform transition-transform duration-300 hover:-rotate-12 pt-1'
         >
-          <Image src={MediumIcon} alt="Medium" width={26} height={26} />
+          <Image src="/images/medium.png" alt="Medium" width={26} height={26} />
         </a>
       </div>
     </div>

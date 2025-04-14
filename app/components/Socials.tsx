@@ -1,7 +1,7 @@
 import React from 'react';
 import TwitterIcon from '@svg/twitter.svg';
 import DiscordIcon from '@svg/discord.svg';
-import GithubIcon from '@svg/github.svg';
+import Image from 'next/image';
 
 const Socials: React.FC = () => {
   return (
@@ -24,12 +24,12 @@ const Socials: React.FC = () => {
           <DiscordIcon className='w-8 h-8' />
         </a>
         <a
-          href='https://github.com'
+          href='https://medium.com/@suirewardsme'
           target='_blank'
           rel='noopener noreferrer'
-          className='transform transition-transform duration-300 hover:-rotate-12'
+          className='transform transition-transform duration-300 hover:-rotate-12 pt-1'
         >
-          <GithubIcon className='w-8 h-8' />
+          <Image src="/images/medium.png" alt="Medium" width={26} height={26} />
         </a>
       </div>
     </div>

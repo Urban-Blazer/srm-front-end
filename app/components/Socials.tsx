@@ -29,7 +29,7 @@ const Socials: React.FC = () => {
           rel='noopener noreferrer'
           className='transform transition-transform duration-300 hover:-rotate-12 pt-1'
         >
-          <Image src="/images/medium.png" alt="Medium" width={26} height={26} />
+          <Image src="/images/Medium.png" alt="Medium" width={26} height={26} />
         </a>
       </div>
     </div>

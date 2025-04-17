@@ -31,6 +31,12 @@ export default function NavBar() {
     setHoverTimeout(timeout);
   };
 
+  const handleMobileLinkClick = () => {
+    setIsMobileMenuOpen(false);
+    setDropdown(null); // Optional: close any open submenu too
+  };
+
+
   // ✅ Initialize Nightly Connect and Fetch Pools
   useEffect(() => {
     const initWallet = async () => {
@@ -78,7 +84,7 @@ export default function NavBar() {
 
   return (
     <nav className="navbar text-white p-4 flex items-center justify-between relative z-50">
-      
+
       {/* Left Section: Logo */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
@@ -134,13 +140,22 @@ export default function NavBar() {
           </div>
         )).concat([
           // 🔥 Perfect clone of internal buttons, but with external <a> tag
-          <div key="external-link" className="relative group">
+          <div key="bridge-link" className="relative group">
             <a
               href="https://bridge.sui.io/"
               target="_blank"
               rel="noopener noreferrer"
             >
               <button className="button-primary px-4 py-2">BRIDGE</button>
+            </a>
+          </div>,
+          <div key="start-link" className="relative group">
+            <a
+              href="https://medium.com/@suirewardsme/introducing-sui-rewards-me-the-worlds-first-rewards-dex-on-the-sui-blockchain-76e6832f140d"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button className="button-primary px-4 py-2">START HERE</button>
             </a>
           </div>
         ])}
@@ -175,34 +190,52 @@ export default function NavBar() {
               {dropdown === menu && (
                 <div className="bg-white text-black p-2 rounded w-full">
                   {/*<Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>*/}
-                  {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint">My Royalties</Link>}
-                  {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap Coins</Link>}
+                  {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>My Royalties</Link>}
+                  {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Swap Coins</Link>}
                   {menu === "pools" && (
                     <>
-                      <Link href="/pools" className="block px-4 py-2 hover:bg-softMint">My Positions</Link>
-                      <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
-                      <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>
-                      <Link href="/pools/burn-liquidity" className="block px-4 py-2 hover:bg-softMint">Burn Liquidity</Link>
+                      <Link href="/pools" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>My Positions</Link>
+                      <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Create Pool</Link>
+                      <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Add Liquidity</Link>
+                      <Link href="/pools/burn-liquidity" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Burn Liquidity</Link>
                     </>
                   )}
                   {menu === "launchpad" && (
                     <>
-                      <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint">Create Coin</Link>
+                      <Link href="/launchpad/create-coin" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Create Coin</Link>
                       {/*<Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>*/}
                     </>
                   )}
                 </div>
               )}
             </div>
+
           )).concat([
             // 🔥 Perfect clone of internal buttons, but with external <a> tag
-            <div key="external-link" className="relative group">
+            <div key="bridge-link" className="w-full">
               <a
                 href="https://bridge.sui.io/"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="block w-full"
+                onClick={handleMobileLinkClick}
               >
-                <button className="block px-4 py-2 hover:bg-softMint">BRIDGE</button>
+                <div className="block w-full bg-[--color-emerald-green] text-white font-semibold text-left px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
+                  BRIDGE
+                </div>
+              </a>
+            </div>,
+            <div key="start-link" className="w-full">
+              <a
+                href="https://medium.com/@suirewardsme/..."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full"
+                onClick={handleMobileLinkClick}
+                >
+                <div className="block w-full bg-[--color-emerald-green] text-white font-semibold text-left px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
+                  START HERE
+                </div>
               </a>
             </div>
           ])}

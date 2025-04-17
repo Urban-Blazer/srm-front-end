@@ -143,6 +143,15 @@ export default function NavBar() {
               <button className="button-primary px-4 py-2">BRIDGE</button>
             </a>
           </div>
+          <div key="external-link" className="relative group">
+            <a
+              href="https://medium.com/@suirewardsme/introducing-sui-rewards-me-the-worlds-first-rewards-dex-on-the-sui-blockchain-76e6832f140d"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button className="button-primary px-4 py-2">START HERE</button>
+            </a>
+          </div>
         ])}
       </div>
 
@@ -203,6 +212,15 @@ export default function NavBar() {
                 rel="noopener noreferrer"
               >
                 <button className="block px-4 py-2 hover:bg-softMint">BRIDGE</button>
+              </a>
+            </div>
+            <div key="external-link" className="relative group">
+              <a
+                href="https://medium.com/@suirewardsme/introducing-sui-rewards-me-the-worlds-first-rewards-dex-on-the-sui-blockchain-76e6832f140d"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="block px-4 py-2 hover:bg-softMint">START HERE</button>
               </a>
             </div>
           ])}

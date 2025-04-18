@@ -35,6 +35,9 @@ export default function Swap() {
     const [logs, setLogs] = useState<string[]>([]);
     const [isProcessing, setIsProcessing] = useState(false); // Track processing state
     const [copiedText, setCopiedText] = useState<string | null>(null);
+    const [coinAPrice, setCoinAPrice] = useState<number | null>(null);
+    const [coinBPrice, setCoinBPrice] = useState<number | null>(null);
+
 
     // ✅ Debounce Timer Ref
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -286,6 +289,17 @@ export default function Swap() {
         }
     };
 
+    const fetchCoinAPrice = async (symbol: "SUIUSD" | "USDCUSD") => {
+        try {
+            const response = await fetch(`/api/get-coina-price?symbol=${symbol}`);
+            const data = await response.json();
+            return data?.price ?? null;
+        } catch (error) {
+            console.error("Error fetching Coin A price:", error);
+            return null;
+        }
+    };
+
     // ✅ Fetch Token Balances when a Token is Selected
     const fetchBalance = async (token, setBalance) => {
         if (!walletAddress || !token) return;
@@ -313,6 +327,49 @@ export default function Swap() {
     useEffect(() => {
         if (buyToken && !fetchingQuote) fetchBalance(buyToken, setBuyBalance);
     }, [buyToken, walletAddress, fetchingQuote]);
+
+    useEffect(() => {
+        const fetchPrice = async () => {
+            if (!poolMetadata?.coinA?.typeName || !predefinedCoins.length) return;
+
+            const suiTypeName = predefinedCoins.find(c => c.symbol === "SUI")?.typeName;
+            const usdcTypeName = predefinedCoins.find(c => c.symbol === "USDC")?.typeName;
+
+            if (poolMetadata.coinA.typeName === suiTypeName) {
+                const price = await fetchCoinAPrice("SUIUSD");
+                setCoinAPrice(price);
+            } else if (poolMetadata.coinA.typeName === usdcTypeName) {
+                const price = await fetchCoinAPrice("USDCUSD");
+                setCoinAPrice(price);
+            } else {
+                setCoinAPrice(null);
+            }
+        };
+
+        if (poolMetadata && poolStats) {
+            fetchPrice();
+        }
+    }, [poolMetadata, poolStats]);
+
+    useEffect(() => {
+        if (!coinAPrice || !poolStats || !poolMetadata) return;
+
+        const balanceA = Number(poolStats.balance_a);
+        const balanceB = Number(poolStats.balance_b);
+        const coinADecimals = Number(poolMetadata.coinA.decimals || 0);
+        const coinBDecimals = Number(poolMetadata.coinB.decimals || 0);
+
+        if (balanceA === 0 || balanceB === 0) {
+            setCoinBPrice(null);
+            return;
+        }
+
+        const normalizedA = balanceA / Math.pow(10, coinADecimals);
+        const normalizedB = balanceB / Math.pow(10, coinBDecimals);
+
+        const priceB = (coinAPrice * normalizedA) / normalizedB;
+        setCoinBPrice(priceB);
+    }, [coinAPrice, poolStats, poolMetadata]);
 
     // ✅ Handle Token Selection
     const handleSelectToken = async (token, type) => {
@@ -1129,18 +1186,18 @@ export default function Swap() {
                                         )}
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinA?.symbol}
+                                            {coinAPrice && (
+                                                <span className="text-sm text-royalPurple ml-2">
+                                                    (${coinAPrice.toFixed(4)})
+                                                </span>
+                                            )}
                                         </p>
                                     </div>
                                         <p className="text-lg font-semibold">
-                                            {(
-                                                Math.floor(
-                                                    Number(poolStats?.balance_a || 0) /
-                                                    Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0)) * 1e4
-                                                ) / 1e4
-                                            ).toLocaleString(undefined, {
-                                                minimumFractionDigits: 4,
-                                                maximumFractionDigits: 4,
-                                            })}
+                                            {Math.floor(
+                                                Number(poolStats?.balance_a || 0) /
+                                                Math.pow(10, Number(poolMetadata?.coinA?.decimals || 0))
+                                            ).toLocaleString()}
                                         </p>
                                 </div>
 
@@ -1152,18 +1209,18 @@ export default function Swap() {
                                         )}
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinB?.symbol}
+                                            {coinBPrice && (
+                                                <span className="text-sm text-royalPurple ml-2">
+                                                    (${coinBPrice})
+                                                </span>
+                                            )}
                                         </p>
                                     </div>
                                         <p className="text-lg font-semibold">
-                                            {(
-                                                Math.floor(
-                                                    Number(poolStats?.balance_b || 0) /
-                                                    Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0)) * 1e4
-                                                ) / 1e4
-                                            ).toLocaleString(undefined, {
-                                                minimumFractionDigits: 4,
-                                                maximumFractionDigits: 4,
-                                            })}
+                                            {Math.floor(
+                                                Number(poolStats?.balance_b || 0) /
+                                                Math.pow(10, Number(poolMetadata?.coinB?.decimals || 0))
+                                            ).toLocaleString()}
                                         </p>
                                 </div>
 

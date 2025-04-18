@@ -1210,7 +1210,7 @@ export default function Swap() {
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinB?.symbol}
                                             {coinBPrice && (
-                                                <span className="text-sm text-royalPurple ml-2">
+                                                <span className="text-royalPurple ml-2">
                                                     (${coinBPrice})
                                                 </span>
                                             )}

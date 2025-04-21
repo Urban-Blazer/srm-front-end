@@ -323,6 +323,7 @@ export default function MyPositions() {
                     txb.pure.u64(lpWithdraw_MIST), // ✅ `lp_amount` now passed explicitly
                     txb.pure.u64(minAOut), // ✅ Minimum output for Coin A
                     txb.pure.u64(minBOut), // ✅ Minimum output for Coin B
+                    txb.object("0x6"), // Clock object
                 ],
             });
 

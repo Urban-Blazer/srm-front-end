@@ -516,7 +516,8 @@ export default function AddLiquidity() {
                     txb.pure.u64(depositA_U64),
                     coinBInput,
                     txb.pure.u64(depositB_U64),
-                    txb.pure.u64(minLpOut), // Minimum LP Tokens (0 for now)
+                    txb.pure.u64(minLpOut),
+                    txb.object("0x6"),
                 ],
             });
 

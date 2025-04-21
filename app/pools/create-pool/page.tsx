@@ -407,6 +407,7 @@ export default function Pools() {
                     txb.pure.u64(Math.round(state.deployerRoyaltyFee * 100)),
                     txb.pure.u64(Math.round(state.rewardsFee * 100)),
                     txb.pure.address(state.deployerRoyaltyWallet),
+                    txb.object("0x6"),
                 ],
             });
 

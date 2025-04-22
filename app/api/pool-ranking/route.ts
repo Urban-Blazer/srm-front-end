@@ -69,6 +69,4 @@ export async function GET(req: NextRequest) {
         console.error('[POOL RANKING PROXY ERROR]', err);
         return NextResponse.json({ error: 'Failed to fetch pool ranking' }, { status: 500 });
     }
-
-    
 }

@@ -18,8 +18,8 @@ const INDEXER_BASE = process.env.INDEXER_URL ?? 'http://localhost:3000';
 
 export async function GET(req: NextRequest) {
     try {
-        const { searchParams } = new URL(req.url);
-        const range = searchParams.get('range') || '24h'; // range: 24h, 7d, all
+        const { searchParams } = req.nextUrl;
+        const range = searchParams.get('range') ?? '24h';
 
         const indexerUrl = `${INDEXER_BASE}/stats/pool-ranking?range=${range}`;
         console.log(`🔁 Fetching indexer data: ${indexerUrl}`);

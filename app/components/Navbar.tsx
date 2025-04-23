@@ -122,6 +122,7 @@ export default function NavBar() {
                 {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap Coins</Link>}
                 {menu === "pools" && (
                   <>
+                    <Link href="/pools" className="block px-4 py-2 hover:bg-softMint">Pool Stats</Link>
                     <Link href="/pools/my-positions" className="block px-4 py-2 hover:bg-softMint">My Positions</Link>
                     <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
                     <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>

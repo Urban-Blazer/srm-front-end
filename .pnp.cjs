@@ -37,6 +37,7 @@ const RAW_RUNTIME_STATE =
           ["@mysten/sui.js", "npm:0.48.1"],\
           ["@mysten/wallet-standard", "npm:0.9.0"],\
           ["@nightlylabs/wallet-selector-sui", "npm:0.4.2"],\
+          ["@prisma/client", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:6.6.0"],\
           ["@react-spring/core", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:9.7.5"],\
           ["@react-spring/three", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:9.7.5"],\
           ["@react-spring/web", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:9.1.1"],\
@@ -4326,6 +4327,32 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/@popperjs-core-npm-2.11.8-f1692e11a0-10c0.zip/node_modules/@popperjs/core/",\
         "packageDependencies": [\
           ["@popperjs/core", "npm:2.11.8"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@prisma/client", [\
+      ["npm:6.6.0", {\
+        "packageLocation": "./.yarn/unplugged/@prisma-client-virtual-4e709fb608/node_modules/@prisma/client/",\
+        "packageDependencies": [\
+          ["@prisma/client", "npm:6.6.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:6.6.0", {\
+        "packageLocation": "./.yarn/unplugged/@prisma-client-virtual-4e709fb608/node_modules/@prisma/client/",\
+        "packageDependencies": [\
+          ["@prisma/client", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:6.6.0"],\
+          ["@types/prisma", null],\
+          ["@types/typescript", null],\
+          ["prisma", null],\
+          ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"]\
+        ],\
+        "packagePeers": [\
+          "@types/prisma",\
+          "@types/typescript",\
+          "prisma",\
+          "typescript"\
         ],\
         "linkType": "HARD"\
       }]\
@@ -11685,6 +11712,7 @@ const RAW_RUNTIME_STATE =
           ["@mysten/sui.js", "npm:0.48.1"],\
           ["@mysten/wallet-standard", "npm:0.9.0"],\
           ["@nightlylabs/wallet-selector-sui", "npm:0.4.2"],\
+          ["@prisma/client", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:6.6.0"],\
           ["@react-spring/core", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:9.7.5"],\
           ["@react-spring/three", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:9.7.5"],\
           ["@react-spring/web", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:9.1.1"],\

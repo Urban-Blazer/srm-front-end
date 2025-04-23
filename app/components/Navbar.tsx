@@ -122,7 +122,7 @@ export default function NavBar() {
                 {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap Coins</Link>}
                 {menu === "pools" && (
                   <>
-                    <Link href="/pools" className="block px-4 py-2 hover:bg-softMint">My Positions</Link>
+                    <Link href="/pools/my-positions" className="block px-4 py-2 hover:bg-softMint">My Positions</Link>
                     <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint">Create Pool</Link>
                     <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint">Add Liquidity</Link>
                     <Link href="/pools/burn-liquidity" className="block px-4 py-2 hover:bg-softMint">Burn Liquidity</Link>
@@ -155,7 +155,7 @@ export default function NavBar() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <button className="button-primary px-4 py-2">START HERE</button>
+              <button className="button-primary px-4 py-2">INFO</button>
             </a>
           </div>
         ])}
@@ -194,7 +194,7 @@ export default function NavBar() {
                   {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Swap Coins</Link>}
                   {menu === "pools" && (
                     <>
-                      <Link href="/pools" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>My Positions</Link>
+                      <Link href="/pools/my-positions" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>My Positions</Link>
                       <Link href="/pools/create-pool" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Create Pool</Link>
                       <Link href="/pools/add-liquidity" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Add Liquidity</Link>
                       <Link href="/pools/burn-liquidity" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Burn Liquidity</Link>
@@ -234,7 +234,7 @@ export default function NavBar() {
                 onClick={handleMobileLinkClick}
                 >
                 <div className="block w-full bg-[--color-emerald-green] text-white font-semibold text-left px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
-                  START HERE
+                  INFO
                 </div>
               </a>
             </div>

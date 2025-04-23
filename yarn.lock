@@ -2910,6 +2910,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@prisma/client@npm:^6.6.0":
+  version: 6.6.0
+  resolution: "@prisma/client@npm:6.6.0"
+  peerDependencies:
+    prisma: "*"
+    typescript: ">=5.1.0"
+  peerDependenciesMeta:
+    prisma:
+      optional: true
+    typescript:
+      optional: true
+  checksum: 10c0/174e4f445ae671dc16af272743b33312f36be34d8d5c0ab92eba8c81d74dc86967fa316bd4db082f1aa0970abf31899a8305e09a6717cb285bdc700aa9273f70
+  languageName: node
+  linkType: hard
+
 "@react-spring/animated@npm:~9.1.1, @react-spring/animated@npm:~9.1.2":
   version: 9.1.2
   resolution: "@react-spring/animated@npm:9.1.2"
@@ -8900,6 +8915,7 @@ __metadata:
     "@mysten/sui.js": "npm:^0.48.1"
     "@mysten/wallet-standard": "npm:^0.9.0"
     "@nightlylabs/wallet-selector-sui": "npm:^0.4.2"
+    "@prisma/client": "npm:^6.6.0"
     "@react-spring/core": "npm:^9.7.5"
     "@react-spring/three": "npm:^9.7.5"
     "@react-spring/web": "npm:9.1.1"

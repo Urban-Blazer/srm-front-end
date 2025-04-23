@@ -24,6 +24,13 @@ export async function GET(req: NextRequest) {
         const indexerUrl = `${INDEXER_BASE}/stats/pool-ranking?range=${range}`;
         console.log(`🔁 Fetching indexer data: ${indexerUrl}`);
         const poolRes = await fetch(indexerUrl);
+        if (!poolRes.ok) {
+            const errorText = await poolRes.text();
+            console.error("❌ Fetch failed with status:", poolRes.status);
+            console.error("❌ Response body:", errorText);
+            throw new Error(`Indexer returned non-200 response`);
+        }
+        
         const pools = await poolRes.json();
 
         const enrichedPools = await Promise.all(

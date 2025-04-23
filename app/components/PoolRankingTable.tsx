@@ -86,38 +86,44 @@ export default function PoolRankingTable() {
 
     return (
         <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold text-purple-500">New Pool Rankings</h1>      
-                <select
-                    className="border border-gray-300 rounded px-2 py-1 text-sm bg-royalPurple ml-2"
-                    value={sortKey ?? ''}
-                    onChange={(e) => {
-                        const selected = e.target.value as PoolSortKey | '';
-                        setSortKey(selected || null);
-                    }}
-                >
-                    <option value="">Sort by...</option>
-                    <option value="buyVolume">Buy Volume</option>
-                    <option value="sellVolume">Sell Volume</option>
-                    <option value="totalVolume">Total Volume</option>
-                    <option value="timestamp">Created</option>
-                </select>
-                <button
-                    onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-                    className="button-secondary ml-2 text-sm border px-2 py-1 rounded"
-                >
-                    {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
-                </button>
-                <select
-                    className="border border-gray-300 rounded px-2 py-1 text-sm bg-royalPurple"
-                    value={range}
-                    onChange={(e) => setRange(e.target.value as '24h' | '7d' | 'all')}
-                >
-                    <option value="24h">24h</option>
-                    <option value="7d">7d</option>
-                    <option value="all">Lifetime</option>
-                </select>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+                <h1 className="text-3xl font-bold text-white drop-shadow-lg">New Pool Rankings</h1>
+
+                <div className="flex flex-wrap items-center gap-2">
+                    <select
+                        className="border border-gray-300 rounded px-2 py-1 text-sm bg-royalPurple text-white"
+                        value={sortKey ?? ''}
+                        onChange={(e) => {
+                            const selected = e.target.value as PoolSortKey | '';
+                            setSortKey(selected || null);
+                        }}
+                    >
+                        <option value="">Sort by...</option>
+                        <option value="buyVolume">Buy Volume</option>
+                        <option value="sellVolume">Sell Volume</option>
+                        <option value="totalVolume">Total Volume</option>
+                        <option value="timestamp">Created</option>
+                    </select>
+
+                    <button
+                        onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                        className="border px-2 py-1 text-sm rounded bg-royalPurple text-white"
+                    >
+                        {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
+                    </button>
+
+                    <select
+                        className="border border-gray-300 rounded px-2 py-1 text-sm bg-royalPurple text-white"
+                        value={range}
+                        onChange={(e) => setRange(e.target.value as '24h' | '7d' | 'all')}
+                    >
+                        <option value="24h">24h</option>
+                        <option value="7d">7d</option>
+                        <option value="all">Lifetime</option>
+                    </select>
+                </div>
             </div>
+
 
             <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse border border-gray-300">

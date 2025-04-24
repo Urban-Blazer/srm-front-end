@@ -119,7 +119,12 @@ export default function NavBar() {
               >
                 {/*<Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>*/}
                 {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint">My Royalties</Link>}
-                {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap Coins</Link>}
+                {menu === "swap" && (
+                  <>
+                  <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Classic</Link>
+                    <Link href="/swap/advanced" className="block px-4 py-2 hover:bg-softMint">Advanced</Link>
+                  </>
+                )}
                 {menu === "pools" && (
                   <>
                     <Link href="/pools" className="block px-4 py-2 hover:bg-softMint">Pool Stats</Link>
@@ -192,7 +197,12 @@ export default function NavBar() {
                 <div className="bg-white text-black p-2 rounded w-full">
                   {/*<Link href={`/${menu}`} className="block px-4 py-2 hover:bg-softMint">Overview</Link>*/}
                   {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>My Royalties</Link>}
-                  {menu === "swap" && <Link href="/swap" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Swap Coins</Link>}
+                  {menu === "swap" && (
+                    <>
+                    <Link href="/swap" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Classic</Link>
+                    <Link href="/swap/advanced" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Advanced</Link>
+                    </>
+                  )}
                   {menu === "pools" && (
                     <>
                       <Link href="/pools" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Pool Stats</Link>

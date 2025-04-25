@@ -24,6 +24,7 @@ interface Stats {
 
 interface CoinMeta {
     decimals: number;
+    image?: string;
 }
 
 interface Props {
@@ -95,13 +96,13 @@ export default function PairStats({ poolId, coinA, coinB }: Props) {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-300">
                 <Stat label="Buy Tx" value={stats.buyTx} type="tx" />
-                <Stat label="Buy Volume" value={stats.buyVolume} decimals={coinADecimals} />
+                <Stat label="Buy Volume" value={stats.buyVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
                 <Stat label="Sell Tx" value={stats.sellTx} type="tx" />
-                <Stat label="Sell Volume" value={stats.sellVolume} decimals={coinADecimals} />
-                <Stat label="Total Volume" value={stats.totalVolume} decimals={coinADecimals} />
-                <Stat label="Rewards Distributed" value={stats.rewardsDistributed} decimals={coinADecimals} />
-                <Stat label="Burned Coins" value={stats.burnedCoins} decimals={coinBDecimals} />
-                <Stat label="Creator Royalty" value={stats.creatorRoyalty} decimals={coinADecimals} />
+                <Stat label="Sell Volume" value={stats.sellVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
+                <Stat label="Total Volume" value={stats.totalVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
+                <Stat label="Rewards Distributed" value={stats.rewardsDistributed} decimals={coinADecimals} imageUrl={coinA?.image} />
+                <Stat label="Burned Coins" value={stats.burnedCoins} decimals={coinBDecimals} imageUrl={coinB?.image} />
+                <Stat label="Creator Royalty" value={stats.creatorRoyalty} decimals={coinADecimals} imageUrl={coinA?.image} />
             </div>
         </div>
     );
@@ -112,11 +113,13 @@ function Stat({
     value,
     decimals = 2,
     type = "decimal",
+    imageUrl,
 }: {
     label: string;
     value: number;
     decimals?: number;
     type?: "tx" | "decimal";
+    imageUrl?: string;
 }) {
     const formattedValue =
         type === "tx"
@@ -129,7 +132,12 @@ function Stat({
     return (
         <div className="flex flex-col">
             <span className="text-gray-400 text-xs">{label}</span>
-            <span className="text-white font-medium">{formattedValue}</span>
+            <span className="text-white font-medium flex items-center gap-1">
+                {formattedValue}
+                {imageUrl && (
+                    <img src={imageUrl} alt="" className="w-4 h-4 rounded-full inline-block" />
+                )}
+            </span>
         </div>
     );
 }

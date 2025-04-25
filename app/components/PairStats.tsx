@@ -44,6 +44,19 @@ const defaultStats: Stats = {
     creatorRoyalty: 0,
 };
 
+function getSinceTimestamp(range: string): number {
+    const now = Date.now();
+    switch (range) {
+        case "1 hour": return now - 1 * 60 * 60 * 1000;
+        case "6 hour": return now - 6 * 60 * 60 * 1000;
+        case "12 hour": return now - 12 * 60 * 60 * 1000;
+        case "24 hour": return now - 24 * 60 * 60 * 1000;
+        case "7 day": return now - 7 * 24 * 60 * 60 * 1000;
+        case "30 day": return now - 30 * 24 * 60 * 60 * 1000;
+        default: return 0;
+    }
+}
+
 export default function PairStats({ poolId, coinA, coinB }: Props) {
     const [selectedRange, setSelectedRange] = useState("24 hour");
     const [stats, setStats] = useState<Stats>(defaultStats);
@@ -56,10 +69,24 @@ export default function PairStats({ poolId, coinA, coinB }: Props) {
         }
 
         setLoading(true);
+        const sinceMs = getSinceTimestamp(selectedRange);
+        const sinceForDynamo = Math.floor(sinceMs / 1000);
+
         try {
-            const res = await fetch(`/api/pair-stats?poolId=${poolId}&range=${rangeMap[selectedRange]}`);
-            const data = await res.json();
-            setStats(data);
+            const [statsRes, rewardsRes] = await Promise.all([
+                fetch(`/api/pair-stats?poolId=${poolId}&range=${rangeMap[selectedRange]}`),
+                fetch(`/api/get-rewards?poolId=${poolId}&since=${sinceForDynamo}`)
+            ]);
+
+            const statsData = await statsRes.json();
+            const rewardsData = await rewardsRes.json();
+
+            const finalStats = {
+                ...statsData,
+                rewardsDistributed: rewardsData.rewardsDistributed ?? 0
+            };
+
+            setStats(finalStats);
         } catch (err) {
             console.error("❌ Failed to load stats:", err);
             setStats(defaultStats);
@@ -100,9 +127,9 @@ export default function PairStats({ poolId, coinA, coinB }: Props) {
                 <Stat label="Sell Tx" value={stats.sellTx} type="tx" />
                 <Stat label="Sell Volume" value={stats.sellVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
                 <Stat label="Total Volume" value={stats.totalVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
-                <Stat label="Rewards Distributed" value={stats.rewardsDistributed} decimals={coinADecimals} imageUrl={coinA?.image} />
                 <Stat label="Burned Coins" value={stats.burnedCoins} decimals={coinBDecimals} imageUrl={coinB?.image} />
                 <Stat label="Creator Royalty" value={stats.creatorRoyalty} decimals={coinADecimals} imageUrl={coinA?.image} />
+                <Stat label="Rewards Distributed" value={stats.rewardsDistributed} decimals={coinADecimals} imageUrl={coinA?.image} />
             </div>
         </div>
     );
@@ -134,9 +161,7 @@ function Stat({
             <span className="text-gray-400 text-xs">{label}</span>
             <span className="text-white font-medium flex items-center gap-1">
                 {formattedValue}
-                {imageUrl && (
-                    <img src={imageUrl} alt="" className="w-4 h-4 rounded-full inline-block" />
-                )}
+                {imageUrl && <img src={imageUrl} alt="" className="w-4 h-4 rounded-full inline-block" />}
             </span>
         </div>
     );

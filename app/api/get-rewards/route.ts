@@ -26,14 +26,6 @@ export async function GET(req: NextRequest) {
 
     try {
 
-        console.log({
-            tableName: TABLE_NAME,
-            poolId,
-            sinceTimestamp,
-            typeOfPoolId: typeof poolId,
-            typeOfSince: typeof sinceTimestamp,
-        });
-
         const command = new QueryCommand({
             TableName: TABLE_NAME,
             KeyConditionExpression: "poolId = :poolId AND #ts >= :since",

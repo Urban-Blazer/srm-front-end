@@ -174,13 +174,6 @@ export default function Swap() {
         };
     }, []);
 
-    // ✅ Fetch Pool Metadata when CoinA and CoinB selected
-    useEffect(() => {
-        if (sellToken && buyToken) {
-            fetchPoolMetadata(sellToken, buyToken);
-        }
-    }, [sellToken, buyToken]);
-
     useEffect(() => {
         return () => {
             if (debounceTimer.current) {
@@ -188,128 +181,6 @@ export default function Swap() {
             }
         };
     }, []);
-
-    // ✅ Fetch Pool Metadata
-    const fetchPoolMetadata = async (sellToken, buyToken) => {
-        if (!sellToken || !buyToken) return;
-
-        setPoolLoading(true);
-        setPoolId(null);
-        setPoolMetadata(null);
-        setPoolStats(null);
-        setIsAtoB(null);
-
-        const tokenPairKey = `${sellToken.typeName}-${buyToken.typeName}`;
-
-        try {
-            const response = await fetch(`/api/get-pool-id?tokenPair=${encodeURIComponent(tokenPairKey)}`);
-            const data = await response.json();
-
-            console.log("🌐 Raw Pool Metadata Response:", data);
-
-            if (data?.poolId) {
-                console.log("✅ Pool ID found:", data.poolId);
-                setPoolId(data.poolId);
-
-                // 🚨 Check if metadata exists before setting state
-                if (!data.coinA_metadata || !data.coinB_metadata) {
-                    console.warn("🚨 Pool metadata missing from API response!");
-                    return;
-                }
-
-                const metadata = {
-                    coinA: data.coinA_metadata,
-                    coinB: data.coinB_metadata,
-                };
-
-                console.log("✅ Setting Pool Metadata:", metadata);
-                setPoolMetadata(metadata);
-
-                // 🚀 Ensure `poolMetadata` is fully set before checking `isAtoB`
-                setTimeout(() => {
-                    console.log("💡 Checking `isAtoB` condition after metadata fetch:");
-                    console.log("  - SellToken TypeName:", sellToken.typeName);
-                    console.log("  - Metadata CoinA TypeName:", metadata.coinA?.typeName);
-                    console.log("  - Metadata CoinB TypeName:", metadata.coinB?.typeName);
-
-                    // ✅ Now we can safely determine `isAtoB`
-                    const newIsAtoB = sellToken.typeName === metadata.coinA?.typeName;
-                    setIsAtoB(newIsAtoB);
-
-                    console.log("🔄 Updated isAtoB:", newIsAtoB);
-                }, 200); // Delay ensures metadata is set
-            } else {
-                console.log("⚠️ Pool does not exist for:", tokenPairKey);
-                setPoolId(null);
-                setPoolMetadata(null);
-                setIsAtoB(null);
-            }
-        } catch (error) {
-            console.error("❌ Error fetching pool metadata:", error);
-            setPoolId(null);
-            setPoolMetadata(null);
-            setIsAtoB(null);
-        }
-
-        setPoolLoading(false);
-    };
-
-
-    // ✅ Fetch Pool Stats when Pool ID updates
-    useEffect(() => {
-        if (poolId) {
-            fetchPoolStats(poolId);
-        }
-    }, [poolId]);
-
-    // ✅ Fetch Pool Stats
-    const fetchPoolStats = async (poolObjectId) => {
-        if (!poolObjectId) return;
-
-        setPoolStats(null);
-        console.log("Fetching Pool Stats with ID:", poolObjectId);
-
-        try {
-            const poolObject = await provider.getObject({
-                id: poolObjectId,
-                options: { showContent: true },
-            });
-
-            console.log("Pool Object Response:", poolObject);
-
-            if (poolObject?.data?.content?.fields) {
-                const fields = poolObject.data.content.fields;
-
-                // ✅ Ensure values are always defined
-                setPoolStats({
-                    balance_a: fields.balance_a || 0,
-                    balance_b: fields.balance_b || 0,
-                    burn_balance_b: fields.burn_balance_b || 0,
-                    burn_fee: fields.burn_fee || 0,
-                    creator_royalty_fee: fields.creator_royalty_fee || 0,
-                    creator_royalty_wallet: fields.creator_royalty_wallet || "",
-                    locked_lp_balance: fields.locked_lp_balance || 0,
-                    lp_builder_fee: fields.lp_builder_fee || 0,
-                    reward_balance_a: fields.reward_balance_a || 0,
-                    rewards_fee: fields.rewards_fee || 0,
-                });
-            } else {
-                console.warn("Missing pool fields:", poolObject);
-                setPoolStats({
-                    balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                    creator_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
-                    lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
-                });
-            }
-        } catch (error) {
-            console.error("Error fetching pool stats:", error);
-            setPoolStats({
-                balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                creator_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
-                lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
-            });
-        }
-    };
 
     const fetchCoinAPrice = async (symbol: "SUIUSD" | "USDCUSD") => {
         try {
@@ -1026,7 +897,12 @@ export default function Swap() {
             {/* 💧 Pool Info | 📈 Chart | 🔄 Swap */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 max-w-screen-xl mx-auto">
                 <div>
-                    <PoolInfo poolMetadata={poolMetadata} poolStats={poolStats} />
+                    <PoolInfo
+                        provider={provider}
+                        poolId={searchPairPoolId}
+                        coinA={searchPairCoinA}
+                        coinB={searchPairCoinB}
+                    />
                 </div>
                 <div>
                     <Chart sellToken={sellToken} buyToken={buyToken} />

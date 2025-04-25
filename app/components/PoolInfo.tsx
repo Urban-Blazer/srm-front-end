@@ -41,21 +41,22 @@ export default function PoolInfo({ provider, poolId, coinA, coinB }: Props) {
             if (content && content.dataType === "moveObject" && "fields" in content) {
                 const fields = content.fields;
 
-            if (fields) {
-                setPoolStats({
-                    balance_a: fields.balance_a || 0,
-                    balance_b: fields.balance_b || 0,
-                    burn_fee: fields.burn_fee || 0,
-                    creator_royalty_fee: fields.creator_royalty_fee || 0,
-                    creator_royalty_wallet: fields.creator_royalty_wallet || "",
-                    locked_lp_balance: fields.locked_lp_balance || 0,
-                    lp_builder_fee: fields.lp_builder_fee || 0,
-                    reward_balance_a: fields.reward_balance_a || 0,
-                    rewards_fee: fields.rewards_fee || 0,
-                });
-            } else {
-                console.warn("⚠️ Missing fields in pool object:", poolObject);
-                setPoolStats(null);
+                if (fields) {
+                    setPoolStats({
+                        balance_a: fields.balance_a || 0,
+                        balance_b: fields.balance_b || 0,
+                        burn_fee: fields.burn_fee || 0,
+                        creator_royalty_fee: fields.creator_royalty_fee || 0,
+                        creator_royalty_wallet: fields.creator_royalty_wallet || "",
+                        locked_lp_balance: fields.locked_lp_balance || 0,
+                        lp_builder_fee: fields.lp_builder_fee || 0,
+                        reward_balance_a: fields.reward_balance_a || 0,
+                        rewards_fee: fields.rewards_fee || 0,
+                    });
+                } else {
+                    console.warn("⚠️ Missing fields in pool object:", poolObject);
+                    setPoolStats(null);
+                }
             }
         } catch (error) {
             console.error("❌ Error fetching pool stats:", error);
@@ -140,6 +141,7 @@ export default function PoolInfo({ provider, poolId, coinA, coinB }: Props) {
                                 title="Copy Wallet"
                             >
                                 <CopyIcon className="w-2 h-2 hover:opacity-70" />
+                                
                             </button>
                             {copiedText === poolStats.creator_royalty_wallet && (
                                 <span className="text-xs text-green-500 ml-1">Copied!</span>

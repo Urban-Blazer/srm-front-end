@@ -895,7 +895,7 @@ export default function Swap() {
 
 
             {/* 💧 Pool Info | 📈 Chart | 🔄 Swap */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 max-w-screen-xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-4 p-4 max-w-screen-xl mx-auto">
                 <div>
                     <PoolInfo
                         provider={provider}
@@ -905,7 +905,7 @@ export default function Swap() {
                     />
                 </div>
                 <div>
-                    <Chart sellToken={sellToken} buyToken={buyToken} />
+                    <Chart poolId={searchPairPoolId} interval="1m" coinASymbol={searchPairCoinA?.symbol} />
                 </div>
                 <div>
                     <SwapInterface

@@ -104,7 +104,7 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
                     formatter: (price: number) => {
                         if (price >= 1) return `$${price.toFixed(2)}`;
                         if (price >= 0.01) return `$${price.toFixed(4)}`;
-                        return `$${price.toFixed(9)}`;
+                        return `$${price.toFixed(8)}`;
                     },
                 },
             });

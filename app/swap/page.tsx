@@ -1209,9 +1209,9 @@ export default function Swap() {
                                         )}
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinB?.symbol}
-                                            {coinBPrice && (
+                                            {coinBPrice !== undefined && (
                                                 <span className="text-sm text-royalPurple ml-2">
-                                                    (${coinBPrice})
+                                                    (${Number(coinBPrice).toFixed(8)})
                                                 </span>
                                             )}
                                         </p>

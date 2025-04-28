@@ -152,8 +152,8 @@ export default function Swap() {
 
             {/* 🔍 Search + Pair Stats */}
             <div className="p-6 border-b border-gray-800 max-w-screen-2xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="md:col-span-1">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="md:col-span-2">
                         <SearchBar onSelectPair={handleSearchPairSelect} />
                     </div>
                     <div className="md:col-span-2">

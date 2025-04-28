@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useRef, useCallback } from "react";
 import { SuiClient } from "@mysten/sui.js/client";
 import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";

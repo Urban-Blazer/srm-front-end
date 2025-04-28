@@ -31,6 +31,15 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
     const [recentSwaps, setRecentSwaps] = useState<RecentSwap[]>([]);
     const wsRef = useRef<WebSocket | null>(null);
     const [coinAPriceUSD, setCoinAPriceUSD] = useState<number>(1);
+    const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(Date.now());
+        }, 1000); // every 1 second
+
+        return () => clearInterval(interval); // cleanup on unmount
+    }, []);
 
     useEffect(() => {
         if (!poolId) return;
@@ -112,7 +121,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
     }, [coinA.symbol]);
 
     const formatAgo = (timestamp: string) => {
-        const now = Date.now();
+        const now = currentTime;
         const diffSeconds = Math.floor((now - Number(timestamp)) / 1000);
 
         if (diffSeconds < 60) return `${diffSeconds}s ago`;

@@ -11,7 +11,7 @@ import TransactionModal from "@components/TransactionModal";
 import Image from "next/image";
 import { predefinedCoins } from "../../data/coins";
 
-// Dashboard
+// Dashboard Components
 
 import Ticker from "@components/Ticker";
 import SearchBar from "@components/SearchBar";

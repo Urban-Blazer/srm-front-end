@@ -134,6 +134,15 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
 
+    function calculateUsdPriceFromReserves(
+        reserveA: number,
+        reserveB: number,
+        coinAPriceUSD: number
+    ): number {
+        if (reserveB === 0) return 0;
+        return (reserveA / reserveB) * coinAPriceUSD;
+    }
+
     return (
         <div className="bg-slate-800 rounded-lg p-4 w-full mt-8">
 
@@ -161,9 +170,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
                                     const reserveB = Number(swap.reserve_b);
 
                                     // Calculate the "onchain" price of CoinB in CoinA
-                                    const priceCoinBInCoinA = reserveB > 0 ? reserveA / reserveB : 0;
-
-                                    const livePriceCoinBUSD = priceCoinBInCoinA * coinAPriceUSD;
+                                    const livePriceCoinBUSD = calculateUsdPriceFromReserves(reserveA, reserveB, coinAPriceUSD);
 
                                     const coinADecimals = coinA.decimals ?? 9;
                                     const coinBDecimals = coinB.decimals ?? 9;

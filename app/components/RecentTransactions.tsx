@@ -134,13 +134,21 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
 
-    function calculateUsdPriceFromReserves(
-        reserveA: number,
-        reserveB: number,
-        coinAPriceUSD: number
-    ): number {
-        if (reserveB === 0) return 0;
-        return (reserveA / reserveB) * coinAPriceUSD;
+    function calculateActualCPC(swap: RecentSwap, coinADecimals: number, coinBDecimals: number, coinAPriceUSD: number): number {
+        const amountIn = Number(swap.amountin);
+        const amountOut = Number(swap.amountout);
+
+        if (swap.is_buy) {
+            // Buying CoinB with CoinA → CPC = (amountIn / 10^A) * coinAPrice / (amountOut / 10^B)
+            const inUSD = (amountIn / Math.pow(10, coinADecimals)) * coinAPriceUSD;
+            const outAmount = amountOut / Math.pow(10, coinBDecimals);
+            return outAmount > 0 ? inUSD / outAmount : 0;
+        } else {
+            // Selling CoinB for CoinA → CPC = (amountOut / 10^A) * coinAPrice / (amountIn / 10^B)
+            const outUSD = (amountOut / Math.pow(10, coinADecimals)) * coinAPriceUSD;
+            const inAmount = amountIn / Math.pow(10, coinBDecimals);
+            return inAmount > 0 ? outUSD / inAmount : 0;
+        }
     }
 
     return (
@@ -157,7 +165,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
                                 <tr className="text-slate-400 text-xs uppercase">
                                     <th className="py-3 px-4 text-center">Time</th>
                                     <th className="py-3 px-4 text-center">Side</th>
-                                    <th className="py-3 px-4 text-center">Price</th>
+                                    <th className="py-3 px-4 text-center">Actual CPC (USD)</th>
                                     <th className="py-3 px-4 text-center">Total Value</th>
                                     <th className="py-3 px-4 text-center">Amount ({coinA.symbol || 'CoinA'})</th>
                                     <th className="py-3 px-4 text-center">Amount ({coinB.symbol || 'CoinB'})</th>
@@ -166,14 +174,11 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
                             </thead>
                         <tbody>
                                 {recentSwaps.map((swap, idx) => {
-                                    const reserveA = Number(swap.reserve_a);
-                                    const reserveB = Number(swap.reserve_b);
 
                                     // Calculate the "onchain" price of CoinB in CoinA
-                                    const livePriceCoinBUSD = calculateUsdPriceFromReserves(reserveA, reserveB, coinAPriceUSD);
-
                                     const coinADecimals = coinA.decimals ?? 9;
                                     const coinBDecimals = coinB.decimals ?? 9;
+                                    const actualCPC = calculateActualCPC(swap, coinADecimals, coinBDecimals, coinAPriceUSD);
 
                                     const amountCoinA = swap.is_buy
                                         ? Number(swap.amountin) / Math.pow(10, coinADecimals)
@@ -185,7 +190,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
 
                                     const totalValueUSD = swap.is_buy
                                         ? amountCoinA * coinAPriceUSD
-                                        : amountCoinB * livePriceCoinBUSD;
+                                        : amountCoinB * actualCPC;
 
                                     return (
                                         <tr key={idx} className="border-t border-slate-700">
@@ -193,7 +198,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
                                             <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
                                                 {swap.is_buy ? 'Buy' : 'Sell'}
                                             </td>
-                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${livePriceCoinBUSD.toFixed(4)}</td>
+                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${actualCPC.toFixed(4)}</td>
                                             <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${totalValueUSD.toFixed(2)}</td>
                                             <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
                                                 {amountCoinA.toFixed(4)}

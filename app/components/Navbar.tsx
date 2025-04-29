@@ -199,8 +199,8 @@ export default function NavBar() {
                   {menu === "dashboard" && <Link href="/dashboard/my-royalties" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>My Royalties</Link>}
                   {menu === "swap" && (
                     <>
-                    <Link href="/swap" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Classic</Link>
-                    <Link href="/swap/advanced" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Advanced</Link>
+                    <Link href="/swap" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Swap</Link>
+                    <Link href="/swap/pro" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>Pro Swap</Link>
                     </>
                   )}
                   {menu === "pools" && (

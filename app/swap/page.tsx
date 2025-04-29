@@ -13,8 +13,8 @@ import { predefinedCoins } from "../data/coins";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
-const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9);  // 50 SUI
-const USDC_REWARD_BALANCE = 50 * Math.pow(10, 6); // 50 USDC
+const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
+const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
 const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 5 SRM
 
 export default function Swap() {
@@ -1209,9 +1209,9 @@ export default function Swap() {
                                         )}
                                         <p className="text-lg font-semibold">
                                             {poolMetadata?.coinB?.symbol}
-                                            {coinBPrice && (
+                                            {coinBPrice !== undefined && (
                                                 <span className="text-sm text-royalPurple ml-2">
-                                                    (${coinBPrice})
+                                                    (${Number(coinBPrice).toFixed(8)})
                                                 </span>
                                             )}
                                         </p>

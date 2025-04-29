@@ -56,6 +56,7 @@ const RAW_RUNTIME_STATE =
           ["encoding", "npm:0.1.13"],\
           ["eslint", "npm:8.49.0"],\
           ["eslint-config-next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
+          ["lightweight-charts", "npm:5.0.6"],\
           ["lucide-react", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:0.475.0"],\
           ["next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
           ["postcss", "npm:8.4.30"],\
@@ -8093,6 +8094,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["fancy-canvas", [\
+      ["npm:2.1.0", {\
+        "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/fancy-canvas-npm-2.1.0-22df58fc44-10c0.zip/node_modules/fancy-canvas/",\
+        "packageDependencies": [\
+          ["fancy-canvas", "npm:2.1.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["fast-deep-equal", [\
       ["npm:3.1.3", {\
         "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/fast-deep-equal-npm-3.1.3-790edcfcf5-10c0.zip/node_modules/fast-deep-equal/",\
@@ -9396,6 +9406,16 @@ const RAW_RUNTIME_STATE =
           ["levn", "npm:0.4.1"],\
           ["prelude-ls", "npm:1.2.1"],\
           ["type-check", "npm:0.4.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["lightweight-charts", [\
+      ["npm:5.0.6", {\
+        "packageLocation": "../../../C:/Users/mattf/AppData/Local/Yarn/Berry/cache/lightweight-charts-npm-5.0.6-168200150f-10c0.zip/node_modules/lightweight-charts/",\
+        "packageDependencies": [\
+          ["lightweight-charts", "npm:5.0.6"],\
+          ["fancy-canvas", "npm:2.1.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -11731,6 +11751,7 @@ const RAW_RUNTIME_STATE =
           ["encoding", "npm:0.1.13"],\
           ["eslint", "npm:8.49.0"],\
           ["eslint-config-next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
+          ["lightweight-charts", "npm:5.0.6"],\
           ["lucide-react", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:0.475.0"],\
           ["next", "virtual:37c93d3c7013384d7e7bb2485b67b10c43fed02fb45512d1518d716a3b33795c85bd7f64412f5b3d76b8acd0361d199b72ecb1bc84ebc707826f3fac2cd5c02c#npm:13.5.1"],\
           ["postcss", "npm:8.4.30"],\

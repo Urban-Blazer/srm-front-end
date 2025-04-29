@@ -5,6 +5,7 @@ import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import { TransactionBlock } from "@mysten/sui.js/transactions"; // for building tx
 import { PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../config";
 import TransactionModal from "@components/TransactionModal";
+import { predefinedCoins } from "../data/coins";
 
 
 interface SwapInterfaceProps {
@@ -47,6 +48,10 @@ const defaultPoolStats: PoolStats = {
     reward_balance_a: 0,
     rewards_fee: 0,
 };
+
+const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
+const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
+const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);     // 5 SRM (adjust if needed)
 
 export default function SwapInterface({
     poolId,
@@ -252,6 +257,28 @@ export default function SwapInterface({
 
             addLog(`✅ Coin selected: ${matchingCoin.objectId}`);
 
+            // ✅ Determine if pool should be activated
+            const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
+            const suiTypeName = predefinedCoins.find((coin) => coin.symbol === "SUI")?.typeName;
+            const usdcTypeName = predefinedCoins.find((coin) => coin.symbol === "USDC")?.typeName;
+            const srmTypeName = predefinedCoins.find((coin) => coin.symbol === "MOCKSUI")?.typeName;
+            const poolCoinATypeName = coinA?.typeName;
+
+            let shouldUpdateIsActive = false;
+
+            if (poolCoinATypeName === suiTypeName && rewardBalance >= SUI_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            } else if (poolCoinATypeName === usdcTypeName && rewardBalance >= USDC_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            } else if (poolCoinATypeName === srmTypeName && rewardBalance >= SRM_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            }
+
+            console.log(`🔍 isActive check:
+            - Pool CoinA: ${poolCoinATypeName}
+            - Reward Balance: ${rewardBalance}
+            - Should Update: ${shouldUpdateIsActive}`);
+
             const txb = new TransactionBlock();
             let usedCoin;
 
@@ -338,6 +365,13 @@ export default function SwapInterface({
 
             addLog("✅ Swap completed successfully!");
 
+            if (shouldUpdateIsActive) {
+                console.log(`🔹 Updating isActive for pool ${poolId}...`);
+                await updateIsActiveWithRetry(poolId, 3);
+            } else {
+                console.log("❌ Skipping isActive update due to insufficient reward balance.");
+            }
+
             // 🛠 Refresh Balances
             await fetchBalance(coinA, setCoinABalance);
             await fetchBalance(coinB, setCoinBBalance);
@@ -409,6 +443,58 @@ export default function SwapInterface({
 
         addLog("❌ Transaction confirmation timed out.");
         return null;
+    };
+
+    const updateIsActiveWithRetry = async (poolId: string, maxRetries = 3) => {
+        let attempt = 0;
+        while (attempt < maxRetries) {
+            try {
+                console.log("🔍 Sending `poolId`:", poolId, "Type:", typeof poolId);
+
+                const response = await fetch("/api/update-pool-activity", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ poolId: String(poolId) }) // ✅ Ensure `poolId` is always a string
+                });
+
+                // ✅ Handle 409 Conflict Gracefully
+                if (response.status === 409) {
+                    console.log(`⚠️ Pool ${poolId} did not meet conditions for update (isActive already set or processing).`);
+                    return; // ✅ Exit without retrying
+                }
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${result.error || "Unknown error"}`);
+                }
+
+                console.log(`✅ isActive API Response (Attempt ${attempt + 1}):`, result);
+                addLog(result.message);
+                return; // ✅ Exit on success
+
+            } catch (error: any) {
+                console.error(`❌ Failed to update isActive (Attempt ${attempt + 1}):`, error);
+                addLog(`⚠️ Failed to update isActive (Attempt ${attempt + 1}) - ${error.message}`);
+
+                // ✅ If the error is a 409 Conflict, exit gracefully
+                if (error.message.includes("HTTP 409")) {
+                    console.log("⚠️ Pool did not meet conditions, stopping retries.");
+                    return; // ✅ Stop retrying, no need to update
+                }
+
+                attempt++;
+
+                if (attempt < maxRetries) {
+                    const delay = Math.pow(2, attempt) * 1000; // Exponential backoff (2s, 4s, 8s)
+                    console.log(`⏳ Retrying isActive update in ${delay / 1000} seconds...`);
+                    await new Promise(res => setTimeout(res, delay));
+                }
+            }
+        }
+
+        console.error("❌ Max retries reached: isActive update failed.");
+        addLog("❌ Max retries reached: isActive update failed.");
     };
 
     return (

@@ -198,7 +198,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
                                             <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
                                                 {swap.is_buy ? 'Buy' : 'Sell'}
                                             </td>
-                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${actualCPC.toFixed(4)}</td>
+                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${actualCPC.toFixed(7)}</td>
                                             <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${totalValueUSD.toFixed(2)}</td>
                                             <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
                                                 {amountCoinA.toFixed(4)}

@@ -74,6 +74,9 @@ export default function SwapInterface({
     const [isProcessing, setIsProcessing] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [priceImpact, setPriceImpact] = useState<number>(0);
+    const getImpactColor = (impact: number) =>
+        impact >= 15 ? "text-red-500" : impact >= 5 ? "text-yellow-400" : "text-slate-300";
 
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]);
@@ -126,10 +129,11 @@ export default function SwapInterface({
     };
 
     // ✅ First define fetchQuote
-    const fetchQuote = useCallback(async (amount: string, isSell: boolean) => {
+    const fetchQuote = async (amount: string, isSell: boolean) => {
         console.log("🏁 fetchQuote called:", { poolId, coinA, coinB, poolStats, amount, isSell });
 
         if (!poolId || !coinA || !coinB || !poolStats) return;
+        setPriceImpact(0);
         if (isNaN(Number(amount)) || Number(amount) <= 0) return;
 
         setFetchingQuote(true);
@@ -160,6 +164,54 @@ export default function SwapInterface({
             const data = await response.json();
 
             if (data) {
+                const inputToken = isSell
+                    ? (isBuy ? coinA : coinB)
+                    : (isBuy ? coinB : coinA);
+
+                const inputAmountRaw = Math.floor(Number(amount) * Math.pow(10, inputToken.decimals));
+                const inputAmountHuman = inputAmountRaw / Math.pow(10, inputToken.decimals);
+
+                const reserveInRaw = isSell
+                    ? (isBuy ? poolStats.balance_a : poolStats.balance_b)
+                    : (isBuy ? poolStats.balance_b : poolStats.balance_a);
+
+                const reserveOutRaw = isSell
+                    ? (isBuy ? poolStats.balance_b : poolStats.balance_a)
+                    : (isBuy ? poolStats.balance_a : poolStats.balance_b);
+
+                const reserveInDecimals = isSell
+                    ? (isBuy ? coinA.decimals : coinB.decimals)
+                    : (isBuy ? coinB.decimals : coinA.decimals);
+
+                const reserveOutDecimals = isSell
+                    ? (isBuy ? coinB.decimals : coinA.decimals)
+                    : (isBuy ? coinA.decimals : coinB.decimals);
+
+                const impact = calculatePriceImpact(
+                    inputAmountHuman,
+                    poolStats,
+                    reserveInRaw,
+                    reserveOutRaw,
+                    reserveInDecimals,
+                    reserveOutDecimals
+                );
+
+                console.log("📊 Price Impact Calc Debug:", {
+                    isSell,
+                    isBuy,
+                    inputAmountHuman,
+                    inputToken: inputToken.symbol,
+                    reserveInRaw,
+                    reserveOutRaw,
+                    reserveIn: reserveInRaw / Math.pow(10, reserveInDecimals),
+                    reserveOut: reserveOutRaw / Math.pow(10, reserveOutDecimals),
+                    reserveInDecimals,
+                    reserveOutDecimals,
+                    priceImpact: impact,
+                });
+
+                setPriceImpact(impact);
+
                 if (isSell && data.buyAmount) {
                     setAmountOut(Number(data.buyAmount).toFixed(4));
                 } else if (!isSell && data.sellAmount) {
@@ -168,10 +220,11 @@ export default function SwapInterface({
             }
         } catch (error) {
             console.error("Error fetching quote:", error);
+            setPriceImpact(0);
         } finally {
             setFetchingQuote(false);
         }
-    }, [poolId, coinA, coinB, poolStats, isBuy]);
+    };
 
     // ✅ THEN define debouncedGetQuote
     const debouncedGetQuote = useCallback((amount: string, isSell: boolean) => {
@@ -195,6 +248,11 @@ export default function SwapInterface({
     const handleSwap = async () => {
         if (!walletAddress || !poolId || !coinA || !coinB || !amountIn || !amountOut || !provider) {
             alert("Missing required information for swap.");
+            return;
+        }
+
+        if (priceImpact >= 15) {
+            alert("Swap blocked: Price impact exceeds 15%");
             return;
         }
 
@@ -497,6 +555,51 @@ export default function SwapInterface({
         addLog("❌ Max retries reached: isActive update failed.");
     };
 
+    function calculateEffectiveAmountIn(
+        amountIn: number,
+        poolStats: PoolStats
+    ): number {
+        const totalFeesBP =
+            100 +
+            Number(poolStats.burn_fee) +
+            Number(poolStats.creator_royalty_fee) +
+            Number(poolStats.lp_builder_fee) +
+            Number(poolStats.rewards_fee);
+
+        console.log("🧾 Total Fee BPS:", totalFeesBP);
+
+        const netAmountBP = 10_000 - totalFeesBP;
+
+        if (netAmountBP < 0) {
+            console.warn("⚠️ Total fees exceed 100%. Returning 0.");
+            return 0;
+        }
+
+        return (amountIn * netAmountBP) / 10_000;
+    }
+
+    function calculatePriceImpact(
+        amountInHuman: number,
+        poolStats: PoolStats,
+        reserveInRaw: number,
+        reserveOutRaw: number,
+        reserveInDecimals: number,
+        reserveOutDecimals: number
+    ): number {
+        const effectiveIn = calculateEffectiveAmountIn(amountInHuman, poolStats);
+        if (effectiveIn <= 0 || reserveInRaw <= 0 || reserveOutRaw <= 0) return 0;
+
+        const reserveIn = reserveInRaw / Math.pow(10, reserveInDecimals);
+        const reserveOut = reserveOutRaw / Math.pow(10, reserveOutDecimals);
+
+        const amountOut = (effectiveIn * reserveOut) / (reserveIn + effectiveIn);
+        const expectedOutNoImpact = effectiveIn * (reserveOut / reserveIn);
+
+        const priceImpact = ((expectedOutNoImpact - amountOut) / expectedOutNoImpact) * 100;
+
+        return priceImpact;
+    }
+
     return (
         <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-auto space-y-6">
             {/* Toggle Buy / Sell */}
@@ -630,8 +733,15 @@ export default function SwapInterface({
                     step="0.1"
                     value={slippage}
                     onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (!isNaN(value)) setSlippage(value);
+                        const value = e.target.value;
+                        if (value === "") {
+                            setSlippage(NaN); // or null if you prefer
+                        } else {
+                            const parsed = parseFloat(value);
+                            if (!isNaN(parsed)) {
+                                setSlippage(parsed);
+                            }
+                        }
                     }}
                     className="bg-transparent w-16 text-center text-slate-100 outline-none border border-slate-600 rounded py-1
                     appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -639,14 +749,35 @@ export default function SwapInterface({
                 <span>%</span>
             </div>
 
+            {priceImpact >= 5 && (
+                <div className={`${getImpactColor(priceImpact)} text-sm text-center mb-2 font-semibold`}>
+                    {priceImpact >= 15
+                        ? `❌ Swap blocked: Price impact exceeds 15% (${priceImpact.toFixed(2)}%)`
+                        : `⚠️ Price Impact High (${priceImpact.toFixed(2)}%)`}
+                </div>
+            )}
+
             {/* Execute Swap Button */}
             <button
                 onClick={handleSwap}
-                disabled={fetchingQuote || !amountIn || !amountOut || isProcessing}
-                className={`mt-6 w-full ${isBuy ? 'bg-green-600 hover:bg-green-500' : 'bg-red-600 hover:bg-red-500'} 
-    text-white py-3 rounded-lg font-semibold text-lg transition disabled:opacity-50`}
+                disabled={fetchingQuote || !amountIn || !amountOut || isProcessing || Math.abs(priceImpact) >= 15}
+
+                className={`mt-6 w-full ${isProcessing || priceImpact >= 15
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : isBuy
+                            ? 'bg-green-600 hover:bg-green-500'
+                            : 'bg-red-600 hover:bg-red-500'
+                    } text-white py-3 rounded-lg font-semibold text-lg transition disabled:opacity-50`}
             >
-                {isProcessing ? "Processing..." : isBuy ? "Buy" : "Sell"}
+                {isProcessing
+                    ? "Processing..."
+                    : Math.abs(priceImpact) >= 15
+                        ? "Swap Disabled – High Impact"
+                        : Math.abs(priceImpact) >= 5
+                            ? "Swap Anyway"
+                            : isBuy
+                                ? "Buy"
+                                : "Sell"}
             </button>
             <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
 

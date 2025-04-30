@@ -12,8 +12,8 @@ export const predefinedCoins = [
         logo: "https://strapi-dev.scand.app/uploads/usdc_019d7ef24b.png",
     },
     {
-        symbol: "MOCKSUI",
-        typeName: "0x9b8a82822335e9c5a4379f7752ec017afdf9127a34024bdc0e672264b947d237::mock_sui::MOCK_SUI",
+        symbol: "SRM",
+        typeName: "0xbd2301d12b96dd64b41134168931dd54742c0336bcf1752ed346a177ac00d1ed::SuiRewardsMe::SUIREWARDSME",
         decimals: 9,
         logo: "https://bafybeif5r3biiwsylqsjkkwh4yrsbltbeetq5w3snuodcw56b7iaaglxoa.ipfs.w3s.link/logo_blk.png",
     },

@@ -37,7 +37,11 @@ export default function Swap() {
     const [copiedText, setCopiedText] = useState<string | null>(null);
     const [coinAPrice, setCoinAPrice] = useState<number | null>(null);
     const [coinBPrice, setCoinBPrice] = useState<number | null>(null);
-
+    const [priceImpact, setPriceImpact] = useState<number>(0);
+    const [parsedSellAmount, setParsedSellAmount] = useState<number | null>(null);
+    const [parsedBuyAmount, setParsedBuyAmount] = useState<number | null>(null);
+    const getImpactColor = (impact: number) =>
+        impact >= 15 ? "text-red-600" : impact >= 5 ? "text-yellow-500" : "text-gray-700";
 
     // ✅ Debounce Timer Ref
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -407,6 +411,8 @@ export default function Swap() {
 
     // ✅ Handle Sell Amount Change with Debounce
     const handleSellAmountChange = (e) => {
+        setParsedSellAmount(null);
+        setParsedBuyAmount(null);
         const amount = e.target.value;
         setSellAmount(amount);
 
@@ -425,6 +431,8 @@ export default function Swap() {
 
     // ✅ Handle Buy Amount Change with Debounce
     const handleBuyAmountChange = (e) => {
+        setParsedSellAmount(null);
+        setParsedBuyAmount(null);
         const amount = e.target.value;
         setBuyAmount(amount);
 
@@ -469,16 +477,39 @@ export default function Swap() {
                 const response = await getSwapQuote(poolId, amount, isSell, isAtoB, poolStats);
 
                 if (response) {
-                    console.log("✅ Updated Swap Quote:", response);
+                    const sell = isSell ? Number(amount) : Number(response.sellAmount);
+                    const buy = isSell ? Number(response.buyAmount) : Number(amount);
 
-                    if (isSell) {
-                        setBuyAmount(response.buyAmount);
-                        console.log("✅ Updated Buy Amount:", response.buyAmount);
-                    } else {
-                        setSellAmount(response.sellAmount);
-                        console.log("✅ Updated Sell Amount:", response.sellAmount);
+                    setParsedSellAmount(sell);
+                    setParsedBuyAmount(buy);
+
+                    setBuyAmount(isSell ? response.buyAmount : amount);
+                    setSellAmount(isSell ? amount : response.sellAmount);
+
+                    // Calculate price impact only when all required data is available
+                    if (
+                        poolStats &&
+                        poolMetadata &&
+                        sell != null &&
+                        buy != null &&
+                        isAtoB != null
+                    ) {
+                        const reserveInRaw = isAtoB ? poolStats.balance_a : poolStats.balance_b;
+                        const reserveOutRaw = isAtoB ? poolStats.balance_b : poolStats.balance_a;
+                        const reserveInDecimals = isAtoB ? poolMetadata.coinA.decimals : poolMetadata.coinB.decimals;
+                        const reserveOutDecimals = isAtoB ? poolMetadata.coinB.decimals : poolMetadata.coinA.decimals;
+
+                        const impact = calculatePriceImpact(
+                            sell,
+                            poolStats,
+                            reserveInRaw,
+                            reserveOutRaw,
+                            reserveInDecimals,
+                            reserveOutDecimals
+                        );
+
+                        setPriceImpact(impact);
                     }
-
                 }
             } catch (error) {
                 console.error("Error fetching quote:", error);
@@ -972,6 +1003,39 @@ export default function Swap() {
         setTimeout(() => setCopiedText(null), 2000);
     };
 
+    const calculateEffectiveAmountIn = (amountIn: number, stats: any) => {
+        const totalFeeBps =
+            Number(stats.lp_builder_fee || 0) +
+            Number(stats.burn_fee || 0) +
+            Number(stats.creator_royalty_fee || 0) +
+            Number(stats.rewards_fee || 0) +
+            100; // Assume base fee of 1%
+
+        const netAmountBps = 10000 - totalFeeBps;
+        return (amountIn * netAmountBps) / 10000;
+    };
+
+    const calculatePriceImpact = (
+        amountInHuman: number,
+        stats: any,
+        reserveInRaw: number,
+        reserveOutRaw: number,
+        reserveInDecimals: number,
+        reserveOutDecimals: number
+    ): number => {
+        const effectiveIn = calculateEffectiveAmountIn(amountInHuman, stats);
+        if (effectiveIn <= 0 || reserveInRaw <= 0 || reserveOutRaw <= 0) return 0;
+
+        const reserveIn = reserveInRaw / Math.pow(10, reserveInDecimals);
+        const reserveOut = reserveOutRaw / Math.pow(10, reserveOutDecimals);
+
+        const amountOut = (effectiveIn * reserveOut) / (reserveIn + effectiveIn);
+        const expectedOut = effectiveIn * (reserveOut / reserveIn);
+
+        return ((expectedOut - amountOut) / expectedOut) * 100;
+    };
+
+
     return (
         <div className="relative z-0 min-h-screen">
             {/* 🔥 Background Video - Behind Everything */}
@@ -1138,14 +1202,35 @@ export default function Swap() {
                         )}
                     </div>
 
+                        {Math.abs(priceImpact) >= 5 && (
+                            <div className={`text-center font-semibold text-sm mt-2 ${getImpactColor(priceImpact)}`}>
+                                {Math.abs(priceImpact) >= 15
+                                    ? `❌ Swap blocked: Price impact too high (${priceImpact.toFixed(2)}%)`
+                                    : `⚠️ High Price Impact: ${priceImpact.toFixed(2)}%`}
+                            </div>
+                        )}
+
                     {/* Swap Button */}
                     <button
                         className={`button-secondary w-full text-white p-3 rounded-lg ${walletConnected && sellToken && buyToken ? "bg-royalPurple" : "bg-gray-300 cursor-not-allowed"
                             }`}
                         onClick={!walletConnected ? () => walletAdapter?.connect() : () => handleSwap(1)}
-                        disabled={fetchingQuote || walletConnected && (!sellToken || !buyToken)}
+                            disabled={
+                                fetchingQuote ||
+                                !walletConnected ||
+                                !sellToken ||
+                                !buyToken ||
+                                isProcessing ||
+                                Math.abs(priceImpact) >= 15
+                            }
                     >
-                        {fetchingQuote ? "Fetching Quote..." : walletConnected ? "Swap" : "Connect Wallet"}
+                            {fetchingQuote
+                                ? "Fetching Quote..."
+                                : !walletConnected
+                                    ? "Connect Wallet"
+                                    : Math.abs(priceImpact) >= 15
+                                        ? "Swap Disabled – High Impact"
+                                        : "Swap"}
                     </button>
                     <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                 </div>

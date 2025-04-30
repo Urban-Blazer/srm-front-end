@@ -62,7 +62,7 @@ export default function SwapInterface({
     poolStats,
     walletAdapter,
 }: SwapInterfaceProps) {
-    
+
     const [isBuy, setIsBuy] = useState(true);
     const [coinABalance, setCoinABalance] = useState<number>(0);
     const [coinBBalance, setCoinBBalance] = useState<number>(0);
@@ -763,10 +763,10 @@ export default function SwapInterface({
                 disabled={fetchingQuote || !amountIn || !amountOut || isProcessing || Math.abs(priceImpact) >= 15}
 
                 className={`mt-6 w-full ${isProcessing || priceImpact >= 15
-                        ? 'bg-gray-500 cursor-not-allowed'
-                        : isBuy
-                            ? 'bg-green-600 hover:bg-green-500'
-                            : 'bg-red-600 hover:bg-red-500'
+                    ? 'bg-gray-500 cursor-not-allowed'
+                    : isBuy
+                        ? 'bg-green-600 hover:bg-green-500'
+                        : 'bg-red-600 hover:bg-red-500'
                     } text-white py-3 rounded-lg font-semibold text-lg transition disabled:opacity-50`}
             >
                 {isProcessing

@@ -733,8 +733,15 @@ export default function SwapInterface({
                     step="0.1"
                     value={slippage}
                     onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (!isNaN(value)) setSlippage(value);
+                        const value = e.target.value;
+                        if (value === "") {
+                            setSlippage(NaN); // or null if you prefer
+                        } else {
+                            const parsed = parseFloat(value);
+                            if (!isNaN(parsed)) {
+                                setSlippage(parsed);
+                            }
+                        }
                     }}
                     className="bg-transparent w-16 text-center text-slate-100 outline-none border border-slate-600 rounded py-1
                     appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

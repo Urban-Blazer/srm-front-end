@@ -18,7 +18,12 @@ export default function Providers({ children }: { children: ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>
             <SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
-                <WalletProvider>
+                <WalletProvider
+                    autoConnect
+                    slushWallet={{
+                        name: 'Sui Rewards Me',
+                    }}
+                    >
                     {children}
                 </WalletProvider>
             </SuiClientProvider>

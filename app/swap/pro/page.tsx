@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
+import { useCurrentWallet, useCurrentAccount } from "@mysten/dapp-kit";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../../config";
@@ -29,9 +29,10 @@ const USDC_REWARD_BALANCE = 50 * Math.pow(10, 6); // 50 USDC
 const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 5 SRM
 
 export default function Swap() {
-    const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
-    const [walletConnected, setWalletConnected] = useState(false);
-    const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const wallet = useCurrentWallet()?.currentWallet;
+    const account = useCurrentAccount();
+    const walletConnected = !!wallet && !!account;
+    const walletAddress = account?.address || null;
 
     //Dashboard variables
     const [searchPairPoolId, setSearchPairPoolId] = useState<string | null>(null);
@@ -39,56 +40,6 @@ export default function Swap() {
     const [searchPairCoinB, setSearchPairCoinB] = useState<any>(null);
     const [poolStats, setPoolStats] = useState<any>(null);
     const [loadingPoolStats, setLoadingPoolStats] = useState(false);
-
-
-    // ✅ Initialize Wallet Connection
-    const walletAdapterRef = useRef<NightlyConnectSuiAdapter | null>(null); 
-
-    useEffect(() => {
-        const initWallet = async () => {
-            try {
-                if (!walletAdapterRef.current) {
-                    const adapter = await NightlyConnectSuiAdapter.build({
-                        appMetadata: {
-                            name: "SuiRewards.Me",
-                            description: "It's time you got a piece",
-                            icon: "https://your-app-logo-url.com/icon.png",
-                        },
-                    });
-
-                    walletAdapterRef.current = adapter;
-                    setWalletAdapter(adapter);
-
-                    await adapter.connect();
-                    const accounts = await adapter.getAccounts();
-
-                    if (accounts.length > 0) {
-                        setWalletConnected(true);
-                        setWalletAddress(accounts[0].address);
-                    }
-
-                    adapter.on("connect", (account) => {
-                        setWalletConnected(true);
-                        setWalletAddress(account.address);
-                    });
-
-                    adapter.on("disconnect", () => {
-                        setWalletConnected(false);
-                        setWalletAddress(null);
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to initialize Nightly Connect:", error);
-            }
-        };
-
-        initWallet();
-
-        return () => {
-            walletAdapterRef.current?.off("connect");
-            walletAdapterRef.current?.off("disconnect");
-        };
-    }, []);
 
     const handleSearchPairSelect = (result) => {
         console.log("🔍 Pair Selected from Search:", result);
@@ -171,7 +122,7 @@ export default function Swap() {
                         <PoolInfo poolId={searchPairPoolId} coinA={searchPairCoinA} coinB={searchPairCoinB} poolStats={poolStats} loading={loadingPoolStats} />
                     </div>
                     <div className="bg-gray-900 rounded-lg p-6 shadow-md">
-                        <SwapInterface poolId={searchPairPoolId} coinA={searchPairCoinA} coinB={searchPairCoinB} provider={provider} walletAddress={walletAddress} poolStats={poolStats} walletAdapter={walletAdapter} />
+                        <SwapInterface poolId={searchPairPoolId} coinA={searchPairCoinA} coinB={searchPairCoinB} provider={provider} poolStats={poolStats} />
                     </div>
                 </div>
 

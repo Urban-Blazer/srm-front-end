@@ -1,19 +1,18 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import StickyHeader from "./StickyHeader";
+import { useState } from 'react';
 import Image from 'next/image';
 import MergeCoinsModal from "./MergeCoinsModal";
-import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
+import { ConnectButton } from '@mysten/dapp-kit';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 
 export default function NavBar() {
   const [dropdown, setDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const account = useCurrentAccount();
+  const walletAddress = account?.address;
 
   const toggleDropdown = (menu: string) => {
     setDropdown(dropdown === menu ? null : menu);
@@ -35,52 +34,6 @@ export default function NavBar() {
     setIsMobileMenuOpen(false);
     setDropdown(null); // Optional: close any open submenu too
   };
-
-
-  // ✅ Initialize Nightly Connect and Fetch Pools
-  useEffect(() => {
-    const initWallet = async () => {
-      try {
-        const adapter = await NightlyConnectSuiAdapter.build({
-          appMetadata: {
-            name: "Sui Rewards Me",
-            description: "Rewards DEX on Sui",
-            icon: "https://your-app-logo-url.com/icon.png",
-          },
-        });
-
-        setWalletAdapter(adapter);
-        await adapter.connect();
-        const accounts = await adapter.getAccounts();
-
-        if (accounts.length > 0) {
-          console.log("✅ Wallet Connected:", accounts[0]);
-          setWalletConnected(true);
-          setWalletAddress(accounts[0].address); // 🔥 FIXED: Extract actual address
-
-        } else {
-          console.warn("⚠️ No accounts found.");
-        }
-
-        adapter.on("connect", async (account) => {
-          console.log("🔗 Wallet connected:", account);
-          setWalletConnected(true);
-          setWalletAddress(accounts[0].address); // 🔥 FIXED: Extract actual address
-        });
-
-        adapter.on("disconnect", () => {
-          console.log("🔌 Wallet disconnected");
-          setWalletConnected(false);
-          setWalletAddress(null);
-        });
-
-      } catch (error) {
-        console.error("❌ Failed to initialize Nightly Connect:", error);
-      }
-    };
-
-    initWallet();
-  }, []);
 
   return (
     <nav className="navbar text-white p-4 flex items-center justify-between relative z-50">
@@ -169,7 +122,7 @@ export default function NavBar() {
 
       <div className="ml-4 mb-2 flex items-center">
         {/* ✅ Merge Coins Modal */}
-        {walletAdapter && walletConnected && <MergeCoinsModal adapter={walletAdapter} />}
+        {walletAddress && <MergeCoinsModal />}
       </div>
 
       {/* Right Section: Mobile Menu Button (Only Visible on Mobile) */}
@@ -254,14 +207,14 @@ export default function NavBar() {
 
           {/* Wallet Connect Button for Mobile Menu */}
           <div className="w-full mt-4 flex justify-center">
-            <StickyHeader />
+            <ConnectButton />
           </div>
         </div>
       )}
 
       {/* Desktop Wallet Connect Button (Hidden on Mobile) */}
       <div className="hidden md:flex ml-auto">
-        <StickyHeader />
+        <ConnectButton />
       </div>
     </nav>
   );

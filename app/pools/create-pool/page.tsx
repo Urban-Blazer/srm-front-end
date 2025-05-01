@@ -6,7 +6,7 @@ import { SuiClient } from "@mysten/sui.js/client";
 import { predefinedCoins } from "@data/coins";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, FACTORY_ID, LOCK_ID } from "../../config";
-import { useCurrentWallet, useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentWallet, useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import TransactionModal from "@components/TransactionModal";
 import Image from "next/image";
 import CopyIcon from "@svg/copy-icon.svg";
@@ -115,6 +115,7 @@ export default function Pools() {
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [copiedText, setCopiedText] = useState<string | null>(null);
+    const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
@@ -355,23 +356,27 @@ export default function Pools() {
                 ],
             });
 
-            // ✅ Sign Transaction
-            addLog("✍️ Signing transaction...");
-            console.log("✍️ Signing transaction...");
-            const signedTx = await wallet.signTransactionBlock({
-                transactionBlock: txb,
-            });
+            let executeResponse;
 
-            addLog("✅ Transaction Signed!");
-            console.log("✅ Transaction Signed:", signedTx);
-
-            // ✅ Submit Transaction
-            addLog("🚀 Submitting transaction...");
-            console.log("🚀 Submitting transaction...");
-            const executeResponse = await provider.executeTransactionBlock({
-                transactionBlock: signedTx.transactionBlockBytes, // Correct parameter
-                signature: signedTx.signature,
-                options: { showEffects: true, showEvents: true },
+            await new Promise<void>((resolve, reject) => {
+                signAndExecuteTransaction(
+                    {
+                        transaction: txb.serialize(),
+                        chain: 'sui:mainnet', // Or 'sui:devnet' depending on env
+                    },
+                    {
+                        onSuccess: (result) => {
+                            executeResponse = result;
+                            resolve();
+                        },
+                        onError: (error) => {
+                            console.error("❌ Claim transaction failed:", error);
+                            addLog(`❌ Transaction failed: ${error.message}`);
+                            alert("⚠️ Claim transaction failed. See console for details.");
+                            reject(error);
+                        },
+                    }
+                );
             });
 
             addLog("✅ Transaction Executed!");

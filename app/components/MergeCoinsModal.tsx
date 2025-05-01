@@ -4,7 +4,7 @@ import Image from "next/image";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC } from "../config";
-import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
+import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 
 const suiClient = new SuiClient({ url: GETTER_RPC });
 
@@ -17,6 +17,7 @@ const MergeCoinsModal = () => {
     const account = useCurrentAccount();
     const walletAddress = account?.address;
     const wallet = useCurrentWallet()?.currentWallet;
+    const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
     /**
      * ✅ Format Coin Name (Handles LP Tokens)
@@ -188,25 +189,33 @@ const MergeCoinsModal = () => {
                 txb.mergeCoins(primaryInput, mergeInputs);
             }
 
-            // ✅ Sign Transaction
-            console.log("✍️ Signing transaction...");
-            const signedTx = await wallet.signTransactionBlock({
-                transactionBlock: txb,
-            });
+            // Replace manual signing + execution block
+            console.log("🚀 Signing and executing transaction...");
 
-            console.log("✅ Transaction Signed!");
+            let executeResponse;
 
-            // ✅ Submit Transaction
-            console.log("🚀 Submitting transaction...");
-            const executeResponse = await suiClient.executeTransactionBlock({
-                transactionBlock: signedTx.transactionBlockBytes,
-                signature: signedTx.signature,
-                options: { showEffects: true, showEvents: true },
+            await new Promise<void>((resolve, reject) => {
+                signAndExecuteTransaction(
+                    {
+                        transaction: txb.serialize(),
+                        chain: 'sui:mainnet', // or 'sui:mainnet' based on env
+                    },
+                    {
+                        onSuccess: (result) => {
+                            executeResponse = result;
+                            resolve();
+                        },
+                        onError: (error) => {
+                            console.error("❌ Merge failed during execution:", error);
+                            alert("⚠️ Merge transaction failed. Please check the console.");
+                            reject(error);
+                        },
+                    }
+                );
             });
 
             console.log("✅ Transaction Submitted!");
 
-            // ✅ Track Transaction Digest
             const txnDigest = executeResponse.digest;
             console.log(`🔍 Transaction Digest: ${txnDigest}`);
 

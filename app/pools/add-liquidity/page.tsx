@@ -10,7 +10,7 @@ import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../../config
 import TransactionModal from "@components/TransactionModal";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
+import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -78,6 +78,7 @@ export default function AddLiquidity() {
     const account = useCurrentAccount();
     const wallet = useCurrentWallet()?.currentWallet;
     const walletAddress = account?.address;
+    const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
     const decimalsA = state.dropdownCoinMetadata?.decimals ?? 9;
     const decimalsB = state.customCoinMetadata?.decimals ?? 9;
@@ -468,20 +469,27 @@ export default function AddLiquidity() {
                 ],
             });
 
-            // ✅ Sign Transaction
-            addLog("✍️ Signing transaction...");
-            const signedTx = await wallet.signTransactionBlock({
-                transactionBlock: txb,
-            });
+            let executeResponse;
 
-            addLog("✅ Transaction Signed!");
-
-            // ✅ Submit Transaction
-            addLog("🚀 Submitting transaction...");
-            const executeResponse = await provider.executeTransactionBlock({
-                transactionBlock: signedTx.transactionBlockBytes,
-                signature: signedTx.signature,
-                options: { showEffects: true, showEvents: true },
+            await new Promise<void>((resolve, reject) => {
+                signAndExecuteTransaction(
+                    {
+                        transaction: txb.serialize(),
+                        chain: 'sui:mainnet', // or 'sui:devnet' if that's your environment
+                    },
+                    {
+                        onSuccess: (result) => {
+                            executeResponse = result;
+                            resolve();
+                        },
+                        onError: (error) => {
+                            console.error("❌ Liquidity transaction failed:", error);
+                            addLog(`❌ Transaction failed: ${error.message}`);
+                            alert("⚠️ Liquidity transaction failed. See console for details.");
+                            reject(error);
+                        },
+                    }
+                );
             });
 
             addLog("✅ Transaction Submitted!");

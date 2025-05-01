@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import StepIndicator from "@components/AddLiquidityStepIndicator";
 import { predefinedCoins } from "@data/coins";
 import { SuiClient } from "@mysten/sui.js/client";
-import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../../config";
 import TransactionModal from "@components/TransactionModal";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -69,16 +69,15 @@ function reducer(state: any, action: any) {
 export default function AddLiquidity() {
     const [state, dispatch] = useReducer(reducer, initialState);
     const router = useRouter();
-    const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
-    const [walletConnected, setWalletConnected] = useState(false);
-    const [walletAddress, setWalletAddress] = useState<string | null>(null);
-
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false); // Track processing state
     const searchParams = useSearchParams();
     const coinA = searchParams.get("coinA");
     const coinB = searchParams.get("coinB");
+    const account = useCurrentAccount();
+    const wallet = useCurrentWallet()?.currentWallet;
+    const walletAddress = account?.address;
 
     const decimalsA = state.dropdownCoinMetadata?.decimals ?? 9;
     const decimalsB = state.customCoinMetadata?.decimals ?? 9;
@@ -96,57 +95,6 @@ export default function AddLiquidity() {
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
     };
-
-    // ✅ Initialize Nightly Connect Adapter
-    useEffect(() => {
-        const initWallet = async () => {
-            try {
-                const adapter = await NightlyConnectSuiAdapter.build({
-                    appMetadata: {
-                        name: "Sui DEX",
-                        description: "DEX for trading tokens on Sui",
-                        icon: "https://your-app-logo-url.com/icon.png",
-                    },
-                });
-
-                setWalletAdapter(adapter);
-
-                // ✅ Manually request connection before fetching accounts
-                await adapter.connect(); // 🔥 Ensure wallet is connected
-
-                // ✅ Fetch accounts after ensuring connection
-                const accounts = await adapter.getAccounts();
-                console.log("Nightly Connect Accounts:", accounts);
-
-                if (accounts.length > 0) {
-                    console.log("Wallet detected:", accounts[0]);
-                    setWalletConnected(true);
-                    setWalletAddress(accounts[0].address); // ✅ Correct if 'address' exists
-                } else {
-                    console.warn("No accounts found from Nightly Connect.");
-                }
-
-                // ✅ Handle wallet connection events
-                adapter.on("connect", async (account) => {
-                    console.log("Wallet connected:", account);
-                    setWalletConnected(true);
-                    setWalletAddress(account[0]?.address || null); // ✅ Extracts address safely
-                });
-
-                // ✅ Handle wallet disconnection
-                adapter.on("disconnect", () => {
-                    console.log("Wallet disconnected");
-                    setWalletConnected(false);
-                    setWalletAddress(null);
-                });
-
-            } catch (error) {
-                console.error("Failed to initialize Nightly Connect:", error);
-            }
-        };
-
-        initWallet();
-    }, []);
 
     useEffect(() => {
         if (isProcessing) {
@@ -354,7 +302,7 @@ export default function AddLiquidity() {
         const decimalsA = state.dropdownCoinMetadata?.decimals ?? 9;
         const decimalsB = state.customCoinMetadata?.decimals ?? 9;
 
-        if (!walletConnected || !walletAddress || !walletAdapter) {
+        if (!wallet || !walletAddress) {
             alert("⚠️ Please connect your wallet first.");
             return;
         }
@@ -362,8 +310,7 @@ export default function AddLiquidity() {
         try {
             dispatch({ type: "SET_LOADING", payload: true });
 
-            const accounts = await walletAdapter.getAccounts();
-            const userAddress = accounts[0]?.address;
+            const userAddress = walletAddress;
 
             if (!userAddress) {
                 alert("⚠️ No accounts found. Please reconnect your wallet.");
@@ -523,10 +470,8 @@ export default function AddLiquidity() {
 
             // ✅ Sign Transaction
             addLog("✍️ Signing transaction...");
-            const signedTx = await walletAdapter.signTransactionBlock({
+            const signedTx = await wallet.signTransactionBlock({
                 transactionBlock: txb,
-                account: userAddress,
-                chain: "sui:mainnet",
             });
 
             addLog("✅ Transaction Signed!");

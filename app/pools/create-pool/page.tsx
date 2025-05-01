@@ -6,7 +6,7 @@ import { SuiClient } from "@mysten/sui.js/client";
 import { predefinedCoins } from "@data/coins";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, FACTORY_ID, LOCK_ID } from "../../config";
-import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
+import { useCurrentWallet, useCurrentAccount } from "@mysten/dapp-kit";
 import TransactionModal from "@components/TransactionModal";
 import Image from "next/image";
 import CopyIcon from "@svg/copy-icon.svg";
@@ -108,9 +108,9 @@ function reducer(state: any, action: any) {
 
 export default function Pools() {
     const [state, dispatch] = useReducer(reducer, initialState);
-    const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
-    const [walletConnected, setWalletConnected] = useState(false);
-    const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const account = useCurrentAccount();
+    const wallet = useCurrentWallet()?.currentWallet;
+    const walletAddress = account?.address;
     const [isProcessing, setIsProcessing] = useState(false); // Track processing state
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,52 +126,6 @@ export default function Pools() {
             dispatch({ type: "SET_STEP", payload: step });
         }
     };
-
-    // ✅ Initialize Nightly Connect Adapter
-    useEffect(() => {
-        const initWallet = async () => {
-            try {
-                const adapter = await NightlyConnectSuiAdapter.build({
-                    appMetadata: {
-                        name: "Sui DEX",
-                        description: "DEX for trading tokens on Sui",
-                        icon: "https://your-app-logo-url.com/icon.png",
-                    },
-                });
-
-                setWalletAdapter(adapter);
-                await adapter.connect();
-
-                const accounts = await adapter.getAccounts();
-                console.log("Nightly Connect Accounts:", accounts);
-
-                if (accounts.length > 0) {
-                    console.log("Wallet detected:", accounts[0].address); // ✅ Use `.address`
-                    setWalletConnected(true);
-                    setWalletAddress(accounts[0].address); // ✅ Store only the string address
-                } else {
-                    console.warn("No accounts found from Nightly Connect.");
-                }
-
-                adapter.on("connect", async (account) => {
-                    console.log("Wallet connected:", account.address);
-                    setWalletConnected(true);
-                    setWalletAddress(account.address); // ✅ Store only the string address
-                });
-
-                adapter.on("disconnect", () => {
-                    console.log("Wallet disconnected");
-                    setWalletConnected(false);
-                    setWalletAddress(null);
-                });
-
-            } catch (error) {
-                console.error("Failed to initialize Nightly Connect:", error);
-            }
-        };
-
-        initWallet();
-    }, []);
 
     useEffect(() => {
         if (isProcessing) {
@@ -229,9 +183,8 @@ export default function Pools() {
         setLogs([]); // Clear previous logs
         setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true); // Open modal
-        console.log("🔍 Checking wallet connection:", walletConnected, walletAddress);
-
-        if (!walletConnected || !walletAddress || !walletAdapter) {
+        
+        if (!wallet || !walletAddress) {
             alert("⚠️ Please connect your wallet first.");
             return;
         }
@@ -239,16 +192,7 @@ export default function Pools() {
         try {
             dispatch({ type: "SET_LOADING", payload: true });
 
-            const accounts = await walletAdapter.getAccounts();
-            console.log("👛 Wallet accounts from Nightly:", accounts);
-
-            if (accounts.length === 0) {
-                alert("⚠️ No accounts found. Please reconnect your wallet.");
-                dispatch({ type: "SET_LOADING", payload: false });
-                return;
-            }
-
-            const userAddress = accounts[0].address;
+            const userAddress = walletAddress;
             console.log("✅ Using wallet address:", userAddress);
 
             // ✅ Validate metadata before proceeding
@@ -414,10 +358,8 @@ export default function Pools() {
             // ✅ Sign Transaction
             addLog("✍️ Signing transaction...");
             console.log("✍️ Signing transaction...");
-            const signedTx = await walletAdapter.signTransactionBlock({
+            const signedTx = await wallet.signTransactionBlock({
                 transactionBlock: txb,
-                account: userAddress,
-                chain: "sui:mainnet",
             });
 
             addLog("✅ Transaction Signed!");

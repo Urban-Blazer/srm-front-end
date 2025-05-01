@@ -1,30 +1,22 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
-import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import Image from "next/image";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC } from "../config";
+import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 
 const suiClient = new SuiClient({ url: GETTER_RPC });
 
-const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => {
+const MergeCoinsModal = () => {
     const [coins, setCoins] = useState<any[]>([]);
     const [mergeableCoins, setMergeableCoins] = useState<Record<string, any[]>>({});
     const [coinMetadata, setCoinMetadata] = useState<Record<string, any>>({});
-    const [walletAddress, setWalletAddress] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        if (!adapter.connected) return;
-
-        adapter.getAccounts().then((accounts) => {
-            if (accounts.length > 0) {
-                setWalletAddress(accounts[0].address);
-            }
-        });
-    }, [adapter]);
+    const account = useCurrentAccount();
+    const walletAddress = account?.address;
+    const wallet = useCurrentWallet()?.currentWallet;
 
     /**
      * ✅ Format Coin Name (Handles LP Tokens)
@@ -138,12 +130,22 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
             return;
         }
 
+        if (!wallet) {
+            alert("⚠️ Wallet not connected.");
+            setLoading(false);
+            return;
+        }
+
+        if (!wallet) {
+            alert("⚠️ No wallet connected.");
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
 
         try {
-            const accounts = await adapter.getAccounts();
-            const userAddress = accounts[0]?.address;
-            if (!userAddress) {
+            if (!walletAddress) {
                 alert("⚠️ No wallet address found.");
                 setLoading(false);
                 return;
@@ -188,10 +190,8 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
 
             // ✅ Sign Transaction
             console.log("✍️ Signing transaction...");
-            const signedTx = await adapter.signTransactionBlock({
-                // @ts-ignore
+            const signedTx = await wallet.signTransactionBlock({
                 transactionBlock: txb,
-                chain: "sui:mainnet",
             });
 
             console.log("✅ Transaction Signed!");
@@ -283,7 +283,7 @@ const MergeCoinsModal = ({ adapter }: { adapter: NightlyConnectSuiAdapter }) => 
     return (
         <div>
             {/* ✅ Show GIF only if there are mergeable coins */}
-            {Object.keys(mergeableCoins).length > 0 && (
+            {walletAddress && Object.keys(mergeableCoins).length > 0 && (
                 <div className="flex flex-col items-center mt-4 text-center">
                   {/*  <p className="text-lg font-semibold text-emeraldGreen mb-2">Merge Coins</p> */}
                     <Image

@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
+import { useCurrentWallet, useCurrentAccount } from "@mysten/dapp-kit";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../config";
@@ -18,9 +18,10 @@ const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
 const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 5 SRM
 
 export default function Swap() {
-    const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
-    const [walletConnected, setWalletConnected] = useState(false);
-    const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const wallet = useCurrentWallet()?.currentWallet;
+    const account = useCurrentAccount();
+    const walletConnected = !!wallet && !!account;
+    const walletAddress = account?.address || null;
     const [sellToken, setSellToken] = useState(null);
     const [buyToken, setBuyToken] = useState(null);
     const [sellAmount, setSellAmount] = useState("");
@@ -49,9 +50,6 @@ export default function Swap() {
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
     };
-
-    // ✅ Initialize Wallet Connection
-    const walletAdapterRef = useRef<NightlyConnectSuiAdapter | null>(null);
 
     const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -109,52 +107,6 @@ export default function Swap() {
             debouncedGetQuote(formattedAmount, true);
         }
     };
-
-    useEffect(() => {
-        const initWallet = async () => {
-            try {
-                if (!walletAdapterRef.current) {
-                    const adapter = await NightlyConnectSuiAdapter.build({
-                        appMetadata: {
-                            name: "SuiRewards.Me",
-                            description: "It's time you got a piece",
-                            icon: "https://your-app-logo-url.com/icon.png",
-                        },
-                    });
-
-                    walletAdapterRef.current = adapter;
-                    setWalletAdapter(adapter);
-
-                    await adapter.connect();
-                    const accounts = await adapter.getAccounts();
-
-                    if (accounts.length > 0) {
-                        setWalletConnected(true);
-                        setWalletAddress(accounts[0].address);
-                    }
-
-                    adapter.on("connect", (account) => {
-                        setWalletConnected(true);
-                        setWalletAddress(account.address);
-                    });
-
-                    adapter.on("disconnect", () => {
-                        setWalletConnected(false);
-                        setWalletAddress(null);
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to initialize Nightly Connect:", error);
-            }
-        };
-
-        initWallet();
-
-        return () => {
-            walletAdapterRef.current?.off("connect");
-            walletAdapterRef.current?.off("disconnect");
-        };
-    }, []);
 
     // ✅ Fetch Pool Metadata when CoinA and CoinB selected
     useEffect(() => {
@@ -628,7 +580,7 @@ export default function Swap() {
         addLog(`⚡ Initiating Swap... (Attempt ${attempt})`);
         console.log(`⚡ Initiating Swap... (Attempt ${attempt})`);
 
-        if (!walletAdapter || !walletConnected || !sellToken || !buyToken || !sellAmount || !poolId || isAtoB === null || !poolMetadata) {
+        if ( !walletConnected || !sellToken || !buyToken || !sellAmount || !poolId || isAtoB === null || !poolMetadata) {
             alert("🚨 Swap execution failed: Missing required parameters.");
             return;
         }
@@ -794,10 +746,8 @@ export default function Swap() {
             // ✅ Sign Transaction
             addLog("✍️ Signing transaction...");
             console.log("✍️ Signing transaction...");
-            const signedTx = await walletAdapter.signTransactionBlock({
+            const signedTx = await wallet.signTransactionBlock({
                 transactionBlock: txb,
-                account: userAddress,
-                chain: "sui:mainnet",
             });
 
             addLog("✅ Transaction Signed!");
@@ -1214,7 +1164,7 @@ export default function Swap() {
                     <button
                         className={`button-secondary w-full text-white p-3 rounded-lg ${walletConnected && sellToken && buyToken ? "bg-royalPurple" : "bg-gray-300 cursor-not-allowed"
                             }`}
-                        onClick={!walletConnected ? () => walletAdapter?.connect() : () => handleSwap(1)}
+                            onClick={!walletConnected ? () => wallet?.connect() : () => handleSwap(1)}
                             disabled={
                                 fetchingQuote ||
                                 !walletConnected ||

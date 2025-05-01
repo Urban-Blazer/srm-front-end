@@ -1,11 +1,11 @@
 // @ts-nocheck
 import { useState, useEffect, useRef, useCallback } from "react";
 import { SuiClient } from "@mysten/sui.js/client";
-import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
 import { TransactionBlock } from "@mysten/sui.js/transactions"; // for building tx
 import { PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../config";
 import TransactionModal from "@components/TransactionModal";
 import { predefinedCoins } from "../data/coins";
+import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 
 
 interface SwapInterfaceProps {
@@ -13,9 +13,7 @@ interface SwapInterfaceProps {
     coinA: CoinMeta | null;
     coinB: CoinMeta | null;
     provider: SuiClient;
-    walletAddress: string | null;
     poolStats: PoolStats | null;
-    walletAdapter: NightlyConnectSuiAdapter;
 }
 
 interface CoinMeta {
@@ -58,9 +56,7 @@ export default function SwapInterface({
     coinA,
     coinB,
     provider,
-    walletAddress,
     poolStats,
-    walletAdapter,
 }: SwapInterfaceProps) {
 
     const [isBuy, setIsBuy] = useState(true);
@@ -74,6 +70,9 @@ export default function SwapInterface({
     const [isProcessing, setIsProcessing] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const account = useCurrentAccount();
+    const wallet = useCurrentWallet()?.currentWallet;
+    const walletAddress = account?.address;
     const [priceImpact, setPriceImpact] = useState<number>(0);
     const getImpactColor = (impact: number) =>
         impact >= 15 ? "text-red-500" : impact >= 5 ? "text-yellow-400" : "text-slate-300";
@@ -256,6 +255,11 @@ export default function SwapInterface({
             return;
         }
 
+        if (!wallet) {
+            alert("⚠️ Wallet not connected.");
+            return;
+        }
+
         setLogs([]);
         setIsProcessing(true);
         setIsModalOpen(true);
@@ -393,10 +397,8 @@ export default function SwapInterface({
             });
 
             addLog("✍️ Signing transaction...");
-            const signedTx = await walletAdapter.signTransactionBlock({
+            const signedTx = await wallet?.signTransactionBlock({
                 transactionBlock: txb,
-                account: walletAddress,
-                chain: "sui:mainnet",
             });
 
             addLog("🚀 Submitting transaction...");

@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { SuiClient } from "@mysten/sui.js/client";
-import { NightlyConnectSuiAdapter } from "@nightlylabs/wallet-selector-sui";
+import { useCurrentWallet, useCurrentAccount } from "@mysten/dapp-kit";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME } from "../../config";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import TransactionModal from "@components/TransactionModal";
@@ -11,9 +11,10 @@ import Image from "next/image";
 const provider = new SuiClient({ url: GETTER_RPC });
 
 export default function MyPositions() {
-    const [walletAdapter, setWalletAdapter] = useState<NightlyConnectSuiAdapter | null>(null);
-    const [walletConnected, setWalletConnected] = useState(false);
-    const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const wallet = useCurrentWallet()?.currentWallet;
+    const account = useCurrentAccount();
+    const walletConnected = !!wallet && !!account;
+    const walletAddress = account?.address || null;
     const [lpTokens, setLpTokens] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -28,52 +29,6 @@ export default function MyPositions() {
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
     };
-
-    // ✅ Initialize Nightly Connect (Matches structure from AddLiquidity.tsx)
-    useEffect(() => {
-        const initWallet = async () => {
-            try {
-                const adapter = await NightlyConnectSuiAdapter.build({
-                    appMetadata: {
-                        name: "Sui Rewards Me",
-                        description: "Rewards DEX on Sui",
-                        icon: "https://your-app-logo-url.com/icon.png",
-                    },
-                });
-
-                setWalletAdapter(adapter);
-                await adapter.connect(); // 🔥 Ensure wallet is connected
-                const accounts = await adapter.getAccounts();
-
-                if (accounts.length > 0) {
-                    console.log("✅ Wallet Connected:", accounts[0]);
-                    setWalletConnected(true);
-                    setWalletAddress(accounts[0]);
-                } else {
-                    console.warn("⚠️ No accounts found.");
-                }
-
-                // ✅ Handle wallet connection events
-                adapter.on("connect", async (account) => {
-                    console.log("🔗 Wallet connected:", account);
-                    setWalletConnected(true);
-                    setWalletAddress(account);
-                });
-
-                // ✅ Handle wallet disconnection
-                adapter.on("disconnect", () => {
-                    console.log("🔌 Wallet disconnected");
-                    setWalletConnected(false);
-                    setWalletAddress(null);
-                });
-
-            } catch (error) {
-                console.error("❌ Failed to initialize Nightly Connect:", error);
-            }
-        };
-
-        initWallet();
-    }, []);
 
     useEffect(() => {
         if (isProcessing) {
@@ -106,7 +61,7 @@ export default function MyPositions() {
 
     // ✅ Fetch LP Tokens
     const fetchLPTokens = async () => {
-        if (!walletConnected || !walletAddress) {
+        if (!wallet || !walletAddress) {
             alert("⚠️ Please connect your wallet first.");
             return;
         }
@@ -252,7 +207,7 @@ export default function MyPositions() {
         setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true); // Open modal
         
-        if (!walletConnected || !walletAddress || !walletAdapter) {
+        if (!wallet || !walletAddress) {
             alert("⚠️ Please connect your wallet first.");
             return;
         }
@@ -268,8 +223,7 @@ export default function MyPositions() {
 
             setLoading(true);
 
-            const accounts = await walletAdapter.getAccounts();
-            const userAddress = accounts[0]?.address;
+            const userAddress = walletAddress;
 
             if (!userAddress) {
                 alert("⚠️ No accounts found. Please reconnect your wallet.");
@@ -330,11 +284,7 @@ export default function MyPositions() {
             // ✅ Sign Transaction
             addLog("✍️ Signing transaction...");
             console.log("✍️ Signing transaction...");
-            const signedTx = await walletAdapter.signTransactionBlock({
-                transactionBlock: txb,
-                account: userAddress,
-                chain: "sui:mainnet",
-            });
+            const signedTx = await wallet.signTransactionBlock({ transactionBlock: txb });
 
             addLog("✅ Transaction Signed!");
             console.log("✅ Transaction Signed!");

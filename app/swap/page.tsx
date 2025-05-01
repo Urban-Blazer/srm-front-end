@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useCurrentWallet, useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentWallet, useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../config";
@@ -41,6 +41,7 @@ export default function Swap() {
     const [priceImpact, setPriceImpact] = useState<number>(0);
     const [parsedSellAmount, setParsedSellAmount] = useState<number | null>(null);
     const [parsedBuyAmount, setParsedBuyAmount] = useState<number | null>(null);
+    const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
     const getImpactColor = (impact: number) =>
         impact >= 15 ? "text-red-600" : impact >= 5 ? "text-yellow-500" : "text-gray-700";
 
@@ -743,23 +744,27 @@ export default function Swap() {
                 ],
             });
 
-            // ✅ Sign Transaction
-            addLog("✍️ Signing transaction...");
-            console.log("✍️ Signing transaction...");
-            const signedTx = await wallet.signTransactionBlock({
-                transactionBlock: txb,
-            });
+            let executeResponse;
 
-            addLog("✅ Transaction Signed!");
-            console.log("✅ Transaction Signed:", signedTx);
-
-            // ✅ Submit Transaction
-            addLog("🚀 Submitting transaction...");
-            console.log("🚀 Submitting transaction...");
-            const executeResponse = await provider.executeTransactionBlock({
-                transactionBlock: signedTx.transactionBlockBytes, // Correct parameter
-                signature: signedTx.signature,
-                options: { showEffects: true, showEvents: true },
+            await new Promise<void>((resolve, reject) => {
+                signAndExecuteTransaction(
+                    {
+                        transaction: txb.serialize(),
+                        chain: 'sui:mainnet', // Or 'sui:devnet' depending on env
+                    },
+                    {
+                        onSuccess: (result) => {
+                            executeResponse = result;
+                            resolve();
+                        },
+                        onError: (error) => {
+                            console.error("❌ Claim transaction failed:", error);
+                            addLog(`❌ Transaction failed: ${error.message}`);
+                            alert("⚠️ Claim transaction failed. See console for details.");
+                            reject(error);
+                        },
+                    }
+                );
             });
 
             addLog("✅ Transaction Executed!");

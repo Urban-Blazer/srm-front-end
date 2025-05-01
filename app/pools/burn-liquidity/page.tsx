@@ -6,7 +6,7 @@ import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME } from "../../config";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import TransactionModal from "@components/TransactionModal";
 import Image from "next/image";
-import { useCurrentAccount, useCurrentWallet } from "@mysten/dapp-kit";
+import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -25,6 +25,7 @@ export default function MyPositions() {
     const account = useCurrentAccount();
     const wallet = useCurrentWallet()?.currentWallet;
     const walletAddress = account?.address;
+    const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
@@ -254,23 +255,27 @@ export default function MyPositions() {
                 ],
             });
 
-            // ✅ Sign transaction
-            addLog("✍️ Signing transaction...");
-            console.log("✍️ Signing transaction...");
-            const signedTx = await wallet.signTransactionBlock({
-                transactionBlock: txb,
-            });
+            let executeResponse;
 
-            addLog("✅ Transaction Signed!");
-            console.log("✅ Transaction Signed!");
-
-            // ✅ Submit transaction
-            addLog("🚀 Submitting transaction...");
-            console.log("🚀 Submitting transaction...");
-            const executeResponse = await provider.executeTransactionBlock({
-                transactionBlock: signedTx.transactionBlockBytes,
-                signature: signedTx.signature,
-                options: { showEffects: true, showEvents: true },
+            await new Promise<void>((resolve, reject) => {
+                signAndExecuteTransaction(
+                    {
+                        transaction: txb.serialize(),
+                        chain: 'sui:mainnet',
+                    },
+                    {
+                        onSuccess: (result) => {
+                            executeResponse = result;
+                            resolve();
+                        },
+                        onError: (error) => {
+                            console.error("❌ Burn transaction failed:", error);
+                            addLog(`❌ Transaction failed: ${error.message}`);
+                            alert("⚠️ Transaction failed. See console for details.");
+                            reject(error);
+                        },
+                    }
+                );
             });
 
             addLog("✅ Transaction Submitted!");

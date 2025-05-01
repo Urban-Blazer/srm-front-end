@@ -5,7 +5,7 @@ import { TransactionBlock } from "@mysten/sui.js/transactions"; // for building 
 import { PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../config";
 import TransactionModal from "@components/TransactionModal";
 import { predefinedCoins } from "../data/coins";
-import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
+import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 
 
 interface SwapInterfaceProps {
@@ -74,6 +74,7 @@ export default function SwapInterface({
     const wallet = useCurrentWallet()?.currentWallet;
     const walletAddress = account?.address;
     const [priceImpact, setPriceImpact] = useState<number>(0);
+    const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
     const getImpactColor = (impact: number) =>
         impact >= 15 ? "text-red-500" : impact >= 5 ? "text-yellow-400" : "text-slate-300";
 
@@ -396,16 +397,28 @@ export default function SwapInterface({
                 ],
             });
 
-            addLog("✍️ Signing transaction...");
-            const signedTx = await wallet?.signTransactionBlock({
-                transactionBlock: txb,
-            });
+            addLog("🚀 Signing and submitting transaction...");
+            let executeResponse;
 
-            addLog("🚀 Submitting transaction...");
-            const executeResponse = await provider.executeTransactionBlock({
-                transactionBlock: signedTx.transactionBlockBytes,
-                signature: signedTx.signature,
-                options: { showEffects: true, showEvents: true },
+            await new Promise<void>((resolve, reject) => {
+                signAndExecuteTransaction(
+                    {
+                        transaction: txb.serialize(), // ✅ Required format
+                        chain: 'sui:mainnet', // or 'sui:devnet' if needed
+                    },
+                    {
+                        onSuccess: (result) => {
+                            executeResponse = result;
+                            resolve();
+                        },
+                        onError: (error) => {
+                            console.error("❌ Swap failed during execution:", error);
+                            addLog(`❌ Swap failed: ${error.message}`);
+                            alert("⚠️ Swap failed. See console for details.");
+                            reject(error);
+                        },
+                    }
+                );
             });
 
             const txnDigest = executeResponse.digest;

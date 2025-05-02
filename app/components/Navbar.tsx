@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Image from 'next/image';
-import MergeCoinsModal from "./MergeCoinsModal";
 import { ConnectButton } from '@mysten/dapp-kit';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 
@@ -118,11 +117,6 @@ export default function NavBar() {
             </a>
           </div>
         ])}
-      </div>
-
-      <div className="ml-4 mb-2 flex items-center">
-        {/* ✅ Merge Coins Modal */}
-        {walletAddress && <MergeCoinsModal />}
       </div>
 
       {/* Right Section: Mobile Menu Button (Only Visible on Mobile) */}

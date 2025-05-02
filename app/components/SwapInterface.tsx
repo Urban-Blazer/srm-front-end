@@ -286,13 +286,40 @@ export default function SwapInterface({
 
             addLog("🔍 Fetching owned coins...");
 
-            const { data: ownedObjects } = await provider.getOwnedObjects({
+          /*  const { data: ownedObjects } = await provider.getOwnedObjects({
                 owner: walletAddress,
                 filter: { StructType: "0x2::coin::Coin" },
                 options: { showType: true, showContent: true },
+            }); */
+
+            const { data: sellTokenCoins } = await provider.getCoins({
+                owner: walletAddress,
+                coinType: sellToken.typeName,
             });
 
-            const coins = ownedObjects
+            const sellTokenBalance = await provider.getBalance({
+                owner: walletAddress,
+                coinType: sellToken.typeName,
+            });
+
+            console.log({ sellTokenBalance, sellTokenCoins })
+
+            if (sellTokenCoins.length === 0) {
+                alert("⚠️ No single coin object has enough balance to cover the sell amount.");
+                console.error("❌ No sufficient Coin Object found:", { sellTokenCoins });
+                return;
+            }
+
+            const needsGasBuffer = sellToken.typeName === "0x2::sui::SUI";
+            const requiredBalance = needsGasBuffer ? sellAmountU64 + BigInt(900_000) : sellAmountU64;
+
+            if (BigInt(sellTokenBalance.totalBalance) < requiredBalance) {
+                alert("⚠️ No enough balance to cover the sell amount.");
+                console.error("❌ No enough balance to cover the sell amount:", { sellTokenBalance });
+                return;
+            }
+
+         /*   const coins = ownedObjects
                 .map((obj) => {
                     const rawType = obj.data?.type;
                     if (!rawType || !rawType.startsWith("0x2::coin::Coin<")) return null;
@@ -308,7 +335,10 @@ export default function SwapInterface({
                 })
                 .filter(Boolean);
 
-            const matchingCoin = coins.find(
+            */
+            console.log("🔍 Extracted Coins with Balance:", sellTokenCoins);
+
+          /*  const matchingCoin = coins.find(
                 (c) => c?.type === sellToken.typeName && c.balance >= sellAmountU64
             );
 
@@ -319,6 +349,8 @@ export default function SwapInterface({
             }
 
             addLog(`✅ Coin selected: ${matchingCoin.objectId}`);
+
+            */
 
             // ✅ Determine if pool should be activated
             const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
@@ -347,11 +379,54 @@ export default function SwapInterface({
 
             const SUI_TYPE = "0x2::sui::SUI";
             const isSellingSui = sellToken.typeName === SUI_TYPE;
-            const suiCoins = coins.filter((c) => c.type === SUI_TYPE);
-            const onlyOneSui = suiCoins.length === 1;
-            const singleSuiCoin = suiCoins[0];
+            //const suiCoins = coins.filter((c) => c.type === SUI_TYPE);
+            //const onlyOneSui = suiCoins.length === 1;
+            //const singleSuiCoin = suiCoins[0];
+            
+            if (isSellingSui) {
 
-            if (isSellingSui && onlyOneSui) {
+                const [splitSui] = txb.splitCoins(txb.gas, [txb.pure(sellAmountU64)]);
+                usedCoin = splitSui;
+
+                addLog("⚡️ Using txb.gas to split sell amount (SUI sell).");
+
+            } else {
+                let accumulated = 0;
+                const coinsToUse: typeof sellTokenCoins = [];
+                for (const coin of sellTokenCoins) {
+                    accumulated += Number(coin.balance);
+                    coinsToUse.push(coin);
+                    if (accumulated >= sellAmountU64) break;
+                }
+
+                if (coinsToUse.length === 0) {
+                    console.error(`No $${coin} coins found in your wallet`);
+                    ctx.reply(`No $${coin} coins found in your wallet`);
+                    return;
+                }
+
+                if (coinsToUse.length === 1) {
+                    usedCoin = txb.splitCoins(
+                        txb.object(coinsToUse[0].coinObjectId),
+                        [txb.pure.u64(sellAmountU64)]
+                    );
+                } else {
+                    // Si se requieren varias monedas, se hace merge de ellas
+                    const firstCoin = coinsToUse[0];
+                    const remainingCoins = coinsToUse.slice(1).map(coin => txb.object(coin.coinObjectId));
+
+                    txb.mergeCoins(txb.object(firstCoin.coinObjectId), remainingCoins);
+                    const [splitSui] = txb.splitCoins(
+                        txb.object(firstCoin.coinObjectId),
+                        [txb.pure.u64(sellAmountU64)]
+                    );
+
+                    usedCoin = splitSui;
+                }
+
+            }
+
+      /*      if (isSellingSui && onlyOneSui) {
                 if (singleSuiCoin.balance > sellAmountU64 + BigInt(250_000_000)) {
                     txb.setGasPayment([{
                         objectId: singleSuiCoin.objectId,
@@ -375,15 +450,15 @@ export default function SwapInterface({
                 const [splitCoin] = txb.splitCoins(coinObject, [txb.pure.u64(sellAmountU64)]);
                 usedCoin = splitCoin;
             }
-
-            txb.setGasBudget(250_000_000);
+*/
+            txb.setGasBudget(50_000_000);
 
             const swapFunction = isBuy
                 ? `${PACKAGE_ID}::${DEX_MODULE_NAME}::swap_a_for_b_with_coins_and_transfer_to_sender`
                 : `${PACKAGE_ID}::${DEX_MODULE_NAME}::swap_b_for_a_with_coins_and_transfer_to_sender`;
 
             const typeArguments = [coinA.typeName, coinB.typeName];
-
+            console.log({ usedCoin })
             txb.moveCall({
                 target: swapFunction,
                 typeArguments,

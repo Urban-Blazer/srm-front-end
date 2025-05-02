@@ -362,44 +362,11 @@ export default function AddLiquidity() {
 
             // ✅ Match a single coin object for CoinA with enough balance
             const expectedCoinA = state.dropdownCoinMetadata.typeName;
-            const matchingCoinA = coins.find(
-                (c) => c.type === expectedCoinA && c.balance >= depositA_U64
-            );
 
             // ✅ Match a single coin object for CoinB with enough balance
             const expectedCoinB = state.customCoinMetadata.typeName;
-            const matchingCoinB = coins.find(
-                (c) => c.type === expectedCoinB && c.balance >= depositB_U64
-            );
-
-            if (!matchingCoinA || !matchingCoinB) {
-                alert("⚠️ No single coin object has enough balance for the deposit.");
-                console.error("❌ Insufficient Coin Objects:", {
-                    expectedCoinA,
-                    expectedCoinB,
-                    depositA_U64,
-                    depositB_U64,
-                    coins
-                });
-                dispatch({ type: "SET_LOADING", payload: false });
-                return;
-            }
-
-            console.log("✅ Selected Coin Objects:", {
-                coinA: matchingCoinA,
-                coinB: matchingCoinB
-            });
 
             console.log("💰 Deposit Amounts (in MIST):", depositA_U64.toString(), depositB_U64.toString());
-
-            // ✅ Ensure User Has Enough Balance
-            if (matchingCoinA.balance < depositA_U64 || matchingCoinB.balance < depositB_U64) {
-                alert("⚠️ Insufficient token balance in wallet.");
-                dispatch({ type: "SET_LOADING", payload: false });
-                return;
-            }
-
-            addLog("✅ Balance Check Passed!");
 
             // ✅ Get user-selected slippage
             const userSlippageTolerance = state.slippageTolerance || 0.5;
@@ -411,50 +378,67 @@ export default function AddLiquidity() {
 
             const txb = new TransactionBlock();
 
-            const suiType = "0x2::sui::SUI";
-            const isCoinADepositSui = expectedCoinA === suiType;
-            const isCoinBDepositSui = expectedCoinB === suiType;
-            const onlyOneSui = coins.filter(c => c.type === suiType).length === 1;
-            const singleSuiCoin = coins.find(c => c.type === suiType);
-            const GAS_BUDGET = 250_000_000;
+            const GAS_BUDGET = 150_000_000;
 
             let coinAInput, coinBInput;
 
-            if (onlyOneSui && (isCoinADepositSui || isCoinBDepositSui)) {
-                const suiDepositAmount = isCoinADepositSui ? depositA_U64 : depositB_U64;
-
-                if (singleSuiCoin.balance > suiDepositAmount + BigInt(250_000_000)) {
-                    txb.setGasPayment([
-                        {
-                            objectId: singleSuiCoin.objectId,
-                            digest: singleSuiCoin.digest,
-                            version: singleSuiCoin.version,
-                        }
-                    ]);
-                    txb.setGasOwner(userAddress);
-
-                    const [splitSui] = txb.splitCoins(txb.gas, [txb.pure(suiDepositAmount)]);
-
-                    if (isCoinADepositSui) {
-                        coinAInput = splitSui;
-                        coinBInput = txb.object(matchingCoinB.objectId);
-                    } else {
-                        coinAInput = txb.object(matchingCoinA.objectId);
-                        coinBInput = splitSui;
-                    }
-
-                    console.log("🧠 Used txb.gas for split SUI.");
-                } else {
-                    alert("⚠️ Not enough SUI to cover both gas and deposit.");
-                    dispatch({ type: "SET_LOADING", payload: false });
-                    return;
+            const getMergedCoinInput = (
+                txb: TransactionBlock,
+                coins: any[],
+                coinType: string,
+                amount: bigint
+            ) => {
+                const matchingCoins = coins.filter((c) => c.type === coinType);
+                if (matchingCoins.length === 0) {
+                    throw new Error(`No ${coinType} coins found in wallet`);
                 }
+
+                let accumulated = 0n;
+                const coinsToUse = [];
+                for (const coin of matchingCoins) {
+                    accumulated += BigInt(coin.balance);
+                    coinsToUse.push(coin);
+                    if (accumulated >= amount) break;
+                }
+
+                if (coinsToUse.length === 0) {
+                    throw new Error(`Not enough ${coinType} balance`);
+                }
+
+                if (coinsToUse.length === 1) {
+                    return txb.splitCoins(
+                        txb.object(coinsToUse[0].objectId),
+                        [txb.pure.u64(amount)]
+                    );
+                } else {
+                    const baseCoin = coinsToUse[0];
+                    const rest = coinsToUse.slice(1).map((c) => txb.object(c.objectId));
+                    txb.mergeCoins(txb.object(baseCoin.objectId), rest);
+                    const [splitCoin] = txb.splitCoins(
+                        txb.object(baseCoin.objectId),
+                        [txb.pure.u64(amount)]
+                    );
+                    return splitCoin;
+                }
+            };
+
+            const suiType = "0x2::sui::SUI";
+            const isCoinADepositSui = expectedCoinA === suiType;
+            const isCoinBDepositSui = expectedCoinB === suiType;
+
+            if (isCoinADepositSui) {
+                coinAInput = txb.splitCoins(txb.gas, [txb.pure.u64(depositA_U64)]);
             } else {
-                coinAInput = txb.object(matchingCoinA.objectId);
-                coinBInput = txb.object(matchingCoinB.objectId);
-                txb.setGasBudget(GAS_BUDGET);
+                coinAInput = await getMergedCoinInput(txb, coins, expectedCoinA, depositA_U64);
             }
 
+            if (isCoinBDepositSui) {
+                coinBInput = txb.splitCoins(txb.gas, [txb.pure.u64(depositB_U64)]);
+            } else {
+                coinBInput = await getMergedCoinInput(txb, coins, expectedCoinB, depositB_U64);
+            }
+
+            txb.setGasBudget(GAS_BUDGET);
             txb.moveCall({
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::add_liquidity_with_coins_and_transfer_to_sender`,
                 typeArguments: [expectedCoinA, expectedCoinB],

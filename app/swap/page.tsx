@@ -616,16 +616,6 @@ export default function Swap() {
             }
 
             // 🔍 Fetch owned coin objects (matching the sell token)
-            //const { data: ownedObjects } = await provider.getOwnedObjects({
-            //    owner: userAddress,
-            //    filter: { StructType: "0x2::coin::Coin" },
-            //    options: { showType: true, showContent: true },
-            //});
-
-            //addLog("🔍 Owned objects fetched.");
-            //console.log("🔍 Owned objects:", ownedObjects);
-
-            // 🔍 Fetch owned coin objects (matching the sell token)
             const { data: sellTokenCoins } = await provider.getCoins({
                 owner: userAddress,
                 coinType: sellToken.typeName,
@@ -648,45 +638,13 @@ export default function Swap() {
             const requiredBalance = needsGasBuffer ? sellAmountU64 + BigInt(900_000) : sellAmountU64;
 
             if (BigInt(sellTokenBalance.totalBalance) < requiredBalance) {
-                alert("⚠️ No enough balance to cover the sell amount.");
-                console.error("❌ No enough balance to cover the sell amount:", { sellTokenBalance });
+                alert("⚠️ Not enough balance to cover the sell amount.");
+                console.error("❌ Not enough balance to cover the sell amount:", { sellTokenBalance });
                 return;
             }
 
-            // ✅ Extract coin data & filter based on type
-            /*const coins = ownedObjects
-                .map((obj) => {
-                    const rawType = obj.data?.type;
-                    if (!rawType || !rawType.startsWith("0x2::coin::Coin<")) return null;
-
-                    return {
-                        objectId: obj.data?.objectId,
-                        type: rawType.replace("0x2::coin::Coin<", "").replace(">", "").trim(),
-                        balance: obj.data?.content?.fields?.balance
-                            ? BigInt(obj.data?.content?.fields?.balance)
-                            : BigInt(0),
-                        digest: obj.data?.digest,
-                        version: obj.data?.version,
-                    };
-                })
-                .filter(Boolean); // Remove null values
-            */
             console.log("🔍 Extracted Coins with Balance:", sellTokenCoins);
 
-          /*  // ✅ Find a coin of the correct type with enough balance
-            const matchingCoin = coins.find(
-                (c) => c.type === sellToken.typeName && c.balance >= sellAmountU64
-            );
-
-            if (!matchingCoin) {
-                alert("⚠️ No single coin object has enough balance to cover the sell amount.");
-                console.error("❌ No sufficient Coin Object found:", { sellAmountU64, coins });
-                return;
-            }
-
-            addLog(`✅ Using Coin ID: ${matchingCoin.objectId}`);
-            console.log(`✅ Using Coin ID: ${matchingCoin.objectId}, Balance: ${matchingCoin.balance.toString()}`);
-*/
             // ✅ Validate reward balance before deciding to update isActive
             const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
 
@@ -717,8 +675,6 @@ export default function Swap() {
 
             const suiType = "0x2::sui::SUI";
             const isSellingSui = sellToken.typeName === suiType;
-            //const onlyOneSui = coins.filter((c) => c.type === suiType).length === 1;
-            //const singleSuiCoin = coins.find((c) => c.type === suiType);
 
             // ✅ Build Transaction Block
             const txb = new TransactionBlock();
@@ -767,32 +723,6 @@ export default function Swap() {
                 }
 
             }
-
-            // if (isSellingSui && onlyOneSui) {
-            //     if (singleSuiCoin.balance > sellAmountU64 + BigInt(250_000_000)) {
-            //         // txb.setGasPayment([
-            //         //     {
-            //         //         objectId: singleSuiCoin.objectId,
-            //         //         digest: singleSuiCoin.digest,
-            //         //         version: singleSuiCoin.version,
-            //         //     },
-            //         // ]);
-            //         // txb.setGasOwner(userAddress);
-
-            //         const [splitSui] = txb.splitCoins(txb.gas, [txb.pure(sellAmountU64)]);
-            //         usedCoin = splitSui;
-
-            //         addLog("⚡️ Using txb.gas to split sell amount (SUI sell).");
-            //     } else {
-            //         alert("⚠️ Not enough SUI to cover gas + sell amount.");
-            //         setIsProcessing(false);
-            //         return;
-            //     }
-            // } else {
-            //     const coinObject = txb.object(matchingCoin.objectId);
-            //     const [splitCoin] = txb.splitCoins(coinObject, [txb.pure.u64(sellAmountU64)]);
-            //     usedCoin = splitCoin;
-            // }
 
             txb.setGasBudget(50_000_000);
 

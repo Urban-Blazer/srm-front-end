@@ -286,12 +286,6 @@ export default function SwapInterface({
 
             addLog("🔍 Fetching owned coins...");
 
-          /*  const { data: ownedObjects } = await provider.getOwnedObjects({
-                owner: walletAddress,
-                filter: { StructType: "0x2::coin::Coin" },
-                options: { showType: true, showContent: true },
-            }); */
-
             const { data: sellTokenCoins } = await provider.getCoins({
                 owner: walletAddress,
                 coinType: sellToken.typeName,
@@ -319,38 +313,7 @@ export default function SwapInterface({
                 return;
             }
 
-         /*   const coins = ownedObjects
-                .map((obj) => {
-                    const rawType = obj.data?.type;
-                    if (!rawType || !rawType.startsWith("0x2::coin::Coin<")) return null;
-                    return {
-                        objectId: obj.data?.objectId,
-                        type: rawType.replace("0x2::coin::Coin<", "").replace(">", "").trim(),
-                        balance: obj.data?.content?.fields?.balance
-                            ? BigInt(obj.data?.content?.fields?.balance)
-                            : BigInt(0),
-                        digest: obj.data?.digest,
-                        version: obj.data?.version,
-                    };
-                })
-                .filter(Boolean);
-
-            */
             console.log("🔍 Extracted Coins with Balance:", sellTokenCoins);
-
-          /*  const matchingCoin = coins.find(
-                (c) => c?.type === sellToken.typeName && c.balance >= sellAmountU64
-            );
-
-            if (!matchingCoin) {
-                alert("No coin with enough balance to complete the swap.");
-                setIsProcessing(false);
-                return;
-            }
-
-            addLog(`✅ Coin selected: ${matchingCoin.objectId}`);
-
-            */
 
             // ✅ Determine if pool should be activated
             const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
@@ -379,9 +342,6 @@ export default function SwapInterface({
 
             const SUI_TYPE = "0x2::sui::SUI";
             const isSellingSui = sellToken.typeName === SUI_TYPE;
-            //const suiCoins = coins.filter((c) => c.type === SUI_TYPE);
-            //const onlyOneSui = suiCoins.length === 1;
-            //const singleSuiCoin = suiCoins[0];
             
             if (isSellingSui) {
 
@@ -426,31 +386,6 @@ export default function SwapInterface({
 
             }
 
-      /*      if (isSellingSui && onlyOneSui) {
-                if (singleSuiCoin.balance > sellAmountU64 + BigInt(250_000_000)) {
-                    txb.setGasPayment([{
-                        objectId: singleSuiCoin.objectId,
-                        digest: singleSuiCoin.digest,
-                        version: singleSuiCoin.version,
-                    }]);
-                    txb.setGasOwner(walletAddress);
-
-                    const [splitSui] = txb.splitCoins(txb.gas, [txb.pure(sellAmountU64)]);
-                    usedCoin = splitSui;
-
-                    addLog("⚡️ Using txb.gas to split sell amount (SUI sell).");
-                } else {
-                    alert("⚠️ Not enough SUI to cover gas + sell amount.");
-                    setIsProcessing(false);
-                    setIsModalOpen(false);
-                    return;
-                }
-            } else {
-                const coinObject = txb.object(matchingCoin.objectId);
-                const [splitCoin] = txb.splitCoins(coinObject, [txb.pure.u64(sellAmountU64)]);
-                usedCoin = splitCoin;
-            }
-*/
             txb.setGasBudget(50_000_000);
 
             const swapFunction = isBuy
@@ -478,8 +413,8 @@ export default function SwapInterface({
             await new Promise<void>((resolve, reject) => {
                 signAndExecuteTransaction(
                     {
-                        transaction: txb.serialize(), // ✅ Required format
-                        chain: 'sui:mainnet', // or 'sui:devnet' if needed
+                        transaction: txb.serialize(),
+                        chain: 'sui:mainnet',
                     },
                     {
                         onSuccess: (result) => {

@@ -4,45 +4,8 @@ import { TransactionBlock } from "@mysten/sui.js/transactions"; // for building 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CONFIG_ID, DEX_MODULE_NAME, PACKAGE_ID } from "../config";
 import { predefinedCoins } from "../data/coins";
+import { PoolStats, SwapInterfaceProps } from "@/app/types";
 
-
-interface SwapInterfaceProps {
-    poolId: string | null;
-    coinA: CoinMeta | null;
-    coinB: CoinMeta | null;
-    poolStats: PoolStats | null;
-}
-
-interface CoinMeta {
-    decimals: number;
-    image?: string;
-    symbol: string;
-    typeName: string;
-}
-
-interface PoolStats {
-    balance_a: number;
-    balance_b: number;
-    burn_fee: number;
-    creator_royalty_fee: number;
-    creator_royalty_wallet: string;
-    locked_lp_balance: number;
-    lp_builder_fee: number;
-    reward_balance_a: number;
-    rewards_fee: number;
-}
-
-const defaultPoolStats: PoolStats = {
-    balance_a: 0,
-    balance_b: 0,
-    burn_fee: 0,
-    creator_royalty_fee: 0,
-    creator_royalty_wallet: "",
-    locked_lp_balance: 0,
-    lp_builder_fee: 0,
-    reward_balance_a: 0,
-    rewards_fee: 0,
-};
 
 const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
 const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC

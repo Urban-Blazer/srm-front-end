@@ -75,12 +75,16 @@ export const rangeMap: Record<string, string> = {
 export interface CoinMeta {
     decimals: number;
     image?: string;
+    typeName: string;
+    name: string;
+    symbol: string;
 }
 
 export interface PairStatsProps {
     poolId: string | null;
     coinA: CoinMeta | null;
     coinB: CoinMeta | null;
+    poolStats?: any
 }
 
 
@@ -96,4 +100,25 @@ export interface PoolSearchResult {
     poolId: string;
     coinA: Token;
     coinB: Token;
+}
+
+
+
+export interface SwapInterfaceProps {
+    poolId: string | null;
+    coinA: CoinMeta | null;
+    coinB: CoinMeta | null;
+    poolStats: PoolStats | null;
+}
+
+export interface PoolStats {
+    balance_a: number;
+    balance_b: number;
+    burn_fee: number;
+    creator_royalty_fee: number;
+    creator_royalty_wallet: string;
+    locked_lp_balance: number;
+    lp_builder_fee: number;
+    reward_balance_a: number;
+    rewards_fee: number;
 }

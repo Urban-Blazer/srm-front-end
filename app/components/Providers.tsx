@@ -4,7 +4,8 @@
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
-import { DEFAULT_NETWORK, networkConfig } from '../config';
+import { DEFAULT_NETWORK } from '../config';
+import { networkConfig } from '../networkConfig';
 
 const queryClient = new QueryClient();
 

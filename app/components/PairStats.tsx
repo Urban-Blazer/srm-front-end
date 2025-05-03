@@ -1,15 +1,35 @@
 "use client";
-import { memo, useState } from "react";
-import usePairStats from "../hooks/usePairStats";
-import { useAtom } from "jotai";
 import { selectedRangeAtom } from "@data/store";
+import { useAtom } from "jotai";
+import usePairStats from "../hooks/usePairStats";
 import { PairStatsProps, rangeMap } from "../types";
+import { SRM_COIN_SUPPLY, SRM_COINTYPE } from "../config";
+import useQuote from "../hooks/useQuote";
+import { MIST_PER_SUI } from "@mysten/sui/utils";
+import useCoinPrice from "../hooks/useCoinPrice";
 
-
-export default  function PairStats({ poolId, coinA, coinB }: PairStatsProps) {
+export default  function PairStats({ poolId, coinA, coinB, poolStats }: PairStatsProps) {
     const [selectedRange, setSelectedRange] = useAtom(selectedRangeAtom);
+    const { data: buy100SuiQuote } = useQuote(new URLSearchParams({
+        poolId: poolId!,
+        amount: (100 * Number(MIST_PER_SUI)).toString(),
+        isSell: 'true',
+        isAtoB: 'true',
+        outputDecimals: coinB?.decimals.toString() ?? "9",
+        balanceA: poolStats?.balance_a.toString(),
+        balanceB: poolStats?.balance_b.toString(),
+        lpBuilderFee: poolStats?.lp_builder_fee.toString(),
+        burnFee: poolStats?.burn_fee.toString(),
+        creatorRoyaltyFee: poolStats?.creator_royalty_fee.toString(),
+        rewardsFee: poolStats?.rewards_fee.toString(),
+    }));
 
+    
     const {data: stats, isLoading} = usePairStats(poolId!, rangeMap[selectedRange]);
+    const {data: statsLifetime, isLoading: isStatsLifetimeLoading} = usePairStats(poolId!, "lifetime");
+    
+    const { data: coinAPriceUSD } = useCoinPrice("SUI");
+    console.log({statsLifetime, buy100SuiQuote, coinAPriceUSD})
 
     const coinADecimals = coinA?.decimals ?? 0;
     const coinBDecimals = coinB?.decimals ?? 0;
@@ -19,7 +39,7 @@ export default  function PairStats({ poolId, coinA, coinB }: PairStatsProps) {
             <div className="flex justify-between items-center mb-4">
                 <div className="flex">
                     <h2 className="text-lg font-semibold text-white">Pair Stats</h2>
-                    {isLoading && (
+                    {(isLoading || isStatsLifetimeLoading) && (
                         <svg className="w-6 h-6 ml-3 -ml-1 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -48,6 +68,21 @@ export default  function PairStats({ poolId, coinA, coinB }: PairStatsProps) {
                     <Stat label="Burned Coins" value={stats?.burnedCoins} decimals={coinBDecimals} imageUrl={coinB?.image} />
                     <Stat label="Creator Royalty" value={stats?.creatorRoyalty} decimals={coinADecimals} imageUrl={coinA?.image} />
                     <Stat label="Rewards Distributed" value={stats?.rewardsDistributed} decimals={coinADecimals} imageUrl={coinA?.image} />
+                    {coinB?.typeName === SRM_COINTYPE && statsLifetime && (
+                        <Stat label="Circulating Supply" value={SRM_COIN_SUPPLY - (statsLifetime?.burnedCoins ?? 0)} decimals={coinBDecimals} imageUrl={coinB?.image} />
+                    )}
+                    {
+                        coinB?.typeName === SRM_COINTYPE && 
+                        buy100SuiQuote?.buyAmount && 
+                        statsLifetime && (
+                            <Stat label="Market Cap (SUI)" value={(100 / +buy100SuiQuote?.buyAmount) * (SRM_COIN_SUPPLY - (statsLifetime?.burnedCoins ?? 0))} decimals={coinBDecimals} imageUrl={coinA?.image} />
+                    )}
+                    {
+                        coinB?.typeName === SRM_COINTYPE && 
+                        buy100SuiQuote?.buyAmount && 
+                        coinAPriceUSD && statsLifetime && (
+                            <Stat label="Market Cap ($USDC)" value={((100 / +buy100SuiQuote?.buyAmount)* coinAPriceUSD) * (SRM_COIN_SUPPLY - (statsLifetime?.burnedCoins ?? 0))} decimals={coinBDecimals} />
+                    )}
                 </div>
             
 

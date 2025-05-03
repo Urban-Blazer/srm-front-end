@@ -43,7 +43,7 @@ export default function Swap() {
                         <SearchBar onSelectPair={handleSearchPairSelect} />
                     </div>
                     <div className="md:col-span-2">
-                        <PairStats poolId={searchPairPoolId} coinA={searchPairCoinA} coinB={searchPairCoinB} />
+                        <PairStats poolId={searchPairPoolId} coinA={searchPairCoinA} coinB={searchPairCoinB} poolStats={poolStats} />
                     </div>
                 </div>
             </div>

@@ -59,7 +59,7 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
         };
 
         ws.onclose = () => {
-            console.warn('🔌 WebSocket closed (RecentTransactions), reconnecting...');
+            console.warn('🔌 WebSocket closed (Chart), reconnecting...');
             setTimeout(connectWebSocket, 5000); // Intenta reconectar después de 5 segundos
         };
     };

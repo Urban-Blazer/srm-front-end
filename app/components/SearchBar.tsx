@@ -1,19 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-
-interface Token {
-    typeName: string;
-    decimals: number;
-    image: string;
-    name: string;
-    symbol: string;
-}
-
-interface PoolSearchResult {
-    poolId: string;
-    coinA: Token;
-    coinB: Token;
-}
+import { PoolSearchResult } from "@/app/types";
+import { selectedPairAtom } from "@data/store";
+import { useAtom } from "jotai";
 
 interface SearchBarProps {
     onSelectPair: (data: PoolSearchResult) => void;
@@ -22,7 +11,7 @@ interface SearchBarProps {
 export default function SearchBar({ onSelectPair }: SearchBarProps) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<PoolSearchResult[]>([]);
-    const [selectedPair, setSelectedPair] = useState<PoolSearchResult | null>(null);
+    const [selectedPair, setSelectedPair] = useAtom(selectedPairAtom);
     const [loading, setLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -64,6 +53,10 @@ export default function SearchBar({ onSelectPair }: SearchBarProps) {
         setResults([]);
     };
 
+    useEffect(()=>{
+        selectedPair && handleSelect(selectedPair);
+    },[])
+
     return (
         <div className="relative w-full max-w-lg">
             {selectedPair ? (
@@ -76,9 +69,9 @@ export default function SearchBar({ onSelectPair }: SearchBarProps) {
                     <span className="text-white text-sm">
                         {selectedPair.coinA.symbol}/{selectedPair.coinB.symbol}
                     </span>
-                    <button onClick={handleClear} className="bg-gray-900 ml-auto text-white border border-white hover:text-red-400 text-xs">
+                    {/* temporarily disabled, not in use <button onClick={handleClear} className="bg-gray-900 ml-auto text-white border border-white hover:text-red-400 text-xs">
                         Clear
-                    </button>
+                    </button> */}
                 </div>
             ) : (
                 <input

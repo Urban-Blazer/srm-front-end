@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      animation: {
+        spin: 'spin 1s linear infinite',
+      },
       colors: {
         deepTeal: "#0D3B3E",
         emeraldGreen: "#21B573",

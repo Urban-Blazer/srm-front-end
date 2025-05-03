@@ -1,37 +1,31 @@
-import { useEffect, useState, useRef } from 'react';
+import { RecentSwap, RecentTransactionsProps } from '@/app/types';
+import { useEffect, useRef, useState } from 'react';
+import { usePoolStats } from '../hooks/usePoolStats';
+import useRecentSwaps from '../hooks/useRecentSwaps';
 
-interface Coin {
-    typeName: string;
-    decimals: number;
-    image?: string;
-    name?: string;
-    symbol?: string;
-}
-
-interface RecentSwap {
-    wallet: string;
-    tokenin: any;
-    amountin: number;
-    tokenout: any;
-    amountout: number;
-    is_buy: boolean;
-    reserve_a: number;
-    reserve_b: number;
-    timestamp: string;
-}
-
-interface RecentTransactionsProps {
-    poolId: string;
-    websocketUrl: string;
-    coinA: Coin;
-    coinB: Coin;
-}
 
 export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB }: RecentTransactionsProps) {
-    const [recentSwaps, setRecentSwaps] = useState<RecentSwap[]>([]);
     const wsRef = useRef<WebSocket | null>(null);
     const [coinAPriceUSD, setCoinAPriceUSD] = useState<number>(1);
     const [currentTime, setCurrentTime] = useState<number>(Date.now());
+    const { data: recentSwaps, refetch: refetchRecentSwaps } = useRecentSwaps(poolId, 60 * 1000);
+    const { refetch: refetchPoolStats } = usePoolStats(poolId, 60 * 1000);
+
+    const handleRecentSwapWS = (event: MessageEvent<any>) => {
+        try {
+            const data = JSON.parse(event.data);
+            console.log('handleRecentSwapWS WS Event:', data.type, data);
+
+            if (data.type === 'recentSwap' && data.poolId === poolId) {
+                refetchPoolStats();
+                refetchRecentSwaps();
+                // refetchPairStats();
+            }
+        } catch (err) {
+            console.error('❌ Error parsing WebSocket message:', err);
+        }
+
+    }
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -41,23 +35,10 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
         return () => clearInterval(interval); // cleanup on unmount
     }, []);
 
-    useEffect(() => {
+    // WebSocket reconexión
+    const connectWebSocket = () => {
         if (!poolId) return;
 
-        // 1. Fetch initial recent swaps
-        const fetchRecentSwaps = async () => {
-            try {
-                const res = await fetch(`/api/recent-transactions?poolId=${poolId}`);
-                const data: RecentSwap[] = await res.json();
-                setRecentSwaps(data.slice(0, 20));
-            } catch (err) {
-                console.error('❌ Failed to fetch recent swaps:', err);
-            }
-        };
-
-        fetchRecentSwaps(); // 🛠️ Call immediately
-
-        // 2. Setup WebSocket for live updates
         const ws = new WebSocket(websocketUrl);
         wsRef.current = ws;
 
@@ -65,32 +46,25 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
             console.log('✅ Connected to WebSocket for RecentTransactions');
         };
 
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-
-                if (data.type === 'recentSwap' && data.poolId === poolId) {
-                    setRecentSwaps((prev) => {
-                        const combined = [...data.swaps, ...prev];
-                        const unique = Array.from(new Map(combined.map(item => [item.timestamp, item])).values());
-                        return unique.slice(0, 20);
-                    });
-                }
-            } catch (err) {
-                console.error('❌ Error parsing WebSocket message:', err);
-            }
-        };
+        ws.onmessage = handleRecentSwapWS;
 
         ws.onerror = (err) => {
             console.error('❌ WebSocket error:', err);
         };
 
         ws.onclose = () => {
-            console.warn('🔌 WebSocket closed (RecentTransactions)');
+            console.warn('🔌 WebSocket closed (RecentTransactions), reconnecting...');
+            setTimeout(connectWebSocket, 5000); // Intenta reconectar después de 5 segundos
         };
+    };
+
+    useEffect(() => {
+        connectWebSocket();
 
         return () => {
-            ws.close();
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
         };
     }, [poolId, websocketUrl]);
 
@@ -157,7 +131,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
             <h2 className="text-slate-100 font-semibold text-lg mb-4">Recent Transactions</h2>
 
             <div className="overflow-x-auto overflow-y-auto max-h-80 min-w-full">
-                {recentSwaps.length === 0 ? (
+                {!recentSwaps || recentSwaps.length === 0 ? (
                     <p className="text-slate-400 text-sm text-center">No recent transactions yet.</p>
                 ) : (
                     <table className="w-full text-slate-300 text-sm">

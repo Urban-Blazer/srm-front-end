@@ -30,6 +30,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/**/*.tsx",
     ".next/types/**/*.ts",
     "app/components/Torus/Styles.js"
   ],

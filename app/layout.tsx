@@ -1,13 +1,10 @@
-import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Navbar from '../app/components/Navbar';
 import Script from 'next/script';
+import Navbar from '../app/components/Navbar';
+import './globals.css';
 
 import '@mysten/dapp-kit/dist/index.css';
-import { WalletProvider, SuiClientProvider, createNetworkConfig } from '@mysten/dapp-kit';
-import { getFullnodeUrl } from '@mysten/sui/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Providers from './components/Providers';
 
 const inter = Inter({ subsets: ['latin'] });

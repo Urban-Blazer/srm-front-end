@@ -13,18 +13,18 @@ const GA_MEASUREMENT_ID = 'G-03BHKQVRD6'; // Replace with your actual Google Ana
 
 export const metadata: Metadata = {
   title: 'Sui Rewards Me',
-  description: 'The First Rewards Descentralized Exchange DEX Ever. It is time you got a piece',
+  description: 'The First Rewards Decentralized Exchange DEX Ever. It is time you got a piece',
   metadataBase: new URL('https://SuiRewards.Me'),
   twitter: {
     title: 'Sui Rewareds Me',
-    description: 'The First Rewards Descentralized Exchange DEX Ever. It is time you got a piece',
+    description: 'The First Rewards Decentralized Exchange DEX Ever. It is time you got a piece',
     images: '/images/banner.jpg',
     card: 'summary_large_image',
     site: '@SuiRewardsMe',
   },
   openGraph: {
     title: 'Sui Rewards Me',
-    description: 'The First Rewards Descentralized Exchange DEX Ever. It is time you got a piece',
+    description: 'The First Rewards Decentralized Exchange DEX Ever. It is time you got a piece',
     images: '/images/banner.jpg',
     url: 'https://SuiRewards.Me',
     type: 'website',

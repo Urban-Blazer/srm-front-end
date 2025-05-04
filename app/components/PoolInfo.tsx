@@ -91,7 +91,7 @@ export default function PoolInfo({ poolId, coinA, coinB, poolStats, loading }: P
                     <p><strong>Rewards Fee:</strong> {(poolStats.rewards_fee / 100).toFixed(2)}%</p>
                     <p><strong>Creator Royalty Fee:</strong> {(poolStats.creator_royalty_fee / 100).toFixed(2)}%</p>
 
-                    <p className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <strong>Creator Wallet:</strong>
                         <div className="flex items-center gap-1">
                             <span>
@@ -109,7 +109,7 @@ export default function PoolInfo({ poolId, coinA, coinB, poolStats, loading }: P
                                 <span className="text-xs text-green-500 ml-1">Copied!</span>
                             )}
                         </div>
-                    </p>
+                    </div>
                 </div>
             ) : !loading && (
                 <p className="text-gray-400 text-sm">No data available for this pool.</p>

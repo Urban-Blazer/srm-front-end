@@ -1,22 +1,17 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import {
-    createChart,
-    ColorType,
-    type CandlestickData,
-    type Time,
-    type CandlestickSeriesPartialOptions,
     CandlestickSeries,
+    ColorType,
+    createChart,
+    type CandlestickData,
+    type CandlestickSeriesPartialOptions
 } from 'lightweight-charts';
+import { useEffect, useRef, useState } from 'react';
+import useChartData from '../hooks/useChartData';
+import { IntervalType } from '../types';
+import useCoinPrice from '../hooks/useCoinPrice';
 
-type Candle = {
-    time: Time;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-};
 
 interface ChartProps {
     poolId: string;
@@ -24,14 +19,53 @@ interface ChartProps {
 }
 
 export default function Chart({ poolId, coinASymbol }: ChartProps) {
+    const websocketUrl = "ws://159.203.34.221:3000";
+    const wsRef = useRef<WebSocket | null>(null);
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const latestCandles = useRef<CandlestickData[]>([]);
     const intervals = ['1m', '5m', '15m', '1h', '4h', '24h'];
-    const [interval, setInterval] = useState<string>('15m');
+    const [interval, setInterval] = useState<IntervalType>('15m');
+    const { data: chartData, refetch: refetchChartData } = useChartData(poolId, interval);
+    const { data: coinAPriceUSD } = useCoinPrice(coinASymbol);
     let ws: WebSocket | null = null;
 
+    // WebSocket reconexión
+    const connectWebSocket = () => {
+        if (!poolId) return;
+
+        const ws = new WebSocket(websocketUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+            console.log('✅ Connected to WebSocket for Chart');
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('📨 WebSocket Event:', data);
+
+                if (data.type === 'swap' && data.poolId === poolId) {
+                    console.log('📈 Live swap detected — refreshing full chart...');
+                    refetchChartData();
+                }
+            } catch (err) {
+                console.error('WebSocket message error:', err);
+            }
+        };
+
+        ws.onerror = (err) => {
+            console.error('❌ WebSocket error:', err);
+        };
+
+        ws.onclose = () => {
+            console.warn('🔌 WebSocket closed (Chart), reconnecting...');
+            setTimeout(connectWebSocket, 5000); // Intenta reconectar después de 5 segundos
+        };
+    };
+
     useEffect(() => {
-        if (!chartContainerRef.current) return;
+        if (!chartContainerRef.current || !chartData || !coinAPriceUSD) return;
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
@@ -67,22 +101,8 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
             wickDownColor: '#f87171',
         } satisfies CandlestickSeriesPartialOptions);
 
-        const fetchChartData = async () => {
-            const res = await fetch(`/api/chart-data?poolId=${poolId}&interval=${interval}`);
-            const rawData: Candle[] = await res.json();
-
-            let coinAPriceUSD = 1;
-            if (coinASymbol === 'SUI') {
-                try {
-                    const priceRes = await fetch('/api/get-coina-price?symbol=SUIUSD');
-                    const { price } = await priceRes.json();
-                    coinAPriceUSD = price ?? 1;
-                } catch (e) {
-                    console.error('Failed to fetch Coin A price:', e);
-                }
-            } else if (coinASymbol === 'USDC') {
-                coinAPriceUSD = 1;
-            }
+        const setChartData = async () => {
+            const rawData = chartData;
 
             const usdCandles: CandlestickData[] = rawData.map(candle => ({
                 time: candle.time,
@@ -110,33 +130,9 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
             });
         };
 
-        fetchChartData();
+        setChartData();
 
-        setTimeout(() => {
-            ws = new WebSocket('ws://159.203.34.221:3000'); // ✅ Assign to outer ws
-
-            ws.onopen = () => {
-                console.log('🔌 WebSocket connected');
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log('📨 WebSocket Event:', data);
-
-                    if (data.type === 'swap' && data.poolId === poolId) {
-                        console.log('📈 Live swap detected — refreshing full chart...');
-                        fetchChartData();
-                    }
-                } catch (err) {
-                    console.error('WebSocket message error:', err);
-                }
-            };
-
-            ws.onclose = () => {
-                console.log('❌ WebSocket disconnected');
-            };
-        }, 300);
+        setTimeout(connectWebSocket, 300);
 
         const resizeObserver = new ResizeObserver(() => {
             chart.applyOptions({
@@ -150,16 +146,18 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
         return () => {
             resizeObserver.disconnect();
             chart.remove();
-            if (ws) ws.close();
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
         };
-    }, [poolId, interval, coinASymbol]);
+    }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData]);
 
     return (
         <div className="w-full">
             <div className="flex justify-end mb-2">
                 <select
                     value={interval}
-                    onChange={(e) => setInterval(e.target.value)}
+                    onChange={(e) => setInterval(e.target.value as IntervalType)}
                     className="bg-slate-800 text-slate-100 border border-slate-600 rounded px-2 py-1 text-sm"
                 >
                     {intervals.map((int) => (

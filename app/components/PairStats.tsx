@@ -1,103 +1,35 @@
 "use client";
-import { useEffect, useState } from "react";
+import { selectedRangeAtom } from "@data/store";
+import { useAtom } from "jotai";
+import usePairStats from "../hooks/usePairStats";
+import { PairStatsProps, rangeMap } from "../types";
+import { SRM_COIN_SUPPLY, SRM_COINTYPE } from "../config";
+import useQuote from "../hooks/useQuote";
+import { MIST_PER_SUI } from "@mysten/sui/utils";
+import useCoinPrice from "../hooks/useCoinPrice";
 
-const rangeMap: Record<string, string> = {
-    "1 hour": "1h",
-    "6 hour": "6h",
-    "12 hour": "12h",
-    "24 hour": "24h",
-    "7 day": "7d",
-    "30 day": "30d",
-    "Lifetime": "lifetime",
-};
+export default  function PairStats({ poolId, coinA, coinB, poolStats }: PairStatsProps) {
+    const [selectedRange, setSelectedRange] = useAtom(selectedRangeAtom);
+    const { data: buy100SuiQuote } = useQuote(new URLSearchParams({
+        poolId: poolId!,
+        amount: (100 * Number(MIST_PER_SUI)).toString(),
+        isSell: 'true',
+        isAtoB: 'true',
+        outputDecimals: coinB?.decimals.toString() ?? "9",
+        balanceA: poolStats?.balance_a.toString(),
+        balanceB: poolStats?.balance_b.toString(),
+        lpBuilderFee: poolStats?.lp_builder_fee.toString(),
+        burnFee: poolStats?.burn_fee.toString(),
+        creatorRoyaltyFee: poolStats?.creator_royalty_fee.toString(),
+        rewardsFee: poolStats?.rewards_fee.toString(),
+    }));
 
-interface Stats {
-    buyTx: number;
-    buyVolume: number;
-    sellTx: number;
-    sellVolume: number;
-    totalVolume: number;
-    rewardsDistributed: number;
-    burnedCoins: number;
-    creatorRoyalty: number;
-}
-
-interface CoinMeta {
-    decimals: number;
-    image?: string;
-}
-
-interface Props {
-    poolId: string | null;
-    coinA: CoinMeta | null;
-    coinB: CoinMeta | null;
-}
-
-const defaultStats: Stats = {
-    buyTx: 0,
-    buyVolume: 0,
-    sellTx: 0,
-    sellVolume: 0,
-    totalVolume: 0,
-    rewardsDistributed: 0,
-    burnedCoins: 0,
-    creatorRoyalty: 0,
-};
-
-function getSinceTimestamp(range: string): number {
-    const now = Date.now();
-    switch (range) {
-        case "1 hour": return now - 1 * 60 * 60 * 1000;
-        case "6 hour": return now - 6 * 60 * 60 * 1000;
-        case "12 hour": return now - 12 * 60 * 60 * 1000;
-        case "24 hour": return now - 24 * 60 * 60 * 1000;
-        case "7 day": return now - 7 * 24 * 60 * 60 * 1000;
-        case "30 day": return now - 30 * 24 * 60 * 60 * 1000;
-        default: return 0;
-    }
-}
-
-export default function PairStats({ poolId, coinA, coinB }: Props) {
-    const [selectedRange, setSelectedRange] = useState("24 hour");
-    const [stats, setStats] = useState<Stats>(defaultStats);
-    const [loading, setLoading] = useState(false);
-
-    const fetchStats = async () => {
-        if (!poolId) {
-            setStats(defaultStats);
-            return;
-        }
-
-        setLoading(true);
-        const sinceMs = getSinceTimestamp(selectedRange);
-        const sinceForDynamo = Math.floor(sinceMs / 1000);
-
-        try {
-            const [statsRes, rewardsRes] = await Promise.all([
-                fetch(`/api/pair-stats?poolId=${poolId}&range=${rangeMap[selectedRange]}`),
-                fetch(`/api/get-rewards?poolId=${poolId}&since=${sinceForDynamo}`)
-            ]);
-
-            const statsData = await statsRes.json();
-            const rewardsData = await rewardsRes.json();
-
-            const finalStats = {
-                ...statsData,
-                rewardsDistributed: rewardsData.rewardsDistributed ?? 0
-            };
-
-            setStats(finalStats);
-        } catch (err) {
-            console.error("❌ Failed to load stats:", err);
-            setStats(defaultStats);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchStats();
-    }, [poolId, selectedRange]);
+    
+    const {data: stats, isLoading} = usePairStats(poolId!, rangeMap[selectedRange]);
+    const {data: statsLifetime, isLoading: isStatsLifetimeLoading} = usePairStats(poolId!, "lifetime");
+    
+    const { data: coinAPriceUSD } = useCoinPrice("SUI");
+    console.log({statsLifetime, buy100SuiQuote, coinAPriceUSD})
 
     const coinADecimals = coinA?.decimals ?? 0;
     const coinBDecimals = coinB?.decimals ?? 0;
@@ -105,7 +37,15 @@ export default function PairStats({ poolId, coinA, coinB }: Props) {
     return (
         <div className="w-full bg-gray-900 border border-gray-800 rounded-lg p-4 shadow-md">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-white">Pair Stats</h2>
+                <div className="flex">
+                    <h2 className="text-lg font-semibold text-white">Pair Stats</h2>
+                    {(isLoading || isStatsLifetimeLoading) && (
+                        <svg className="w-6 h-6 ml-3 -ml-1 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    )}
+                </div>
                 <select
                     className="bg-gray-800 border border-gray-700 text-white text-sm rounded-md px-3 py-1 focus:outline-none"
                     value={selectedRange}
@@ -119,35 +59,50 @@ export default function PairStats({ poolId, coinA, coinB }: Props) {
                 </select>
             </div>
 
-            {loading && <p className="text-gray-400 text-sm">Loading stats...</p>}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-300">
+                    <Stat label="Buy Tx" value={stats?.buyTx} type="tx" />
+                    <Stat label="Buy Volume" value={stats?.buyVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
+                    <Stat label="Sell Tx" value={stats?.sellTx} type="tx" />
+                    <Stat label="Sell Volume" value={stats?.sellVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
+                    <Stat label="Total Volume" value={stats?.totalVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
+                    <Stat label="Burned Coins" value={stats?.burnedCoins} decimals={coinBDecimals} imageUrl={coinB?.image} />
+                    <Stat label="Creator Royalty" value={stats?.creatorRoyalty} decimals={coinADecimals} imageUrl={coinA?.image} />
+                    <Stat label="Rewards Distributed" value={stats?.rewardsDistributed} decimals={coinADecimals} imageUrl={coinA?.image} />
+                    {coinB?.typeName === SRM_COINTYPE && statsLifetime && (
+                        <Stat label="Circulating Supply" value={SRM_COIN_SUPPLY - (statsLifetime?.burnedCoins ?? 0)} decimals={coinBDecimals} imageUrl={coinB?.image} />
+                    )}
+                    {
+                        coinB?.typeName === SRM_COINTYPE && 
+                        buy100SuiQuote?.buyAmount && 
+                        statsLifetime && (
+                            <Stat label="Market Cap (SUI)" value={(100 / +buy100SuiQuote?.buyAmount) * (SRM_COIN_SUPPLY - (statsLifetime?.burnedCoins ?? 0))} decimals={coinBDecimals} imageUrl={coinA?.image} />
+                    )}
+                    {
+                        coinB?.typeName === SRM_COINTYPE && 
+                        buy100SuiQuote?.buyAmount && 
+                        coinAPriceUSD && statsLifetime && (
+                            <Stat label="Market Cap ($USDC)" value={((100 / +buy100SuiQuote?.buyAmount)* coinAPriceUSD) * (SRM_COIN_SUPPLY - (statsLifetime?.burnedCoins ?? 0))} decimals={coinBDecimals} />
+                    )}
+                </div>
+            
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-300">
-                <Stat label="Buy Tx" value={stats.buyTx} type="tx" />
-                <Stat label="Buy Volume" value={stats.buyVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
-                <Stat label="Sell Tx" value={stats.sellTx} type="tx" />
-                <Stat label="Sell Volume" value={stats.sellVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
-                <Stat label="Total Volume" value={stats.totalVolume} decimals={coinADecimals} imageUrl={coinA?.image} />
-                <Stat label="Burned Coins" value={stats.burnedCoins} decimals={coinBDecimals} imageUrl={coinB?.image} />
-                <Stat label="Creator Royalty" value={stats.creatorRoyalty} decimals={coinADecimals} imageUrl={coinA?.image} />
-                <Stat label="Rewards Distributed" value={stats.rewardsDistributed} decimals={coinADecimals} imageUrl={coinA?.image} />
-            </div>
         </div>
     );
-}
+};
 
-function Stat({
+const Stat = ({
     label,
-    value,
+    value = 0,
     decimals = 2,
     type = "decimal",
     imageUrl,
 }: {
     label: string;
-    value: number;
+    value?: number;
     decimals?: number;
     type?: "tx" | "decimal";
     imageUrl?: string;
-}) {
+}) => {
     const formattedValue =
         type === "tx"
             ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })

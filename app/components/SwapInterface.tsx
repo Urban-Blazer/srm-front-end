@@ -1,51 +1,11 @@
-// @ts-nocheck
-import { useState, useEffect, useRef, useCallback } from "react";
-import { SuiClient } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions"; // for building tx
-import { PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../config";
 import TransactionModal from "@components/TransactionModal";
+import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit';
+import { TransactionBlock } from "@mysten/sui.js/transactions"; // for building tx
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CONFIG_ID, DEX_MODULE_NAME, PACKAGE_ID } from "../config";
 import { predefinedCoins } from "../data/coins";
-import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { PoolStats, SwapInterfaceProps } from "@/app/types";
 
-
-interface SwapInterfaceProps {
-    poolId: string | null;
-    coinA: CoinMeta | null;
-    coinB: CoinMeta | null;
-    provider: SuiClient;
-    poolStats: PoolStats | null;
-}
-
-interface CoinMeta {
-    decimals: number;
-    image?: string;
-    symbol: string;
-    typeName: string;
-}
-
-interface PoolStats {
-    balance_a: number;
-    balance_b: number;
-    burn_fee: number;
-    creator_royalty_fee: number;
-    creator_royalty_wallet: string;
-    locked_lp_balance: number;
-    lp_builder_fee: number;
-    reward_balance_a: number;
-    rewards_fee: number;
-}
-
-const defaultPoolStats: PoolStats = {
-    balance_a: 0,
-    balance_b: 0,
-    burn_fee: 0,
-    creator_royalty_fee: 0,
-    creator_royalty_wallet: "",
-    locked_lp_balance: 0,
-    lp_builder_fee: 0,
-    reward_balance_a: 0,
-    rewards_fee: 0,
-};
 
 const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
 const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
@@ -55,10 +15,9 @@ export default function SwapInterface({
     poolId,
     coinA,
     coinB,
-    provider,
     poolStats,
 }: SwapInterfaceProps) {
-
+    const provider = useSuiClient();
     const [isBuy, setIsBuy] = useState(true);
     const [coinABalance, setCoinABalance] = useState<number>(0);
     const [coinBBalance, setCoinBBalance] = useState<number>(0);
@@ -360,8 +319,7 @@ export default function SwapInterface({
                 }
 
                 if (coinsToUse.length === 0) {
-                    console.error(`No $${coin} coins found in your wallet`);
-                    ctx.reply(`No $${coin} coins found in your wallet`);
+                    console.error(`No $${coinA} coins found in your wallet`);
                     return;
                 }
 
@@ -398,7 +356,7 @@ export default function SwapInterface({
                 target: swapFunction,
                 typeArguments,
                 arguments: [
-                    txb.object(poolId, { mutable: true }),
+                    txb.object(poolId),
                     txb.object(CONFIG_ID),
                     usedCoin,
                     txb.pure.u64(sellAmountU64),
@@ -408,7 +366,7 @@ export default function SwapInterface({
             });
 
             addLog("🚀 Signing and submitting transaction...");
-            let executeResponse;
+            let executeResponse: any;
 
             await new Promise<void>((resolve, reject) => {
                 signAndExecuteTransaction(
@@ -431,7 +389,7 @@ export default function SwapInterface({
                 );
             });
 
-            const txnDigest = executeResponse.digest;
+            const txnDigest = executeResponse?.digest;
 
             if (!txnDigest) {
                 throw new Error("Transaction digest missing after submit.");
@@ -459,7 +417,7 @@ export default function SwapInterface({
             await fetchBalance(coinA, setCoinABalance);
             await fetchBalance(coinB, setCoinBBalance);
 
-            alert("Swap executed and confirmed!");
+            // alert("Swap executed and confirmed!");
 
         } catch (error: any) {
             console.error("Swap failed:", error.message);

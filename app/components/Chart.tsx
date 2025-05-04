@@ -24,7 +24,7 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const latestCandles = useRef<CandlestickData[]>([]);
     const intervals = ['1m', '5m', '15m', '1h', '4h', '24h'];
-    const [interval, setInterval] = useState<IntervalType>('15m');
+    const [interval, setInterval] = useState<IntervalType>('1h');
     const { data: chartData, refetch: refetchChartData } = useChartData(poolId, interval);
     const { data: coinAPriceUSD } = useCoinPrice(coinASymbol);
     let ws: WebSocket | null = null;

@@ -19,7 +19,7 @@ interface ChartProps {
 }
 
 export default function Chart({ poolId, coinASymbol }: ChartProps) {
-    const websocketUrl = "ws://159.203.34.221:3000";
+    const websocketUrl = "wss://159.203.34.221:3000";
     const wsRef = useRef<WebSocket | null>(null);
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const latestCandles = useRef<CandlestickData[]>([]);

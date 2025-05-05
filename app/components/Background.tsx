@@ -19,7 +19,7 @@ const Background: React.FC = () => {
       {/* Opening Banner Text */}
       <div className="absolute top-24 sm:top-28 md:top-32 w-full flex justify-center z-50 pointer-events-none px-2">
         <h1 className="text-white text-2xl sm:text-4xl md:text-5xl font-extrabold drop-shadow-md tracking-wide text-center bg-black bg-opacity-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl leading-tight max-w-[90%]">
-          $SRM NOW TRADING LIVE!
+          Audited by SPYWOLF!
         </h1>
       </div>
 

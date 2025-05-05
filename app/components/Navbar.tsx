@@ -52,7 +52,7 @@ export default function NavBar() {
 
       {/* Desktop Menu (Hidden on Mobile) */}
       <div className="hidden md:flex space-x-4 ml-8">
-        {["dashboard", "swap", "pools", "launchpad"].map((menu) => (
+        {["dashboard", "swap", "pools", "launchpad", "info"].map((menu) => (
           <div
             key={menu}
             className="relative group"
@@ -74,7 +74,7 @@ export default function NavBar() {
                 {menu === "swap" && (
                   <>
                   <Link href="/swap" className="block px-4 py-2 hover:bg-softMint">Swap</Link>
-                    <Link href="/swap/pro" className="block px-4 py-2 hover:bg-softMint">Pro Swap</Link>
+                  <Link href="/swap/pro" className="block px-4 py-2 hover:bg-softMint">Pro Swap</Link>
                   </>
                 )}
                 {menu === "pools" && (
@@ -92,7 +92,13 @@ export default function NavBar() {
                     {/*<Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>*/}
                   </>
                 )}
-
+                {menu === "info" && (
+                  <>
+                    <Link href="https://medium.com/@suirewardsme/introducing-sui-rewards-me-the-worlds-first-rewards-dex-on-the-sui-blockchain-76e6832f140d" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-softMint">About SRM</Link>
+                    <Link href="/docs/SuiRewardsMe_DEX.pdf" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-softMint">SRM Dex Audit</Link>
+                    <Link href="/docs/SuiRewardsMe_SRM.pdf" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-softMint">SRM Coin Audit</Link>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -105,15 +111,6 @@ export default function NavBar() {
               rel="noopener noreferrer"
             >
               <button className="button-primary px-4 py-2">BRIDGE</button>
-            </a>
-          </div>,
-          <div key="start-link" className="relative group">
-            <a
-              href="https://medium.com/@suirewardsme/introducing-sui-rewards-me-the-worlds-first-rewards-dex-on-the-sui-blockchain-76e6832f140d"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <button className="button-primary px-4 py-2">INFO</button>
             </a>
           </div>
         ])}
@@ -132,7 +129,7 @@ export default function NavBar() {
       {/* Mobile Menu (Slide-in) */}
       {isMobileMenuOpen && (
         <div className="absolute top-16 right-0 bg-darkBlue w-full sm:w-64 p-4 shadow-lg flex flex-col items-start md:hidden">
-          {["dashboard", "swap", "pools", "launchpad"].map((menu) => (
+          {["dashboard", "swap", "pools", "launchpad", "info"].map((menu) => (
             <div key={menu} className="w-full">
               <button
                 className="text-white w-full text-left px-4 py-2 hover:bg-softMint"
@@ -165,6 +162,14 @@ export default function NavBar() {
                       {/*<Link href="/launchpad/coming-soon" className="block px-4 py-2 hover:bg-softMint">Coming Soon</Link>*/}
                     </>
                   )}
+                  {menu === "info" && (
+                    <>
+                      <Link href="https://medium.com/@suirewardsme/introducing-sui-rewards-me-the-worlds-first-rewards-dex-on-the-sui-blockchain-76e6832f140d" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>About SRM</Link>
+                      <Link href="/docs/SuiRewardsMe_DEX.pdf" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>SRM DEX Audit</Link>
+                      <Link href="/docs/SuiRewardsMe_SRM.pdf" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-softMint" onClick={handleMobileLinkClick}>SRM Coin Audit</Link>
+                    </>
+                  )}
+
                 </div>
               )}
             </div>
@@ -181,19 +186,6 @@ export default function NavBar() {
               >
                 <div className="block w-full bg-[--color-emerald-green] text-white font-semibold text-left px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
                   BRIDGE
-                </div>
-              </a>
-            </div>,
-            <div key="start-link" className="w-full">
-              <a
-                href="https://medium.com/@suirewardsme/introducing-sui-rewards-me-the-worlds-first-rewards-dex-on-the-sui-blockchain-76e6832f140d"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full"
-                onClick={handleMobileLinkClick}
-                >
-                <div className="block w-full bg-[--color-emerald-green] text-white font-semibold text-left px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
-                  INFO
                 </div>
               </a>
             </div>

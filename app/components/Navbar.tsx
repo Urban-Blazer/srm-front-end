@@ -186,7 +186,7 @@ export default function NavBar() {
             </div>,
             <div key="start-link" className="w-full">
               <a
-                href="https://medium.com/@suirewardsme/..."
+                href="https://medium.com/@suirewardsme/introducing-sui-rewards-me-the-worlds-first-rewards-dex-on-the-sui-blockchain-76e6832f140d"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full"

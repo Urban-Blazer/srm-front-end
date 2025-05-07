@@ -69,9 +69,9 @@ export default function SearchBar({ onSelectPair }: SearchBarProps) {
                     <span className="text-white text-sm">
                         {selectedPair.coinA.symbol}/{selectedPair.coinB.symbol}
                     </span>
-                    {/* temporarily disabled, not in use <button onClick={handleClear} className="bg-gray-900 ml-auto text-white border border-white hover:text-red-400 text-xs">
+                    <button onClick={handleClear} className="bg-gray-900 ml-auto text-white border border-white hover:text-red-400 text-xs">
                         Clear
-                    </button> */}
+                    </button>
                 </div>
             ) : (
                 <input

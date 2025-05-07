@@ -27,7 +27,6 @@ export default function MyPositions() {
     const [isProcessing, setIsProcessing] = useState(false);
     const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
-
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
     };

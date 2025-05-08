@@ -64,7 +64,6 @@ export default function SearchBar({ onSelectPair }: SearchBarProps) {
                     className="w-full px-4 py-2 rounded-md bg-gray-900 text-white border border-gray-700 flex items-center space-x-2"
                 >
                     <img src={selectedPair.coinA.image} alt={selectedPair.coinA.symbol} className="w-5 h-5 rounded-full" />
-                    <span className="text-white text-sm">/</span>
                     <img src={selectedPair.coinB.image} alt={selectedPair.coinB.symbol} className="w-5 h-5 rounded-full" />
                     <span className="text-white text-sm">
                         {selectedPair.coinA.symbol}/{selectedPair.coinB.symbol}

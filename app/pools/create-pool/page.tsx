@@ -185,9 +185,12 @@ export default function Pools() {
         coinType: string,
         amount: bigint
     ) => {
-        const matchingCoins = coins.filter((c) => c.type === coinType);
+        const matchingCoins = coins.filter((c) => c.coinType === coinType);
         if (matchingCoins.length === 0) {
-            throw new Error(`No ${coinType} coins found in wallet`);
+            alert(`❌ No ${coinType} coins found in wallet`);
+            console.error(`❌ No ${coinType} coins found in wallet`);
+            dispatch({ type: "SET_LOADING", payload: false });
+            return;
         }
 
         let accumulated = 0n;
@@ -200,18 +203,21 @@ export default function Pools() {
         }
 
         if (accumulated < amount) {
-            throw new Error(`Insufficient total balance for ${coinType}`);
+            alert(`⚠️ Insufficient coin balance in wallet. ${coinType}`);
+            console.error(`❌ Insufficient total balance for ${coinType}`);
+            dispatch({ type: "SET_LOADING", payload: false });
+            return
         }
 
         if (coinsToUse.length === 1) {
-            return txb.splitCoins(txb.object(coinsToUse[0].objectId), [txb.pure.u64(amount)]);
+            return txb.splitCoins(txb.object(coinsToUse[0].coinObjectId), [txb.pure.u64(amount)]);
         } else {
             const baseCoin = coinsToUse[0];
-            const rest = coinsToUse.slice(1).map(c => txb.object(c.objectId));
+            const rest = coinsToUse.slice(1).map(c => txb.object(c.coinObjectId));
 
-            txb.mergeCoins(txb.object(baseCoin.objectId), rest);
+            txb.mergeCoins(txb.object(baseCoin.coinObjectId), rest);
             const [splitCoin] = txb.splitCoins(
-                txb.object(baseCoin.objectId),
+                txb.object(baseCoin.coinObjectId),
                 [txb.pure.u64(amount)]
             );
             return splitCoin;
@@ -248,32 +254,24 @@ export default function Pools() {
 
             console.log("✅ Expected Coin Types:", state.dropdownCoinMetadata.typeName, state.customCoinMetadata.typeName);
 
+            // ✅ Find matching coin objects
+            const expectedCoinA = state.dropdownCoinMetadata.typeName;
+            const expectedCoinB = state.customCoinMetadata.typeName;
+
             // ✅ Fetch owned coin objects INCLUDING balance field
-            const { data: ownedObjects } = await provider.getOwnedObjects({
+            const { data: coinsA } = await provider.getCoins({
                 owner: userAddress,
-                filter: { StructType: "0x2::coin::Coin" },
-                options: { showType: true, showContent: true },
+                coinType: expectedCoinA
             });
 
-            console.log("🔍 Owned objects:", ownedObjects);
+            const { data: coinsB } = await provider.getCoins({
+                owner: userAddress,
+                coinType: expectedCoinB
+            });
 
-            // ✅ Extract and clean up coin data
-            const coins = ownedObjects
-                .map((obj) => {
-                    const rawType = obj.data?.type;
-                    if (!rawType || !rawType.startsWith("0x2::coin::Coin<")) return null;
-
-                    return {
-                        objectId: obj.data?.objectId,
-                        type: rawType.replace("0x2::coin::Coin<", "").replace(">", "").trim(),
-                        balance: obj.data?.content?.fields?.balance
-                            ? BigInt(obj.data?.content?.fields?.balance)
-                            : BigInt(0),
-                        digest: obj.data?.digest, // ✅ Add this
-                        version: obj.data?.version, // ✅ And this
-                    };
-                })
-                .filter(Boolean);
+            console.log("🔍 Owned Coin Objects:", { coinsA, coinsB });
+            // merge responses
+            const coins = [...coinsA, ...coinsB];
 
             console.log("🔍 Extracted Coins with Balance:", coins);
 
@@ -294,14 +292,11 @@ export default function Pools() {
             console.log(`${state.dropdownCoinMetadata.symbol}:`, depositDropdownMIST.toString());
             console.log(`${state.customCoinMetadata.symbol}:`, depositCustomMIST.toString());
 
-            // ✅ Find matching coin objects
-            const expectedCoinA = state.dropdownCoinMetadata.typeName;
-            const expectedCoinB = state.customCoinMetadata.typeName;
             const coinA = coins.find(
-                (c) => c.type === expectedCoinA && c.balance >= depositDropdownMIST
+                (c) => c.coinType === expectedCoinA
             );
             const coinB = coins.find(
-                (c) => c.type === expectedCoinB && c.balance >= depositCustomMIST
+                (c) => c.coinType === expectedCoinB
             );
 
             if (!coinA || !coinB) {
@@ -312,17 +307,29 @@ export default function Pools() {
             }
 
             // ✅ Ensure user has enough balance
-            if (coinA.balance < depositDropdownMIST || coinB.balance < depositCustomMIST) {
+
+            const coinABalance = await provider.getBalance({
+                owner: userAddress,
+                coinType: expectedCoinA
+            });
+
+            const coinBBalance = await provider.getBalance({
+                owner: userAddress,
+                coinType: expectedCoinB
+            });
+
+            if (BigInt(coinABalance.totalBalance) < depositDropdownMIST || BigInt(coinBBalance.totalBalance) < depositCustomMIST) {
                 alert("⚠️ Insufficient coin balance in wallet.");
                 console.error("❌ Balance Check Failed!");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
+
             addLog("✅ Balance Check Passed!");
             console.log("✅ Balance Check Passed!");
             console.log("💰 Selected Coin Objects for Deposit:");
-            console.log(`${state.dropdownCoinMetadata.symbol}:`, coinA.objectId, "Balance:", coinA.balance.toString());
-            console.log(`${state.customCoinMetadata.symbol}:`, coinB.objectId, "Balance:", coinB.balance.toString());
+            console.log(`${state.dropdownCoinMetadata.symbol}:`, coinA.coinObjectId, "Balance:", coinABalance.totalBalance.toString());
+            console.log(`${state.customCoinMetadata.symbol}:`, coinB.coinObjectId, "Balance:", coinBBalance.totalBalance.toString());
 
             const txb = new TransactionBlock();
 
@@ -354,9 +361,9 @@ export default function Pools() {
                 arguments: [
                     txb.object(LOCK_ID),
                     txb.object(FACTORY_ID),
-                    coinAInput,
+                    coinAInput!,
                     txb.pure.u64(depositDropdownMIST),
-                    coinBInput,
+                    coinBInput!,
                     txb.pure.u64(depositCustomMIST),
                     txb.pure.u64(Math.round(state.lpBuilderFee * 100)), // Convert % → basis points
                     txb.pure.u64(Math.round(state.buybackBurnFee * 100)),
@@ -367,7 +374,7 @@ export default function Pools() {
                 ],
             });
 
-            let executeResponse;
+            let executeResponse: any;
 
             await new Promise<void>((resolve, reject) => {
                 signAndExecuteTransaction(
@@ -394,7 +401,7 @@ export default function Pools() {
             console.log("✅ Transaction Executed:", executeResponse);
 
             // ✅ Extract the transaction digest
-            const txnDigest = executeResponse.digest;
+            const txnDigest = executeResponse?.digest;
             addLog(`🔍 Tracking transaction digest: ${txnDigest}`);
             console.log("🔍 Tracking transaction digest:", txnDigest);
 
@@ -438,7 +445,7 @@ export default function Pools() {
             }
 
             // ✅ Extract event data safely
-            const poolDataFromEvent = poolCreatedEvent.parsedJson;
+            const poolDataFromEvent = poolCreatedEvent.parsedJson as any;
             if (!poolDataFromEvent) {
                 alert(`PoolCreated event detected, but no data available.`);
                 dispatch({ type: "SET_LOADING", payload: false });
@@ -515,7 +522,7 @@ export default function Pools() {
 
             dispatch({ type: "SET_LOADING", payload: false });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("❌ Transaction failed:", error);
 
             // 🔍 Detect MoveAbort errors
@@ -547,7 +554,7 @@ export default function Pools() {
     };
 
     // ✅ Retry function to wait for transaction propagation
-    const fetchTransactionWithRetry = async (txnDigest, retries = 20, delay = 5000) => {
+    const fetchTransactionWithRetry = async (txnDigest: any, retries = 20, delay = 5000) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 console.log(`🔍 Attempt ${attempt}: Fetching transaction details for digest: ${txnDigest}`);

@@ -327,38 +327,53 @@ export default function AddLiquidity() {
 
             console.log("✅ Pool ID:", state.poolData.poolId);
             console.log("✅ Coin Types:", state.dropdownCoinMetadata.typeName, state.customCoinMetadata.typeName);
-
-            // ✅ Fetch Owned Coins
-            const { data: ownedObjects } = await provider.getOwnedObjects({
+            const coinTypeA = state.dropdownCoinMetadata.typeName;
+            const coinTypeB = state.customCoinMetadata.typeName;
+            // // ✅ Fetch Owned Coins A and B
+            const { data: coinsA } = await provider.getCoins({
                 owner: userAddress,
-                filter: { StructType: "0x2::coin::Coin" },
-                options: { showType: true, showContent: true },
+                coinType: coinTypeA
             });
 
-            console.log("🔍 Owned Coin Objects:", ownedObjects);
+            const { data: coinsB } = await provider.getCoins({
+                owner: userAddress,
+                coinType: coinTypeB
+            });
 
-            const coins = ownedObjects
-                .map((obj) => {
-                    const rawType = obj.data?.type;
-                    if (!rawType || !rawType.startsWith("0x2::coin::Coin<")) return null;
-
-                    return {
-                        objectId: obj.data?.objectId,
-                        type: rawType.replace("0x2::coin::Coin<", "").replace(">", "").trim(),
-                        balance: obj.data?.content?.fields?.balance
-                            ? BigInt(obj.data?.content?.fields?.balance)
-                            : BigInt(0),
-                        digest: obj.data?.digest,       // 🔥 Add this
-                        version: obj.data?.version,     // 🔥 And this
-                    };
-                })
-                .filter(Boolean);
+            console.log("🔍 Owned Coin Objects:", { coinsA, coinsB }, {coinA, coinB});
+            // merge responses
+            const coins = [...coinsA, ...coinsB];
 
             console.log("🔍 Extracted Coins with Balances:", coins);
 
             // ✅ Convert Deposit Amounts to MIST
             const depositA_U64 = BigInt(Math.floor(parseFloat(state.depositDropdownCoin) * Math.pow(10, decimalsA)));
             const depositB_U64 = BigInt(Math.floor(parseFloat(state.depositCustomCoin) * Math.pow(10, decimalsB)));
+
+            // ✅ Ensure user has enough balance
+
+            const coinABalance = await provider.getBalance({
+                owner: userAddress,
+                coinType: coinTypeA
+            });
+
+            const coinBBalance = await provider.getBalance({
+                owner: userAddress,
+                coinType: coinTypeB
+            });
+
+            if (BigInt(coinABalance.totalBalance) < depositA_U64 || BigInt(coinBBalance.totalBalance) < depositB_U64) {
+                alert("⚠️ Insufficient coin balance in wallet.");
+                console.error("❌ Balance Check Failed!");
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            addLog("✅ Balance Check Passed!");
+            console.log("✅ Balance Check Passed!");
+            console.log("💰 Selected Coin Objects for Deposit:");
+            console.log(`${state.dropdownCoinMetadata.symbol}:`, coinTypeA, "Balance:", coinABalance.totalBalance.toString());
+            console.log(`${state.customCoinMetadata.symbol}:`, coinTypeB, "Balance:", coinBBalance.totalBalance.toString());
 
             // ✅ Match a single coin object for CoinA with enough balance
             const expectedCoinA = state.dropdownCoinMetadata.typeName;
@@ -382,13 +397,14 @@ export default function AddLiquidity() {
 
             let coinAInput, coinBInput;
 
-            const getMergedCoinInput = (
+            const getMergedCoinInput = async (
                 txb: TransactionBlock,
                 coins: any[],
                 coinType: string,
                 amount: bigint
             ) => {
-                const matchingCoins = coins.filter((c) => c.type === coinType);
+                console.log({coins})
+                const matchingCoins = coins.filter((c) => c.coinType === coinType);
                 if (matchingCoins.length === 0) {
                     throw new Error(`No ${coinType} coins found in wallet`);
                 }
@@ -407,15 +423,15 @@ export default function AddLiquidity() {
 
                 if (coinsToUse.length === 1) {
                     return txb.splitCoins(
-                        txb.object(coinsToUse[0].objectId),
+                        txb.object(coinsToUse[0].coinObjectId),
                         [txb.pure.u64(amount)]
                     );
                 } else {
                     const baseCoin = coinsToUse[0];
-                    const rest = coinsToUse.slice(1).map((c) => txb.object(c.objectId));
-                    txb.mergeCoins(txb.object(baseCoin.objectId), rest);
+                    const rest = coinsToUse.slice(1).map((c) => txb.object(c.coinObjectId));
+                    txb.mergeCoins(txb.object(baseCoin.coinObjectId), rest);
                     const [splitCoin] = txb.splitCoins(
-                        txb.object(baseCoin.objectId),
+                        txb.object(baseCoin.coinObjectId),
                         [txb.pure.u64(amount)]
                     );
                     return splitCoin;
@@ -453,7 +469,7 @@ export default function AddLiquidity() {
                 ],
             });
 
-            let executeResponse;
+            let executeResponse: any;
 
             await new Promise<void>((resolve, reject) => {
                 signAndExecuteTransaction(
@@ -479,7 +495,7 @@ export default function AddLiquidity() {
             addLog("✅ Transaction Submitted!");
 
             // ✅ Track Transaction Digest
-            const txnDigest = executeResponse.digest;
+            const txnDigest = executeResponse?.digest;
             addLog(`🔍 Transaction Digest: ${txnDigest}`);
 
             if (!txnDigest) {
@@ -519,7 +535,7 @@ export default function AddLiquidity() {
             }
 
             // ✅ Extract Liquidity Event Data
-            const liquidityData = liquidityEvent.parsedJson;
+            const liquidityData: any = liquidityEvent.parsedJson;
             if (!liquidityData) {
                 alert("⚠️ Event detected but no data available.");
                 dispatch({ type: "SET_LOADING", payload: false });
@@ -556,7 +572,7 @@ export default function AddLiquidity() {
         }
     };
 
-    const fetchTransactionWithRetry = async (txnDigest, retries = 20, delay = 5000) => {
+    const fetchTransactionWithRetry = async (txnDigest: any, retries = 20, delay = 5000) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 console.log(`🔍 Attempt ${attempt}: Fetching transaction details for digest: ${txnDigest}`);

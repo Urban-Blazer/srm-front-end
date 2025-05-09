@@ -179,51 +179,12 @@ export default function Pools() {
         dispatch({ type: "SET_LOADING", payload: false });
     };
 
-    const getMergedCoinInput = (
-        txb: TransactionBlock,
-        coins: any[],
-        coinType: string,
-        amount: bigint
-    ) => {
-        const matchingCoins = coins.filter((c) => c.type === coinType);
-        if (matchingCoins.length === 0) {
-            throw new Error(`No ${coinType} coins found in wallet`);
-        }
-
-        let accumulated = 0n;
-        const coinsToUse = [];
-
-        for (const coin of matchingCoins) {
-            accumulated += BigInt(coin.balance);
-            coinsToUse.push(coin);
-            if (accumulated >= amount) break;
-        }
-
-        if (accumulated < amount) {
-            throw new Error(`Insufficient total balance for ${coinType}`);
-        }
-
-        if (coinsToUse.length === 1) {
-            return txb.splitCoins(txb.object(coinsToUse[0].objectId), [txb.pure.u64(amount)]);
-        } else {
-            const baseCoin = coinsToUse[0];
-            const rest = coinsToUse.slice(1).map(c => txb.object(c.objectId));
-
-            txb.mergeCoins(txb.object(baseCoin.objectId), rest);
-            const [splitCoin] = txb.splitCoins(
-                txb.object(baseCoin.objectId),
-                [txb.pure.u64(amount)]
-            );
-            return splitCoin;
-        }
-    };
-
     // ✅ Create Pool Transaction
     const handleCreatePool = async () => {
         setLogs([]); // Clear previous logs
         setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true); // Open modal
-        
+
         if (!wallet || !walletAddress) {
             alert("⚠️ Please connect your wallet first.");
             return;
@@ -333,21 +294,49 @@ export default function Pools() {
             const isCoinADepositSui = expectedCoinA === suiType;
             const isCoinBDepositSui = expectedCoinB === suiType;
 
-            const GAS_BUDGET = 150_000_000;
+            const singleSuiCoin = coins.find(c => c.type === suiType);
+            const onlyOneSui = coins.filter(c => c.type === suiType).length === 1;
+            const GAS_BUDGET = 250_000_000;
 
-            if (isCoinADepositSui) {
-                coinAInput = txb.splitCoins(txb.gas, [txb.pure.u64(depositDropdownMIST)]);
+            if (onlyOneSui && (isCoinADepositSui || isCoinBDepositSui)) {
+                const suiDepositAmount = isCoinADepositSui ? depositDropdownMIST : depositCustomMIST;
+
+                if (singleSuiCoin.balance > suiDepositAmount + BigInt(250_000_000)) {
+                    // Use the only SUI coin as gas
+                    txb.setGasPayment([
+                        {
+                            objectId: singleSuiCoin.objectId,
+                            digest: singleSuiCoin.digest,
+                            version: singleSuiCoin.version,
+                        }
+                    ]);
+
+                    txb.setGasOwner(userAddress);
+
+                    // Split deposit from gas coin
+                    const [splitSui] = txb.splitCoins(txb.gas, [txb.pure(suiDepositAmount)]);
+
+                    if (isCoinADepositSui) {
+                        coinAInput = splitSui;
+                        coinBInput = txb.object(coinB.objectId);
+                    } else {
+                        coinAInput = txb.object(coinA.objectId);
+                        coinBInput = splitSui;
+                    }
+
+                    console.log("🧠 Using txb.gas for split. Single SUI coin used for both gas + deposit.");
+                } else {
+                    alert("⚠️ Insufficient SUI to both deposit and pay for gas.");
+                    dispatch({ type: "SET_LOADING", payload: false });
+                    return;
+                }
             } else {
-                coinAInput = await getMergedCoinInput(txb, coins, expectedCoinA, depositDropdownMIST);
+                // Normal case: SUI is not involved or not the only coin
+                coinAInput = txb.object(coinA.objectId);
+                coinBInput = txb.object(coinB.objectId);
+                txb.setGasBudget(GAS_BUDGET);
             }
 
-            if (isCoinBDepositSui) {
-                coinBInput = txb.splitCoins(txb.gas, [txb.pure.u64(depositCustomMIST)]);
-            } else {
-                coinBInput = await getMergedCoinInput(txb, coins, expectedCoinB, depositCustomMIST);
-            }
-
-            txb.setGasBudget(GAS_BUDGET);
             txb.moveCall({
                 target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
                 typeArguments: [state.dropdownCoinMetadata!.typeName, state.customCoinMetadata!.typeName],
@@ -937,7 +926,7 @@ export default function Pools() {
 
                             <button className="button-primary text-white p-3 rounded-lg disabled:opacity-50"
                                 onClick={() => handleCreatePool()}
-                                
+
                                 disabled={state.loading} // ✅ Prevent multiple clicks
                             >
                                 {state.loading ? "Processing..." : "Create Pool ✅"}
@@ -1025,7 +1014,7 @@ export default function Pools() {
                                     <li><strong>Initial Amount (B):</strong> {formatCoinValue(state.poolData.initB, state.customCoinMetadata.decimals)} {state.customCoinMetadata.symbol}</li>
 
                                     <li><strong>LP Minted:</strong> {formatCoinValue(state.poolData.lpMinted, 9)}</li>
-                                    
+
                                     {/* Fees Section */}
                                     <li><strong>Fees:</strong></li>
                                     <ul className="ml-4">

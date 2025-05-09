@@ -350,6 +350,31 @@ export default function AddLiquidity() {
             const depositA_U64 = BigInt(Math.floor(parseFloat(state.depositDropdownCoin) * Math.pow(10, decimalsA)));
             const depositB_U64 = BigInt(Math.floor(parseFloat(state.depositCustomCoin) * Math.pow(10, decimalsB)));
 
+            // ✅ Ensure user has enough balance
+
+            const coinABalance = await provider.getBalance({
+                owner: userAddress,
+                coinType: coinTypeA
+            });
+
+            const coinBBalance = await provider.getBalance({
+                owner: userAddress,
+                coinType: coinTypeB
+            });
+
+            if (BigInt(coinABalance.totalBalance) < depositA_U64 || BigInt(coinBBalance.totalBalance) < depositB_U64) {
+                alert("⚠️ Insufficient coin balance in wallet.");
+                console.error("❌ Balance Check Failed!");
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
+
+            addLog("✅ Balance Check Passed!");
+            console.log("✅ Balance Check Passed!");
+            console.log("💰 Selected Coin Objects for Deposit:");
+            console.log(`${state.dropdownCoinMetadata.symbol}:`, coinTypeA, "Balance:", coinABalance.totalBalance.toString());
+            console.log(`${state.customCoinMetadata.symbol}:`, coinTypeB, "Balance:", coinBBalance.totalBalance.toString());
+
             // ✅ Match a single coin object for CoinA with enough balance
             const expectedCoinA = state.dropdownCoinMetadata.typeName;
 

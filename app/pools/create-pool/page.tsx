@@ -187,7 +187,10 @@ export default function Pools() {
     ) => {
         const matchingCoins = coins.filter((c) => c.coinType === coinType);
         if (matchingCoins.length === 0) {
-            throw new Error(`No ${coinType} coins found in wallet`);
+            alert(`❌ No ${coinType} coins found in wallet`);
+            console.error(`❌ No ${coinType} coins found in wallet`);
+            dispatch({ type: "SET_LOADING", payload: false });
+            return;
         }
 
         let accumulated = 0n;
@@ -200,7 +203,10 @@ export default function Pools() {
         }
 
         if (accumulated < amount) {
-            throw new Error(`Insufficient total balance for ${coinType}`);
+            alert(`⚠️ Insufficient coin balance in wallet. ${coinType}`);
+            console.error(`❌ Insufficient total balance for ${coinType}`);
+            dispatch({ type: "SET_LOADING", payload: false });
+            return
         }
 
         if (coinsToUse.length === 1) {
@@ -287,10 +293,10 @@ export default function Pools() {
             console.log(`${state.customCoinMetadata.symbol}:`, depositCustomMIST.toString());
 
             const coinA = coins.find(
-                (c) => c.coinType === expectedCoinA && BigInt(c.balance) >= depositDropdownMIST
+                (c) => c.coinType === expectedCoinA
             );
             const coinB = coins.find(
-                (c) => c.coinType === expectedCoinB && BigInt(c.balance) >= depositCustomMIST
+                (c) => c.coinType === expectedCoinB
             );
 
             if (!coinA || !coinB) {
@@ -301,17 +307,29 @@ export default function Pools() {
             }
 
             // ✅ Ensure user has enough balance
-            if (BigInt(coinA.balance) < depositDropdownMIST || BigInt(coinB.balance) < depositCustomMIST) {
+
+            const coinABalance = await provider.getBalance({
+                owner: userAddress,
+                coinType: expectedCoinA
+            });
+
+            const coinBBalance = await provider.getBalance({
+                owner: userAddress,
+                coinType: expectedCoinB
+            });
+
+            if (BigInt(coinABalance.totalBalance) < depositDropdownMIST || BigInt(coinBBalance.totalBalance) < depositCustomMIST) {
                 alert("⚠️ Insufficient coin balance in wallet.");
                 console.error("❌ Balance Check Failed!");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
+
             addLog("✅ Balance Check Passed!");
             console.log("✅ Balance Check Passed!");
             console.log("💰 Selected Coin Objects for Deposit:");
-            console.log(`${state.dropdownCoinMetadata.symbol}:`, coinA.coinObjectId, "Balance:", coinA.balance.toString());
-            console.log(`${state.customCoinMetadata.symbol}:`, coinB.coinObjectId, "Balance:", coinB.balance.toString());
+            console.log(`${state.dropdownCoinMetadata.symbol}:`, coinA.coinObjectId, "Balance:", coinABalance.totalBalance.toString());
+            console.log(`${state.customCoinMetadata.symbol}:`, coinB.coinObjectId, "Balance:", coinBBalance.totalBalance.toString());
 
             const txb = new TransactionBlock();
 
@@ -343,9 +361,9 @@ export default function Pools() {
                 arguments: [
                     txb.object(LOCK_ID),
                     txb.object(FACTORY_ID),
-                    coinAInput,
+                    coinAInput!,
                     txb.pure.u64(depositDropdownMIST),
-                    coinBInput,
+                    coinBInput!,
                     txb.pure.u64(depositCustomMIST),
                     txb.pure.u64(Math.round(state.lpBuilderFee * 100)), // Convert % → basis points
                     txb.pure.u64(Math.round(state.buybackBurnFee * 100)),

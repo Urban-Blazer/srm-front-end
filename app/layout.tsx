@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description: 'The First Rewards Decentralized Exchange DEX Ever. It is time you got a piece',
   metadataBase: new URL('https://SuiRewards.Me'),
   twitter: {
-    title: 'Sui Rewareds Me',
+    title: 'Sui Rewards Me',
     description: 'The First Rewards Decentralized Exchange DEX Ever. It is time you got a piece',
     images: '/images/banner.jpg',
     card: 'summary_large_image',

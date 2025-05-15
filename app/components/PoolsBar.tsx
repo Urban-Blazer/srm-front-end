@@ -6,7 +6,6 @@ import usePairStats from "../hooks/usePairStats";
 import { usePoolStats } from "../hooks/usePoolStats";
 import { Spinner } from "./Spinner";
 import Link from "next/link";
-import { Badge } from "@radix-ui/themes";
 
 interface PoolsBarProps { }
 
@@ -24,7 +23,7 @@ const PoolsBar: FC<PoolsBarProps> = () => {
     return (
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-300 p-4">
             {data?.map(pool => (
-                <Link href={`/swap/${pool.coinA.symbol}/${pool.coinB.symbol}`}>
+                <Link key={pool.poolId} href={`/swap/${pool.coinA.symbol}/${pool.coinB.symbol}`}>
                     <div className={`flex flex-col h-full p-4 text-white border border-${((selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '3' : '1')} border-[${(selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '#61F98A' : '#5E21A1'}] items-center gap-2 opacity-${((selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '100' : '75')}`}>
                         <div className={`flex items-center gap-2`}>
                             <img
@@ -69,7 +68,7 @@ const PoolsBar: FC<PoolsBarProps> = () => {
                         </div>
                         {(selectedPair?.poolId && selectedPair.poolId === pool.poolId)  && (
                             <div className={`flex items-center gap-2`}>
-                                <Badge color="green">active</Badge>
+                                <span className="text-xs text-green-800 bg-green-200 rounded-full px-2 py-1">active</span>
                             </div>
                         )}
                     </div>

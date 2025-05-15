@@ -3,19 +3,49 @@
 import { usePoolSearch } from "@/app/hooks/usePoolSearch";
 import { usePoolStats } from "@/app/hooks/usePoolStats";
 import { PoolSearchResult } from "@/app/types";
+import Chart from "@components/Chart";
 import Holders from "@components/Holders";
 import PairStats from "@components/PairStats";
 import PoolInfoV2 from "@components/PoolInfoV2";
 import PoolsBar from "@components/PoolsBar";
-import SearchBar from "@components/SearchBar";
+import RecentTransactions from "@components/RecentTransactions";
 import { Spinner } from "@components/Spinner";
 import SwapInterface from "@components/SwapInterface";
-import Ticker from "@components/Ticker";
 import { emptyPairAtom } from "@data/store";
-import { Box, Heading, Tabs } from "@radix-ui/themes";
+import { Tabs, Tab, Box } from "@mui/material";
 import { useAtom } from "jotai";
-import dynamic from "next/dynamic";
 import { FC, useEffect, useMemo, useState } from "react";
+
+
+function a11yProps(index: number) {
+    return {
+        id: `simple-tab-${index}`,
+        'aria-controls': `simple-tabpanel-${index}`,
+    };
+}
+
+
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+function CustomTabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+        </div>
+    );
+}
 
 interface PageProps {
     params: {
@@ -24,13 +54,13 @@ interface PageProps {
     };
 }
 
-const Chart = dynamic(() => import("@components/Chart"), { ssr: false });
-const RecentTransactions = dynamic(
-    () => import("@components/RecentTransactions"),
-    { ssr: false }
-);
-
 const SwapParams: FC<PageProps> = ({ params }) => {
+    const [value, setValue] = useState(0);
+
+    const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+        setValue(newValue);
+    };
+
     const websocketUrl = process.env.NEXT_PUBLIC_WS_URL!;
     const { coinA: rawA, coinB: rawB } = params;
 
@@ -262,61 +292,49 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                         <PoolsBar />
                     </div>
                     <div className="flex flex-col gap-6 col-span-12">
-                        <Tabs.Root defaultValue="pairStats">
-                            <Tabs.List>
-                                <Tabs.Trigger value="pairStats">
-                                    <Heading mb="2" size="1" color="gray" highContrast>PAIR STATS</Heading>
-                                </Tabs.Trigger>
-                                <Tabs.Trigger value="poolInfo">
-                                    <Heading mb="2" size="1" color="gray" highContrast>POOL INFO</Heading>
-                                </Tabs.Trigger>
-                                <Tabs.Trigger value="recentTransactions">
-                                    <Heading mb="2" size="1" color="gray" highContrast>RECENT TXN</Heading>
-                                </Tabs.Trigger>
-                                <Tabs.Trigger value="holders">
-                                    <Heading mb="2" size="1" color="gray" highContrast>HOLDERS</Heading>
-                                </Tabs.Trigger>
-                                {/* <Spinner/> */}
-                            </Tabs.List>
-
-                            <Box pt="3" className="w-full">
-                                <Tabs.Content value="pairStats">
-                                    <PairStats
-                                        poolId={poolId}
-                                        coinA={coinA}
-                                        coinB={coinB}
-                                        poolStats={poolStats}
-                                    />
-                                </Tabs.Content>
-
-                                <Tabs.Content value="poolInfo">
-                                    <PoolInfoV2
-                                        poolId={poolId}
-                                        coinA={coinA}
-                                        coinB={coinB}
-                                        poolStats={poolStats}
-                                        loading={statsLoading || statsPending}
-                                    />
-                                </Tabs.Content>
-
-                                <Tabs.Content value="recentTransactions">
-                                    {coinA && coinB && (
-                                        <RecentTransactions
-                                            poolId={poolId}
-                                            websocketUrl={websocketUrl}
-                                            coinA={coinA}
-                                            coinB={coinB}
-                                        />
-                                    )}
-                                </Tabs.Content>
-
-                                <Tabs.Content value="holders">
-                                    {coinA && coinB && (
-                                        <Holders coinType={coinB.typeName} poolId={poolId}/>
-                                    )}
-                                </Tabs.Content>
-                            </Box>
-                        </Tabs.Root>
+                        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                            <Tabs value={value} onChange={handleChange} aria-label="tabs"
+                                variant="scrollable"
+                                scrollButtons="auto"
+                            >
+                                <Tab label="PAIR STATS"  {...a11yProps(0)} />
+                                <Tab label="POOL INFO"  {...a11yProps(1)} />
+                                <Tab label="RECENT TXN"  {...a11yProps(2)} />
+                                <Tab label="HOLDERS"  {...a11yProps(3)} />
+                            </Tabs>
+                        </Box>
+                        <CustomTabPanel value={value} index={0}>
+                            <PairStats
+                                poolId={poolId}
+                                coinA={coinA}
+                                coinB={coinB}
+                                poolStats={poolStats}
+                            />
+                        </CustomTabPanel>
+                        <CustomTabPanel value={value} index={1}>
+                            <PoolInfoV2
+                                poolId={poolId}
+                                coinA={coinA}
+                                coinB={coinB}
+                                poolStats={poolStats}
+                                loading={statsLoading || statsPending}
+                            />
+                        </CustomTabPanel>
+                        <CustomTabPanel value={value} index={2}>
+                            {coinA && coinB && (
+                                <RecentTransactions
+                                    poolId={poolId}
+                                    websocketUrl={websocketUrl}
+                                    coinA={coinA}
+                                    coinB={coinB}
+                                />
+                            )}
+                        </CustomTabPanel>
+                        <CustomTabPanel value={value} index={3}>
+                            {coinA && coinB && (
+                                <Holders coinType={coinB.typeName} poolId={poolId} />
+                            )}
+                        </CustomTabPanel>
                     </div>
                 </div>
             </div>

@@ -2,7 +2,6 @@
 import { useState } from "react";
 import CopyIcon from "@svg/copy-icon.svg";
 import { Spinner } from "./Spinner";
-import { ThickCheckIcon } from "@radix-ui/themes";
 
 interface Coin {
     typeName: string;
@@ -131,7 +130,7 @@ export default function PoolInfoV2({ poolId, coinA, coinB, poolStats, loading }:
                             >
                             {copiedText === poolStats.creator_royalty_wallet ? (
                                 <div className="flex">
-                                    <ThickCheckIcon className="w-4 h-4 text-green-800" /><span className="text-xs text-green-800 ml-1"> Copied!</span>
+                                    <span className="text-xs text-green-800 ml-1"> Copied!</span>
                                 </div>
                             ) : (
                                 <CopyIcon className="w-4 h-4 text-white" />

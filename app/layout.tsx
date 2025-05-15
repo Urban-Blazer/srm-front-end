@@ -4,8 +4,6 @@ import Script from 'next/script';
 import Navbar from '../app/components/Navbar';
 import '@mysten/dapp-kit/dist/index.css';
 import './globals.css';
-import "@radix-ui/themes/styles.css";
-import { Theme } from "@radix-ui/themes";
 
 import Providers from './components/Providers';
 
@@ -61,12 +59,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${inter.className} bg-gray-900 text-white h-screen`}>
-        <Theme accentColor="mint">
           <Providers>
             <Navbar />
             <main className="mx-auto">{children}</main>
           </Providers>
-        </Theme>
       </body>
     </html>
   );

@@ -26,8 +26,8 @@ export default  function PairStats({ poolId, coinA, coinB, poolStats }: PairStat
     }));
 
     
-    const {data: stats, isLoading} = usePairStats(poolId!, rangeMap[selectedRange]);
-    const {data: statsLifetime, isLoading: isStatsLifetimeLoading} = usePairStats(poolId!, "lifetime");
+    const {pairStats: stats, isLoading} = usePairStats(poolId!, rangeMap[selectedRange]);
+    const {pairStats: statsLifetime, isLoading: isStatsLifetimeLoading} = usePairStats(poolId!, "lifetime");
     
     const { data: coinAPriceUSD } = useCoinPrice("SUI");
     console.log({statsLifetime, buy100SuiQuote, coinAPriceUSD})

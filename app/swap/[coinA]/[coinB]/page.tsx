@@ -40,6 +40,7 @@ function CustomTabPanel(props: TabPanelProps) {
             hidden={value !== index}
             id={`simple-tabpanel-${index}`}
             aria-labelledby={`simple-tab-${index}`}
+            className="h-full min-h-[300px]"
             {...other}
         >
             {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
@@ -153,7 +154,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
         );
     }
 
-    if (isAnyLoading) {
+    if (false) {
         return (
             <>
                 <div
@@ -242,16 +243,16 @@ const SwapParams: FC<PageProps> = ({ params }) => {
         );
     }
 
-    if (!poolId) {
-        return (
-            <div
-                className="flex items-center justify-center w-full h-[80vh]"
-                aria-busy="true"
-            >
-                <span>No pool id...</span>
-            </div>
-        );
-    }
+    // if (!poolId) {
+    //     return (
+    //         <div
+    //             className="flex items-center justify-center w-full h-[80vh]"
+    //             aria-busy="true"
+    //         >
+    //             <span>No pool id...</span>
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className="flex flex-col min-h-screen text-white bg-[#000306]">
@@ -274,9 +275,14 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                             poolStats={poolStats}
                         />
                     </div>
-                    <div className="flex flex-col gap-6 col-span-12 md:col-span-7 lg:col-span-8">
+                    <div className={`w-full flex flex-col gap-6 col-span-12 md:col-span-7 lg:col-span-8 justify-center ${!poolId || poolId === null ? 'items-center' : ''}`}>
                         {!poolId || poolId === null ? (
-                            <div>Please select a pool.</div>
+                            <div className='relative w-full animate-pulse'>
+                                <div className="w-full min-h-[460px] flex bg-gray-900 border border-gray-800 p-4 shadow-md">
+                                    <h2 className="text-white text-lg font-semibold mb-2">Chart</h2>
+                                    <Spinner />
+                                </div>
+                            </div>
                         ) : (
                             <>
                                 <div className="shadow-md">
@@ -321,7 +327,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                             />
                         </CustomTabPanel>
                         <CustomTabPanel value={value} index={2}>
-                            {coinA && coinB && (
+                            {coinA && coinB && poolId && (
                                 <RecentTransactions
                                     poolId={poolId}
                                     websocketUrl={websocketUrl}
@@ -331,7 +337,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                             )}
                         </CustomTabPanel>
                         <CustomTabPanel value={value} index={3}>
-                            {coinA && coinB && (
+                            {coinA && coinB && poolId && (
                                 <Holders coinType={coinB.typeName} poolId={poolId} />
                             )}
                         </CustomTabPanel>

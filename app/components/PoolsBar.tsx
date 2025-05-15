@@ -81,13 +81,12 @@ const PoolsBar: FC<PoolsBarProps> = () => {
 export default PoolsBar;
 
 const RewardsDistributed = ({ poolId }: { poolId: string }) => {
-    // const selectedPair = useAtomValue(emptyPairAtom);
-    const { data: stats24h, isPending: isStats24hPending } = usePairStats(poolId, "24h");
+    const { pairStats, isPending: isStats24hPending } = usePairStats(poolId, "24h");
     return (
         <>
             <span className="text-white text-sm"><b>Distributed 24h: </b></span>
             <span className="text-white text-sm">
-                {(Number(stats24h?.rewardsDistributed ?? 0) / 10 ** 9).toLocaleString(undefined, {
+                {(Number(pairStats?.rewardsDistributed ?? 0) / 10 ** 9).toLocaleString(undefined, {
                     maximumFractionDigits: 2,
                     minimumFractionDigits: 2
                 })}

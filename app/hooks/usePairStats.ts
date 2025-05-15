@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Stats } from '@/app/types';
+import { useMemo } from 'react';
 
 function getSinceTimestamp(range: string): number {
     const now = Date.now();
@@ -47,10 +48,20 @@ const usePairStats = (poolId?: string, range?: string, refetchInterval?: number)
         queryFn: () => fetchStats(poolId, range, sinceForDynamo),
         enabled: (!!poolId && !!range && !!sinceForDynamo),
         refetchInterval,
-        staleTime: 10 * 1000
+        staleTime: 10 * 1000,
+
     });
 
-    return { data, isLoading, isPending, error, refetch };
+
+
+  const pairStats = useMemo<Stats | null>(() => {
+    if (data) {
+      return data;
+    }
+    return null; 
+  }, [data]);
+
+    return { pairStats, isLoading, isPending, error, refetch };
 };
 
 export default usePairStats;

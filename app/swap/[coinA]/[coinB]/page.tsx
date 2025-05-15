@@ -103,7 +103,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
     }
 
     const chartProps = useMemo(
-        () => ({ poolId, coinASymbol: coinA?.symbol }),
+        () => ({ poolId: poolId ?? undefined, coinASymbol: coinA?.symbol }),
         [poolId, coinA?.symbol]
     );
 
@@ -154,106 +154,6 @@ const SwapParams: FC<PageProps> = ({ params }) => {
         );
     }
 
-    if (false) {
-        return (
-            <>
-                <div
-                    className="flex flex-col min-h-screen text-white bg-[#000306] pt-4"
-                    aria-busy="true"
-                >
-                    <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 mx-auto">
-                        <div className="flex flex-col gap-6 lg:col-span-4">
-                            <div className='relative w-full animate-pulse'>
-                                <div className="w-full min-h-[460px] flex bg-gray-900 border border-gray-800 p-4 shadow-md">
-                                    <h2 className="text-white text-lg font-semibold mb-2">Swap</h2>
-                                    <Spinner />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="lg:col-span-8 w-full">
-                            <div className='relative w-full animate-pulse'>
-                                <div className="w-full min-h-[460px] bg-gray-900 border border-gray-800 p-4 shadow-md">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <div className="flex">
-                                            <h2 className="text-lg font-semibold text-white">Chart</h2>
-                                            <Spinner />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="w-full p-6 border-b border-gray-800 max-w-screen-2xl mx-auto">
-                        <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="w-full">
-                                <div className='relative w-full max-w-lg animate-pulse'>
-                                    <div className="w-full min-h-[226px] px-4 py-2 bg-gray-900 text-white border border-gray-700 flex items-center space-x-2">
-                                        <div className="flex">
-                                            <h2 className="text-lg font-semibold text-white">Loading pool</h2>
-                                            <Spinner />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="w-full">
-                                <div className='relative w-full max-w-lg animate-pulse'>
-                                    <div className="w-full min-h-[226px] px-4 py-2 bg-gray-900 text-white border border-gray-700 flex items-center space-x-2">
-                                        <div className="flex">
-                                            <h2 className="text-lg font-semibold text-white">Loading pool</h2>
-                                            <Spinner />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="w-full">
-                                <div className='relative w-full max-w-lg animate-pulse'>
-                                    <div className="w-full min-h-[226px] px-4 py-2 bg-gray-900 text-white border border-gray-700 flex items-center space-x-2">
-                                        <div className="flex">
-                                            <h2 className="text-lg font-semibold text-white">Loading pool</h2>
-                                            <Spinner />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="w-full">
-                                <div className='relative w-full max-w-lg animate-pulse'>
-                                    <div className="w-full min-h-[226px] px-4 py-2 bg-gray-900 text-white border border-gray-700 flex items-center space-x-2">
-                                        <div className="flex">
-                                            <h2 className="text-lg font-semibold text-white">Loading pool</h2>
-                                            <Spinner />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 mx-auto">
-                        <div className="flex flex-col gap-6 lg:col-span-12">
-                            <div className='relative w-full animate-pulse'>
-                                <div className="w-full min-h-[460px] flex bg-gray-900 border border-gray-800 p-4 shadow-md">
-                                    <h2 className="text-white text-lg font-semibold mb-2">Pair Stats & Pool Info</h2>
-                                    <Spinner />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </>
-        );
-    }
-
-    // if (!poolId) {
-    //     return (
-    //         <div
-    //             className="flex items-center justify-center w-full h-[80vh]"
-    //             aria-busy="true"
-    //         >
-    //             <span>No pool id...</span>
-    //         </div>
-    //     );
-    // }
-
     return (
         <div className="flex flex-col min-h-screen text-white bg-[#000306]">
             {/* <div className="w-full p-6 mx-auto max-w-screen-2xl">
@@ -267,7 +167,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     {/* Sidebar */}
-                    <div className="flex flex-col gap-6 col-span-12 md:col-span-5 lg:col-span-4 h-full">
+                    <div className="flex flex-col gap-6 col-span-12 md:col-span-5 lg:col-span-4 h-full pb-10">
                         <SwapInterface
                             poolId={poolId}
                             coinA={coinA}
@@ -276,22 +176,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                         />
                     </div>
                     <div className={`w-full flex flex-col gap-6 col-span-12 md:col-span-7 lg:col-span-8 justify-center ${!poolId || poolId === null ? 'items-center' : ''}`}>
-                        {!poolId || poolId === null ? (
-                            <div className='relative w-full animate-pulse'>
-                                <div className="w-full min-h-[460px] flex bg-gray-900 border border-gray-800 p-4 shadow-md">
-                                    <h2 className="text-white text-lg font-semibold mb-2">Chart</h2>
-                                    <Spinner />
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="shadow-md">
-                                    {chartProps?.poolId && chartProps?.coinASymbol && (
-                                        <Chart poolId={chartProps.poolId} coinASymbol={chartProps.coinASymbol} />
-                                    )}
-                                </div>
-                            </>
-                        )}
+                        <Chart poolId={chartProps.poolId} coinASymbol={chartProps.coinASymbol} />
                     </div>
 
                     <div className="flex flex-col gap-6 col-span-12">

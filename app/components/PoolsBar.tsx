@@ -21,7 +21,7 @@ const PoolsBar: FC<PoolsBarProps> = () => {
     }
 
     return (
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-300 p-4">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-300">
             {data?.map(pool => (
                 <Link key={pool.poolId} href={`/swap/${pool.coinA.symbol}/${pool.coinB.symbol}`}>
                     <div className={`flex flex-col h-full p-4 text-white border border-${((selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '3' : '1')} border-[${(selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '#61F98A' : '#5E21A1'}] items-center gap-2 opacity-${((selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '100' : '75')}`}>

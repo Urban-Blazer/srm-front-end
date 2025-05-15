@@ -11,11 +11,12 @@ import { useEffect, useRef, useState } from 'react';
 import useChartData from '../hooks/useChartData';
 import { IntervalType } from '../types';
 import useCoinPrice from '../hooks/useCoinPrice';
+import { Spinner } from './Spinner';
 
 
 interface ChartProps {
-    poolId: string;
-    coinASymbol: string; // "SUI" | "USDC"
+    poolId?: string;
+    coinASymbol?: string; // "SUI" | "USDC"
 }
 
 export default function Chart({ poolId, coinASymbol }: ChartProps) {
@@ -25,8 +26,9 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
     const latestCandles = useRef<CandlestickData[]>([]);
     const intervals = ['1m', '5m', '15m', '1h', '4h', '24h'];
     const [interval, setInterval] = useState<IntervalType>('1h');
-    const { data: chartData, refetch: refetchChartData } = useChartData(poolId, interval);
-    const { data: coinAPriceUSD } = useCoinPrice(coinASymbol);
+    const { data: chartData, refetch: refetchChartData, isPending: isChartDataPending } = useChartData(poolId, interval);
+    const { data: coinAPriceUSD, isPending: isCoinPricePending } = useCoinPrice(coinASymbol);
+    const isAnyLoading = isChartDataPending || isCoinPricePending;
     let ws: WebSocket | null = null;
 
     // WebSocket reconexión
@@ -153,7 +155,7 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
     }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData]);
 
     return (
-        <div className="w-full">
+        <div className="w-full min-h-[480px]">
             <div className="flex justify-end mb-2">
                 <select
                     value={interval}
@@ -167,6 +169,13 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
                     ))}
                 </select>
             </div>
+
+            {isAnyLoading && (
+                <div className='w-full h-[400px] animate-pulse flex bg-gray-900 border border-gray-800 shadow-md p-4'>
+                    {/* <h2 className="text-white text-lg font-semibold">Chart</h2>
+                    <Spinner /> */}
+                </div>
+            )}
 
             <div
                 ref={chartContainerRef}

@@ -33,7 +33,6 @@ const useHolders = (coinType: string) => {
         queryKey: ['holders', coinType],
         queryFn: () => fetchHolders(coinType),
         enabled: !!coinType,
-        // no refetchInterval by default
     });
 
     return {

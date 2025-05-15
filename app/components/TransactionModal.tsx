@@ -1,41 +1,38 @@
+import { Dialog, DialogContent, DialogTitle } from "@mui/material";
+import { Spinner } from "@components/Spinner";
+import Image from "next/image";
 import React from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/material";
 
 interface TransactionModalProps {
     open: boolean;
     onClose: () => void;
     logs: string[];
     isProcessing: boolean;
+    transactionProgress?: {
+        image: string;
+        text: string;
+    }
 }
 
-const TransactionModal: React.FC<TransactionModalProps> = ({ open, onClose, logs, isProcessing }) => {
+const TransactionModal: React.FC<TransactionModalProps> = ({ open, onClose, logs, isProcessing, transactionProgress }) => {
     return (
-        <Dialog open={open} onClose={!isProcessing ? onClose : undefined} fullWidth maxWidth="sm">
-            <DialogTitle>Transaction Progress</DialogTitle>
-            <DialogContent dividers>
-                <div style={{ maxHeight: "300px", overflowY: "auto", fontFamily: "monospace" }}>
-                    {logs.map((log, index) => (
+        <Dialog open={open} onClose={!isProcessing ? onClose : undefined} maxWidth="sm" sx={{backgroundColor: '#6A1B9A78'}}>
+            {/* <DialogTitle sx={{backgroundColor: '#000306', color: '#21B573'}}>{transactionProgress?.text}</DialogTitle> */}
+            <DialogContent dividers sx={{backgroundColor: '#000306'}}>
+                <div style={{ maxHeight: "650px", overflowY: "auto", fontFamily: "monospace", color: '#fff' }} className="relative flex items-center flex-col">
+                    <Image
+                        src={transactionProgress?.image ?? ''}
+                        alt="Sui Rewards Me App Logo"
+                        width={250} /* Adjusted size for mobile fit */
+                        height={120}
+                        priority
+                    />
+                    {transactionProgress?.image === '/images/txn_loading.png' ? <Spinner /> : null}   
+                    {logs.slice(logs.length - 3).map((log, index) => (
                         <p key={index} style={{ margin: "5px 0" }}>{log}</p>
-                    ))}
+                    ))}  
                 </div>
             </DialogContent>
-            <DialogActions>
-                <Button
-                    variant="contained"
-                    disabled={isProcessing} // ✅ Keeps button disabled while processing
-                    onClick={onClose}
-                    sx={{
-                        backgroundColor: isProcessing ? "#6c757d" : "#21B573",
-                        color: "#6A1B9A",
-                        minWidth: "200px",
-                        "&:hover": {
-                            backgroundColor: isProcessing ? "#5a6268" : "#9FFFCB",
-                        },
-                    }}
-                >
-                    {isProcessing ? "Processing Transaction..." : "Transaction Completed"}
-                </Button>
-            </DialogActions>
         </Dialog>
     );
 };

@@ -31,8 +31,8 @@ export async function GET(req: NextRequest) {
 
     const isTypename = query.startsWith("0x");
     const keyName = isTypename ? "coinB" : "coinB_symbol";
-    const searchValue = isTypename ? query : query.toUpperCase(); // 🔁 Normalize symbol
-
+    const searchValue = isTypename ? decodeURIComponent(query) : query.toUpperCase(); // 🔁 Normalize symbol
+    console.log({keyName, isTypename, searchValue});
     try {
         const response = await docClient.send(
             new ScanCommand({

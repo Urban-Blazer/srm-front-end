@@ -5,14 +5,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CONFIG_ID, DEX_MODULE_NAME, PACKAGE_ID } from "../config";
 import { predefinedCoins } from "../data/coins";
 import { PoolStats, SwapInterfaceProps } from "@/app/types";
-import InputCurrency, { formatWithCommas } from "./InputCurrency";
 
 
 const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
 const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
 const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);     // 5 SRM (adjust if needed)
 
-export default function SwapInterface({
+export default function SwapInterfaceV2({
     poolId,
     coinA,
     coinB,
@@ -29,7 +28,6 @@ export default function SwapInterface({
     const [slippage, setSlippage] = useState<number>(1);
     const [isProcessing, setIsProcessing] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
-    const [transactionProgress, setTransactionProgress] = useState<{ image: string; text: string; } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const account = useCurrentAccount();
     const wallet = useCurrentWallet()?.currentWallet;
@@ -44,7 +42,7 @@ export default function SwapInterface({
     };
 
     const fetchBalance = async (token: any, setBalance: (balance: number) => void) => {
-        if (!walletAddress || !token || !token?.symbol) return; // ✅ Check for walletAddress
+        if (!walletAddress || !token) return; // ✅ Check for walletAddress
 
         try {
             console.log(`Fetching balance for ${token.symbol}...`);
@@ -59,11 +57,6 @@ export default function SwapInterface({
             setBalance(0);
         }
     };
-
-    useEffect(() => {
-        setAmountIn('');
-        setAmountOut('');
-    },[isBuy]);
 
     useEffect(() => {
         const fetchBalances = async () => {
@@ -81,24 +74,22 @@ export default function SwapInterface({
     const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setAmountIn(value);
-        console.log({value}, isNaN(Number(value)))
-        if (value && !isNaN(Number(value.replace(/,/g, "")))) {
-            debouncedGetQuote(value.replace(/,/g, ""), true);
+        if (value && !isNaN(Number(value))) {
+            debouncedGetQuote(value, true);
         }
     };
 
-    // const handleAmountOutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     const value = e.target.value;
-    //     setAmountOut(value);
-    //     if (value && !isNaN(Number(value))) {
-    //         debouncedGetQuote(value, false); // false = buying CoinB
-    //     }
-    // };
+    const handleAmountOutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setAmountOut(value);
+        if (value && !isNaN(Number(value))) {
+            debouncedGetQuote(value, false); // false = buying CoinB
+        }
+    };
 
     // ✅ First define fetchQuote
     const fetchQuote = async (amount: string, isSell: boolean) => {
         console.log("🏁 fetchQuote called:", { poolId, coinA, coinB, poolStats, amount, isSell });
-        console.log({amount}, isNaN(Number(amount)))
 
         if (!poolId || !coinA || !coinB || !poolStats) return;
         setPriceImpact(0);
@@ -179,14 +170,11 @@ export default function SwapInterface({
                 });
 
                 setPriceImpact(impact);
-                let _amount;
 
                 if (isSell && data.buyAmount) {
-                    _amount = formatWithCommas(Number(data.buyAmount).toFixed(4));
-                    setAmountOut(_amount);
+                    setAmountOut(Number(data.buyAmount).toFixed(4));
                 } else if (!isSell && data.sellAmount) {
-                    _amount = formatWithCommas(Number(data.sellAmount).toFixed(4));
-                    setAmountIn(_amount);
+                    setAmountIn(Number(data.sellAmount).toFixed(4));
                 }
             }
         } catch (error) {
@@ -204,19 +192,15 @@ export default function SwapInterface({
         debounceTimer.current = setTimeout(() => {
             fetchQuote(amount, isSell);
         }, 300);
-    }, [fetchQuote, amountIn]);
+    }, [fetchQuote]);
 
     const handleQuickSelect = (percent: number) => {
-        let suiReserved = 0;
-        if(percent === 100 && isBuy){
-            suiReserved = 1_000_000;   
-        }
-        const balance = (isBuy ? coinABalance : coinBBalance) - suiReserved;
+        const balance = isBuy ? coinABalance : coinBBalance;
         const decimals = isBuy ? coinA?.decimals ?? 9 : coinB?.decimals ?? 9;
         const formattedBalance = balance / Math.pow(10, decimals);
 
         const amount = (formattedBalance * (percent / 100)).toString();
-        setAmountIn(formatWithCommas(Number(amount).toFixed(4)));
+        setAmountIn(amount);
         debouncedGetQuote(amount, true);
     };
 
@@ -238,10 +222,6 @@ export default function SwapInterface({
 
         setLogs([]);
         setIsProcessing(true);
-        setTransactionProgress({        
-            image: '/images/txn_loading.png',
-            text: '',
-        });
         setIsModalOpen(true);
 
         try {
@@ -251,8 +231,8 @@ export default function SwapInterface({
             const sellDecimals = sellToken.decimals ?? 9;
             const buyDecimals = buyToken.decimals ?? 9;
 
-            const sellAmountU64 = BigInt(Math.floor(Number(amountIn.replace(/,/g, "")) * Math.pow(10, sellDecimals)));
-            const expectedOutU64 = BigInt(Math.floor(Number(amountOut.replace(/,/g, "")) * Math.pow(10, buyDecimals)));
+            const sellAmountU64 = BigInt(Math.floor(Number(amountIn) * Math.pow(10, sellDecimals)));
+            const expectedOutU64 = BigInt(Math.floor(Number(amountOut) * Math.pow(10, buyDecimals)));
 
             const maxSlippageInt = BigInt(Math.floor(Number(slippage) * 100));
             const minOutU64 = expectedOutU64 - (expectedOutU64 * maxSlippageInt / BigInt(10000));
@@ -278,12 +258,8 @@ export default function SwapInterface({
             console.log({ sellTokenBalance, sellTokenCoins })
 
             if (sellTokenCoins.length === 0) {
-                addLog("❌ No sufficient Coin Object found");
+                alert("⚠️ No single coin object has enough balance to cover the sell amount.");
                 console.error("❌ No sufficient Coin Object found:", { sellTokenCoins });
-                setTransactionProgress({        
-                    image: '/images/txn_failed.png',
-                    text: '',
-                });
                 return;
             }
 
@@ -291,12 +267,8 @@ export default function SwapInterface({
             const requiredBalance = needsGasBuffer ? sellAmountU64 + BigInt(900_000) : sellAmountU64;
 
             if (BigInt(sellTokenBalance.totalBalance) < requiredBalance) {
-                addLog("❌ No enough balance to cover the sell amount");
+                alert("⚠️ No enough balance to cover the sell amount.");
                 console.error("❌ No enough balance to cover the sell amount:", { sellTokenBalance });
-                setTransactionProgress({        
-                    image: '/images/txn_failed.png',
-                    text: '',
-                });
                 return;
             }
 
@@ -347,12 +319,7 @@ export default function SwapInterface({
                 }
 
                 if (coinsToUse.length === 0) {
-                    addLog("❌ No $${coinA} coins found in your wallet.");
                     console.error(`No $${coinA} coins found in your wallet`);
-                    setTransactionProgress({        
-                        image: '/images/txn_failed.png',
-                        text: '',
-                    });
                     return;
                 }
 
@@ -413,13 +380,9 @@ export default function SwapInterface({
                             resolve();
                         },
                         onError: (error) => {
-                            setTransactionProgress({        
-                                image: '/images/txn_failed.png',
-                                text: '',
-                            });
                             console.error("❌ Swap failed during execution:", error);
                             addLog(`❌ Swap failed: ${error.message}`);
-                            // alert("⚠️ Swap failed. See console for details.");
+                            alert("⚠️ Swap failed. See console for details.");
                             reject(error);
                         },
                     }
@@ -443,11 +406,6 @@ export default function SwapInterface({
 
             addLog("✅ Swap completed successfully!");
 
-            setTransactionProgress({        
-                image: '/images/txn_successful.png',
-                text: '',
-            });
-
             if (shouldUpdateIsActive) {
                 console.log(`🔹 Updating isActive for pool ${poolId}...`);
                 await updateIsActiveWithRetry(poolId, 3);
@@ -459,16 +417,15 @@ export default function SwapInterface({
             await fetchBalance(coinA, setCoinABalance);
             await fetchBalance(coinB, setCoinBBalance);
 
+            // alert("Swap executed and confirmed!");
+
         } catch (error: any) {
             console.error("Swap failed:", error.message);
             addLog(`❌ Swap failed: ${error.message}`);
-            setTransactionProgress({        
-                image: '/images/txn_failed.png',
-                text: '',
-            });
+            alert(`Swap failed: ${error.message}`);
         } finally {
             setIsProcessing(false);
-            setTimeout(()=>setIsModalOpen(false), 5000)
+            setIsModalOpen(false);
         }
     };
 
@@ -516,9 +473,8 @@ export default function SwapInterface({
                 if (error.message.includes("Could not find the referenced transaction")) {
                     console.warn(`⏳ Transaction not indexed yet. Retrying (Attempt ${attempt})`);
                 } else {
-
-                    addLog(`Unexpected error fetching transaction: ${error.message}`);
                     console.error(`❌ Error fetching transaction (Attempt ${attempt}):`, error);
+                    alert(`Unexpected error fetching transaction: ${error.message}`);
                     return null;
                 }
             }
@@ -628,19 +584,19 @@ export default function SwapInterface({
     }
 
     return (
-        <div className="py-6 w-full max-w-md mx-auto space-y-6 h-full">
+        <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md mx-auto space-y-6">
             {/* Toggle Buy / Sell */}
             <div className="flex justify-center space-x-4 mb-4">
                 <button
                     onClick={() => setIsBuy(true)}
-                    className={`px-4 py-2 rounded-none text-sm font-semibold ${isBuy ? 'bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75' : 'bg-[#14110c] hover:bg-slate-600 text-slate-100'
+                    className={`px-4 py-2 rounded-full text-sm font-semibold ${isBuy ? 'bg-green-600 hover:bg-green-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
                         }`}
                 >
                     Buy
                 </button>
                 <button
                     onClick={() => setIsBuy(false)}
-                    className={`px-4 py-2 rounded-none text-sm font-semibold ${!isBuy ? 'bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:text-[#61F98A] hover:opacity-75' : 'bg-[#14110c] hover:bg-slate-600 text-slate-100'
+                    className={`px-4 py-2 rounded-full text-sm font-semibold ${!isBuy ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
                         }`}
                 >
                     Sell
@@ -680,12 +636,14 @@ export default function SwapInterface({
                 </div>
 
                 {/* Input box */}
-                <div className="flex items-center bg-[#14110c] px-3 py-2">
-                    <InputCurrency
-                        className="flex-1 p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden grow disabled:text-[#868098]"
-                        placeholder="0"
+                <div className="flex items-center bg-slate-700 rounded px-3 py-2">
+                    <input
+                        type="number"
+                        placeholder="0.0"
                         value={amountIn}
                         onChange={handleAmountInChange}
+                        className="bg-transparent text-slate-100 w-full outline-none text-lg text-right
+             appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                 </div>
             </div>
@@ -697,7 +655,7 @@ export default function SwapInterface({
                     <button
                         key={percent}
                         onClick={() => handleQuickSelect(parseInt(percent))}
-                        className="flex-1 text-md mx-1 bg-[#14110c] hover:bg-slate-600 rounded-none px-3 py-1 text-slate-300"
+                        className="flex-1 text-xs mx-1 bg-slate-700 hover:bg-slate-600 rounded-full px-3 py-1 text-slate-300"
                     >
                         {percent}%
                     </button>
@@ -737,19 +695,20 @@ export default function SwapInterface({
                 </div>
 
                 {/* Input box */}
-                <div className="flex items-center bg-[#14110c] px-3 py-2">
-                    <InputCurrency
-                        className="flex-1 p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden grow"
-                        placeholder="0"
+                <div className="flex items-center bg-slate-700 rounded px-3 py-2">
+                    <input
+                        type="number"
+                        placeholder="0.0"
                         value={amountOut}
-                        disabled
-                        // onChange={handleAmountOutChange}
+                        onChange={handleAmountOutChange}
+                        className="bg-transparent text-slate-100 w-full outline-none text-lg text-right
+             appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                 </div>
             </div>
 
             {/* Slippage Setting */}
-            <div className="flex items-center justify-end text-slate-400 text-xs mt-4 gap-4">
+            <div className="flex items-center justify-between text-slate-400 text-xs mt-4">
                 <span>Slippage</span>
                 <input
                     type="number"
@@ -767,7 +726,7 @@ export default function SwapInterface({
                             }
                         }
                     }}
-                    className="bg-transparent w-16 text-center text-slate-100 outline-none border border-slate-600 py-1
+                    className="bg-transparent w-16 text-center text-slate-100 outline-none border border-slate-600 rounded py-1
                     appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <span>%</span>
@@ -786,12 +745,12 @@ export default function SwapInterface({
                 onClick={handleSwap}
                 disabled={fetchingQuote || !amountIn || !amountOut || isProcessing || Math.abs(priceImpact) >= 15}
 
-                className={`mt-6 w-full rounded-none ${isProcessing || priceImpact >= 15
+                className={`mt-6 w-full ${isProcessing || priceImpact >= 15
                     ? 'bg-gray-500 cursor-not-allowed'
                     : isBuy
-                        ? 'bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75' // bg-green-600 hover:bg-green-500
-                        : 'bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:text-[#5E21A1] hover:opacity-75'
-                    } text-white py-3 font-semibold text-lg transition disabled:opacity-50`}
+                        ? 'bg-green-600 hover:bg-green-500'
+                        : 'bg-red-600 hover:bg-red-500'
+                    } text-white py-3 rounded-lg font-semibold text-lg transition disabled:opacity-50`}
             >
                 {isProcessing
                     ? "Processing..."
@@ -803,7 +762,7 @@ export default function SwapInterface({
                                 ? "Buy"
                                 : "Sell"}
             </button>
-            <TransactionModal open={isModalOpen} transactionProgress={transactionProgress ?? undefined} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
+            <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
 
         </div>
     );

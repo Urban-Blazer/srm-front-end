@@ -25,6 +25,9 @@ const defaultPair: PoolSearchResult = {
 };
 
 export const selectedPairAtom = atom<PoolSearchResult | null>(defaultPair);
+export const emptyPairAtom = atom<PoolSearchResult | null>(null);
+
+export const selectedPoolId = atom<string | null>(null);
 
 
 export const useSelectedPair = () => {

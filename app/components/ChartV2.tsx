@@ -14,11 +14,11 @@ import useCoinPrice from '../hooks/useCoinPrice';
 
 
 interface ChartProps {
-    poolId: string;
-    coinASymbol: string; // "SUI" | "USDC"
+    poolId?: string;
+    coinASymbol?: string; // "SUI" | "USDC"
 }
 
-export default function Chart({ poolId, coinASymbol }: ChartProps) {
+export default function ChartV2({ poolId, coinASymbol }: ChartProps) {
     const websocketUrl = "wss://api.suirewards.me";
     const wsRef = useRef<WebSocket | null>(null);
     const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -89,7 +89,7 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
                 borderColor: '#334155',
                 visible: true,
             },
-            width: chartContainerRef.current.clientWidth,
+            width: chartContainerRef.current?.clientWidth,
             height: 400,
         });
 
@@ -135,9 +135,9 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
         setTimeout(connectWebSocket, 300);
 
         const resizeObserver = new ResizeObserver(() => {
-            chartContainerRef.current && chart.applyOptions({
-                width: chartContainerRef.current.clientWidth,
-                height: chartContainerRef.current.clientHeight,
+            chart.applyOptions({
+                width: chartContainerRef.current!.clientWidth,
+                height: chartContainerRef.current!.clientHeight,
             });
         });
 
@@ -154,24 +154,33 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
 
     return (
         <div className="w-full">
-            <div className="flex justify-end mb-2">
-                <select
-                    value={interval}
-                    onChange={(e) => setInterval(e.target.value as IntervalType)}
-                    className="bg-slate-800 text-slate-100 border border-slate-600 px-2 py-1 text-sm"
-                >
-                    {intervals.map((int) => (
-                        <option key={int} value={int}>
-                            {int}
-                        </option>
-                    ))}
-                </select>
-            </div>
+            {poolId && coinASymbol ? (
+                <>
+                    <div className="flex justify-end mb-2">
+                        <select
+                            value={interval}
+                            onChange={(e) => setInterval(e.target.value as IntervalType)}
+                            className="bg-slate-800 text-slate-100 border border-slate-600 px-2 py-1 text-sm"
+                        >
+                            {intervals.map((int) => (
+                                <option key={int} value={int}>
+                                    {int}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+        
+                    <div
+                        ref={chartContainerRef}
+                        className="w-full h-[400px]"
+                    />
+                </>
 
-            <div
-                ref={chartContainerRef}
-                className="w-full h-[400px]"
-            />
+            ) : (
+                <>
+                   Please select a pool.
+                </>
+            )}
         </div>
     );
 }

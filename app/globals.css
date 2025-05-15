@@ -14,6 +14,7 @@
   --color-soft-mint: #9FFFCB;
   --color-royal-purple: #6A1B9A;
   --color-lavender-glow: #C77DFF;
+  --color-srm-green: #61F98A;
 
   --background-main: var(--color-deep-teal);
   --primary-button: var(--color-emerald-green);
@@ -50,15 +51,15 @@ body {
   color: white;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
-  padding-top: 80px;
 }
 
 /* 🔹 Navbar Styling */
 .navbar {
-  background-color: var(--background-main);
+  /* background-color: transparent; */
+  /* background-color: var(--background-main); */
+  background-image: url('https://suirewardsme.staxenterprise.tech/wp-content/uploads/2025/05/SRM_BG-MEN.jpeg');
   padding: 16px;
   width: 100%;
-  position: fixed;
   top: 0;
   left: 0;
   z-index: 50;
@@ -108,9 +109,33 @@ button {
   transition: all 0.3s ease-in-out;
 }
 
+button.menu-button {
+  font-family: var(--font-cta);
+  background-color: transparent;
+  color: white;
+  border-radius: 0px;
+  padding: 10px 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+button.menu-button:hover {
+  border-bottom: 3px solid var(--color-royal-purple);
+  background-color: transparent;
+  color: var(--color-soft-mint);
+}
+
 button:hover {
   background-color: var(--color-soft-mint);
   color: var(--background-main);
+}
+
+button.rt-BaseTabListTrigger {
+  background-color: transparent;
+}
+
+button.rt-BaseTabListTrigger:hover {
+  color: var(--gray-12);
 }
 
 /* 🔥 Secondary Buttons */
@@ -232,4 +257,55 @@ a:hover {
   .text-m {
     font-size: 14px;
   }
+}
+
+
+.bg-srm-green {
+  background-color: var(--color-srm-green);
+}
+
+.text-srm-green {
+  color: var(--color-srm-green);
+}
+
+.border-srm-green {
+  border-color: var(--color-srm-green);
+}
+
+/* Wallet Connect */
+
+[data-dapp-kit].Button_buttonVariants_size_lg__x1s81q4, [data-dapp-kit] .Button_buttonVariants_size_lg__x1s81q4 {
+  border-radius: 0px;
+  padding: 0px 16px;
+  background-color: #61F98A;
+}
+
+[data-dapp-kit].Button_buttonVariants_size_md__x1s81q3, [data-dapp-kit] .Button_buttonVariants_size_md__x1s81q3 {
+  border-radius: 0px;
+  padding: 0px 16px;
+  background-color: #61F98A;
+}
+
+[data-dapp-kit]:where(*), [data-dapp-kit] :where(*) {
+  box-sizing: border-box;
+  color: var(--dapp-kit-colors-body);
+  font-family: var(--dapp-kit-typography-fontFamily);
+  font-size: var(--dapp-kit-fontWeights-normal);
+  font-style: var(--dapp-kit-typography-fontStyle);
+  font-weight: var(--dapp-kit-fontWeights-normal);
+  line-height: 16px;
+  letter-spacing: var(--dapp-kit-typography-letterSpacing);
+}
+
+[data-dapp-kit].AccountDropdownMenu_menuContent__div2ql2, [data-dapp-kit] .AccountDropdownMenu_menuContent__div2ql2 {
+  display: flex
+;
+  flex-direction: column;
+  width: 180px;
+  max-height: 80vh;
+  margin-top: 4px;
+  padding: 8px;
+  gap: 8px;
+  border-radius: 0px;
+  background-color: #61F98A;
 }

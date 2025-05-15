@@ -13,11 +13,11 @@ const fetchCoinPrice = async (symbol: string) => {
     }
 };
 
-const useCoinPrice = (symbol: string, refetchInterval?: number) => {
+const useCoinPrice = (symbol?: string, refetchInterval?: number) => {
 
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['get-coina-price', symbol],
-        queryFn: () => fetchCoinPrice(symbol),
+        queryFn: () => fetchCoinPrice(symbol!),
         enabled: !!symbol,
         refetchInterval,
     });

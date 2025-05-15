@@ -13,10 +13,12 @@ const getQuote = async (queryParams: URLSearchParams) => {
 const useQuote = (queryParams?: URLSearchParams, refetchInterval?: number) => {
     const poolId = queryParams?.get('poolId');
 
+    console.log({queryParams, poolId})
+
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['get-quote', queryParams],
         queryFn: () => getQuote(queryParams!),
-        enabled: !!poolId,
+        enabled: !!poolId && poolId !== 'null',
         refetchInterval,
     });
 

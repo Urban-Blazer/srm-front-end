@@ -2,6 +2,7 @@
 const nextConfig = {
     images: {
         domains: [
+            "suirewardsme.staxenterprise.tech",
             "strapi-dev.scand.app",
             "via.placeholder.com",
             "bafybeif5r3biiwsylqsjkkwh4yrsbltbeetq5w3snuodcw56b7iaaglxoa.ipfs.w3s.link",],

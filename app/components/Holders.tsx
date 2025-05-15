@@ -16,7 +16,7 @@ const formatNumber = (n: number) =>
   n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
 const Holders: FC<HoldersProps> = ({ coinType, poolId }) => {
-    const {data: statsLifetime, isLoading: isStatsLifetimeLoading} = usePairStats(poolId!, "lifetime");
+    const {pairStats: statsLifetime, isLoading: isStatsLifetimeLoading} = usePairStats(poolId!, "lifetime");
   const { holders, isLoading, error } = useHolders(coinType);
 
   return (

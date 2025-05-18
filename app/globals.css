@@ -283,6 +283,11 @@ a:hover {
   border-color: var(--color-srm-green);
 }
 
+.token-icon > img {
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Wallet Connect */
 
 [data-dapp-kit].Button_buttonVariants_size_lg__x1s81q4, [data-dapp-kit] .Button_buttonVariants_size_lg__x1s81q4 {

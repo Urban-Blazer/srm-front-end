@@ -6,6 +6,7 @@ import usePairStats from "../hooks/usePairStats";
 import { usePoolStats } from "../hooks/usePoolStats";
 import { Spinner } from "./Spinner";
 import Link from "next/link";
+import Avatar from "./Avatar";
 
 interface PoolsBarProps { }
 
@@ -26,18 +27,18 @@ const PoolsBar: FC<PoolsBarProps> = () => {
                 <Link key={pool.poolId} href={`/swap/${pool.coinA.symbol}/${pool.coinB.symbol}`}>
                     <div className={`flex flex-col h-full p-4 text-white border border-${((selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '3' : '1')} border-[${(selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '#61F98A' : '#5E21A1'}] items-center gap-2 opacity-${((selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '100' : '75')}`}>
                         <div className={`flex items-center gap-2`}>
-                            <img
+                            <Avatar
                                 src={pool.coinA.image}
                                 alt={pool.coinA.symbol}
-                                className="w-5 h-5 rounded-full"
+                                className="w-5 h-5 aspect-square rounded-full token-icon"
                             />
                             <span className="text-white text-sm">
                                 {pool.coinA.symbol}
                             </span>
-                            <img
+                            <Avatar
                                 src={pool.coinB.image}
                                 alt={pool.coinB.symbol}
-                                className="w-5 h-5 rounded-full"
+                                className="w-5 h-5 aspect-square rounded-full token-icon"
                             />
                             <span className="text-white text-sm">
                                 {pool.coinB.symbol}
@@ -51,19 +52,19 @@ const PoolsBar: FC<PoolsBarProps> = () => {
                         <div className={`flex items-center gap-2`}>
                             <RewardsDistributed poolId={pool.poolId} />
 
-                            <img
+                            <Avatar
                                 src={pool.coinA.image}
                                 alt={pool.coinA.symbol}
-                                className="w-5 h-5 rounded-full"
+                                className="w-5 h-5 aspect-square rounded-full token-icon"
                             />
                         </div>
                         <div className={`flex items-center gap-2`}>
                             <RewardsBalance poolId={pool.poolId} />
 
-                            <img
+                            <Avatar
                                 src={pool.coinA.image}
                                 alt={pool.coinA.symbol}
-                                className="w-5 h-5 rounded-full"
+                                className="w-5 h-5 aspect-square rounded-full token-icon"
                             />
                         </div>
                         {(selectedPair?.poolId && selectedPair.poolId === pool.poolId)  && (

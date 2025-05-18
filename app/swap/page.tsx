@@ -62,12 +62,11 @@ export default function Swap() {
     const [poolStats, setPoolStats] = useState<any>(null);
     
     useEffect(() => {
-        console.log("✅ UI Updated - New Buy Amount:", buyAmount);
     }, [buyAmount]);
 
     useEffect(() => {
-        console.log("✅ UI Updated - New Sell Amount:", sellAmount);
-    }, [sellAmount]);
+        console.log("✅ UI Updated - New Amount:", {sellAmount, buyAmount});
+    }, [sellAmount, buyAmount]);
 
     useEffect(() => {
         if (isProcessing) {
@@ -140,10 +139,7 @@ export default function Swap() {
             const response = await fetch(`/api/get-pool-id?tokenPair=${encodeURIComponent(tokenPairKey)}`);
             const data = await response.json();
 
-            console.log("🌐 Raw Pool Metadata Response:", data);
-
             if (data?.poolId) {
-                console.log("✅ Pool ID found:", data.poolId);
                 setPoolId(data.poolId);
 
                 // 🚨 Check if metadata exists before setting state
@@ -157,24 +153,15 @@ export default function Swap() {
                     coinB: data.coinB_metadata,
                 };
 
-                console.log("✅ Setting Pool Metadata:", metadata);
                 setPoolMetadata(metadata);
 
                 // 🚀 Ensure `poolMetadata` is fully set before checking `isAtoB`
                 setTimeout(() => {
-                    console.log("💡 Checking `isAtoB` condition after metadata fetch:");
-                    console.log("  - SellToken TypeName:", sellToken.typeName);
-                    console.log("  - Metadata CoinA TypeName:", metadata.coinA?.typeName);
-                    console.log("  - Metadata CoinB TypeName:", metadata.coinB?.typeName);
-
-                    // ✅ Now we can safely determine `isAtoB`
                     const newIsAtoB = sellToken.typeName === metadata.coinA?.typeName;
                     setIsAtoB(newIsAtoB);
-
-                    console.log("🔄 Updated isAtoB:", newIsAtoB);
                 }, 200); // Delay ensures metadata is set
             } else {
-                console.log("⚠️ Pool does not exist for:", tokenPairKey);
+                console.error("⚠️ Pool does not exist for:", tokenPairKey);
                 setPoolId(null);
                 setPoolMetadata(null);
                 setIsAtoB(null);
@@ -210,12 +197,9 @@ export default function Swap() {
                 options: { showContent: true },
             });
 
-            console.log("Pool Object Response:", poolObject);
-
             if (poolObject?.data?.content?.fields) {
                 const fields = poolObject.data.content.fields;
 
-                // ✅ Ensure values are always defined
                 setPoolStats({
                     balance_a: fields.balance_a || 0,
                     balance_b: fields.balance_b || 0,
@@ -698,8 +682,8 @@ export default function Swap() {
                 }
 
                 if (coinsToUse.length === 0) {
-                    console.error(`No $${coin} coins found in your wallet`);
-                    ctx.reply(`No $${coin} coins found in your wallet`);
+                    console.error(`No $${coin} coins found in your wallet`)
+                    ctx.reply(`No $${coin} coins found in your wallet`)
                     return;
                 }
 

@@ -6,6 +6,11 @@ import { CONFIG_ID, DEX_MODULE_NAME, PACKAGE_ID } from "../config";
 import { predefinedCoins } from "../data/coins";
 import { PoolStats, SwapInterfaceProps } from "@/app/types";
 import InputCurrency, { formatWithCommas } from "./InputCurrency";
+import SelectTokenModal from "./SelectTokenModal";
+import useAccountBalances from "../hooks/useAccountBalances";
+import SRMSwapIcon from "./UI/SRMSwapIcon";
+import { isBuyAtom } from "@data/store";
+import { useAtom } from "jotai";
 
 
 const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
@@ -19,7 +24,7 @@ export default function SwapInterface({
     poolStats,
 }: SwapInterfaceProps) {
     const provider = useSuiClient();
-    const [isBuy, setIsBuy] = useState(true);
+    const [isBuy, setIsBuy] = useAtom(isBuyAtom);
     const [coinABalance, setCoinABalance] = useState<number>(0);
     const [coinBBalance, setCoinBBalance] = useState<number>(0);
     const [amountIn, setAmountIn] = useState<string>("");
@@ -39,15 +44,16 @@ export default function SwapInterface({
     const getImpactColor = (impact: number) =>
         impact >= 15 ? "text-red-500" : impact >= 5 ? "text-yellow-400" : "text-slate-300";
 
+  const { obj: accountBalancesObj } = useAccountBalances();
+
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]);
     };
 
     const fetchBalance = async (token: any, setBalance: (balance: number) => void) => {
-        if (!walletAddress || !token || !token?.symbol) return; // ✅ Check for walletAddress
+        if (!walletAddress || !token || !token?.symbol) return; // 
 
         try {
-            console.log(`Fetching balance for ${token.symbol}...`);
             const { totalBalance } = await provider.getBalance({
                 owner: walletAddress,
                 coinType: token.typeName,
@@ -81,25 +87,12 @@ export default function SwapInterface({
     const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setAmountIn(value);
-        console.log({value}, isNaN(Number(value)))
         if (value && !isNaN(Number(value.replace(/,/g, "")))) {
             debouncedGetQuote(value.replace(/,/g, ""), true);
         }
     };
 
-    // const handleAmountOutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     const value = e.target.value;
-    //     setAmountOut(value);
-    //     if (value && !isNaN(Number(value))) {
-    //         debouncedGetQuote(value, false); // false = buying CoinB
-    //     }
-    // };
-
-    // ✅ First define fetchQuote
     const fetchQuote = async (amount: string, isSell: boolean) => {
-        console.log("🏁 fetchQuote called:", { poolId, coinA, coinB, poolStats, amount, isSell });
-        console.log({amount}, isNaN(Number(amount)))
-
         if (!poolId || !coinA || !coinB || !poolStats) return;
         setPriceImpact(0);
         if (isNaN(Number(amount)) || Number(amount) <= 0) return;
@@ -126,7 +119,6 @@ export default function SwapInterface({
                 creatorRoyaltyFee: poolStats.creator_royalty_fee.toString(),
                 rewardsFee: poolStats.rewards_fee.toString(),
             });
-            console.log("⚡ Fetching quote with params:", queryParams.toString());
 
             const response = await fetch(`/api/get-quote?${queryParams}`);
             const data = await response.json();
@@ -164,20 +156,6 @@ export default function SwapInterface({
                     reserveOutDecimals
                 );
 
-                console.log("📊 Price Impact Calc Debug:", {
-                    isSell,
-                    isBuy,
-                    inputAmountHuman,
-                    inputToken: inputToken.symbol,
-                    reserveInRaw,
-                    reserveOutRaw,
-                    reserveIn: reserveInRaw / Math.pow(10, reserveInDecimals),
-                    reserveOut: reserveOutRaw / Math.pow(10, reserveOutDecimals),
-                    reserveInDecimals,
-                    reserveOutDecimals,
-                    priceImpact: impact,
-                });
-
                 setPriceImpact(impact);
                 let _amount;
 
@@ -197,7 +175,6 @@ export default function SwapInterface({
         }
     };
 
-    // ✅ THEN define debouncedGetQuote
     const debouncedGetQuote = useCallback((amount: string, isSell: boolean) => {
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
@@ -227,12 +204,12 @@ export default function SwapInterface({
         }
 
         if (priceImpact >= 15) {
-            alert("Swap blocked: Price impact exceeds 15%");
+            console.error("Swap blocked: Price impact exceeds 15%");
             return;
         }
 
         if (!wallet) {
-            alert("⚠️ Wallet not connected.");
+            console.error(" Wallet not connected.");
             return;
         }
 
@@ -275,8 +252,6 @@ export default function SwapInterface({
                 coinType: sellToken.typeName,
             });
 
-            console.log({ sellTokenBalance, sellTokenCoins })
-
             if (sellTokenCoins.length === 0) {
                 addLog("❌ No sufficient Coin Object found");
                 console.error("❌ No sufficient Coin Object found:", { sellTokenCoins });
@@ -299,30 +274,6 @@ export default function SwapInterface({
                 });
                 return;
             }
-
-            console.log("🔍 Extracted Coins with Balance:", sellTokenCoins);
-
-            // ✅ Determine if pool should be activated
-            const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
-            const suiTypeName = predefinedCoins.find((coin) => coin.symbol === "SUI")?.typeName;
-            const usdcTypeName = predefinedCoins.find((coin) => coin.symbol === "USDC")?.typeName;
-            const srmTypeName = predefinedCoins.find((coin) => coin.symbol === "MOCKSUI")?.typeName;
-            const poolCoinATypeName = coinA?.typeName;
-
-            let shouldUpdateIsActive = false;
-
-            if (poolCoinATypeName === suiTypeName && rewardBalance >= SUI_REWARD_BALANCE) {
-                shouldUpdateIsActive = true;
-            } else if (poolCoinATypeName === usdcTypeName && rewardBalance >= USDC_REWARD_BALANCE) {
-                shouldUpdateIsActive = true;
-            } else if (poolCoinATypeName === srmTypeName && rewardBalance >= SRM_REWARD_BALANCE) {
-                shouldUpdateIsActive = true;
-            }
-
-            console.log(`🔍 isActive check:
-            - Pool CoinA: ${poolCoinATypeName}
-            - Reward Balance: ${rewardBalance}
-            - Should Update: ${shouldUpdateIsActive}`);
 
             const txb = new TransactionBlock();
             let usedCoin;
@@ -362,7 +313,6 @@ export default function SwapInterface({
                         [txb.pure.u64(sellAmountU64)]
                     );
                 } else {
-                    // Si se requieren varias monedas, se hace merge de ellas
                     const firstCoin = coinsToUse[0];
                     const remainingCoins = coinsToUse.slice(1).map(coin => txb.object(coin.coinObjectId));
 
@@ -384,7 +334,6 @@ export default function SwapInterface({
                 : `${PACKAGE_ID}::${DEX_MODULE_NAME}::swap_b_for_a_with_coins_and_transfer_to_sender`;
 
             const typeArguments = [coinA.typeName, coinB.typeName];
-            console.log({ usedCoin })
             txb.moveCall({
                 target: swapFunction,
                 typeArguments,
@@ -448,14 +397,28 @@ export default function SwapInterface({
                 text: '',
             });
 
+            const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
+            const suiTypeName = predefinedCoins.find((coin) => coin.symbol === "SUI")?.typeName;
+            const usdcTypeName = predefinedCoins.find((coin) => coin.symbol === "USDC")?.typeName;
+            const srmTypeName = predefinedCoins.find((coin) => coin.symbol === "MOCKSUI")?.typeName;
+            const poolCoinATypeName = coinA?.typeName;
+
+            let shouldUpdateIsActive = false;
+
+            if (poolCoinATypeName === suiTypeName && rewardBalance >= SUI_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            } else if (poolCoinATypeName === usdcTypeName && rewardBalance >= USDC_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            } else if (poolCoinATypeName === srmTypeName && rewardBalance >= SRM_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            }
+
             if (shouldUpdateIsActive) {
-                console.log(`🔹 Updating isActive for pool ${poolId}...`);
                 await updateIsActiveWithRetry(poolId, 3);
             } else {
                 console.log("❌ Skipping isActive update due to insufficient reward balance.");
             }
 
-            // 🛠 Refresh Balances
             await fetchBalance(coinA, setCoinABalance);
             await fetchBalance(coinB, setCoinBBalance);
 
@@ -534,12 +497,10 @@ export default function SwapInterface({
         let attempt = 0;
         while (attempt < maxRetries) {
             try {
-                console.log("🔍 Sending `poolId`:", poolId, "Type:", typeof poolId);
-
                 const response = await fetch("/api/update-pool-activity", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ poolId: String(poolId) }) // ✅ Ensure `poolId` is always a string
+                    body: JSON.stringify({ poolId: String(poolId) }) 
                 });
 
                 // ✅ Handle 409 Conflict Gracefully
@@ -560,12 +521,12 @@ export default function SwapInterface({
 
             } catch (error: any) {
                 console.error(`❌ Failed to update isActive (Attempt ${attempt + 1}):`, error);
-                addLog(`⚠️ Failed to update isActive (Attempt ${attempt + 1}) - ${error.message}`);
+                addLog(`❌ Failed to update isActive (Attempt ${attempt + 1}) - ${error.message}`);
 
                 // ✅ If the error is a 409 Conflict, exit gracefully
                 if (error.message.includes("HTTP 409")) {
-                    console.log("⚠️ Pool did not meet conditions, stopping retries.");
-                    return; // ✅ Stop retrying, no need to update
+                    console.error("❌ Pool did not meet conditions, stopping retries.");
+                    return; 
                 }
 
                 attempt++;
@@ -592,8 +553,6 @@ export default function SwapInterface({
             Number(poolStats.creator_royalty_fee) +
             Number(poolStats.lp_builder_fee) +
             Number(poolStats.rewards_fee);
-
-        console.log("🧾 Total Fee BPS:", totalFeesBP);
 
         const netAmountBP = 10_000 - totalFeesBP;
 
@@ -680,12 +639,19 @@ export default function SwapInterface({
                 </div>
 
                 {/* Input box */}
-                <div className="flex items-center bg-[#14110c] px-3 py-2">
+                <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
                     <InputCurrency
-                        className="flex-1 p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden grow disabled:text-[#868098]"
+                        className="max-w-[240px] flex-1 p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden grow disabled:text-[#868098]"
                         placeholder="0"
                         value={amountIn}
                         onChange={handleAmountInChange}
+                    />
+                    <SelectTokenModal
+                      className="flex-1 text-end flex justify-end"
+                      token={(isBuy ? coinA : coinB) ?? undefined}
+                      pivotTokenId={(isBuy ? coinB?.typeName : coinA?.typeName) ?? ''}
+                      accountBalancesObj={accountBalancesObj}
+                      isIn={true}
                     />
                 </div>
             </div>
@@ -702,6 +668,10 @@ export default function SwapInterface({
                         {percent}%
                     </button>
                 ))}
+            </div>
+            <div className="flex justify-center">
+                {/* Swap Icon: onclick rotate icon 180 */}
+                <SRMSwapIcon className="w-6 h-6 cursor-pointer hover:scale-110 transition-transform duration-250 hover:rotate-180 active:rotate-180" onClick={() => setIsBuy(!isBuy)} />
             </div>
 
             {/* TO Section */}
@@ -737,13 +707,19 @@ export default function SwapInterface({
                 </div>
 
                 {/* Input box */}
-                <div className="flex items-center bg-[#14110c] px-3 py-2">
+                <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
                     <InputCurrency
-                        className="flex-1 p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden grow"
+                        className="max-w-[240px] flex-1 p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden grow disabled:text-[#868098]"
                         placeholder="0"
                         value={amountOut}
                         disabled
-                        // onChange={handleAmountOutChange}
+                    />
+                    <SelectTokenModal
+                      className="flex-1 text-end flex justify-end"
+                      token={(isBuy ? coinB : coinA) ?? undefined}
+                      pivotTokenId={(isBuy ? coinA?.typeName : coinB?.typeName) ?? ''}
+                      accountBalancesObj={accountBalancesObj}
+                      isIn={false}
                     />
                 </div>
             </div>
@@ -759,7 +735,7 @@ export default function SwapInterface({
                     onChange={(e) => {
                         const value = e.target.value;
                         if (value === "") {
-                            setSlippage(NaN); // or null if you prefer
+                            setSlippage(NaN); 
                         } else {
                             const parsed = parseFloat(value);
                             if (!isNaN(parsed)) {

@@ -37,7 +37,7 @@ export default function ChartV2({ poolId, coinASymbol }: ChartProps) {
         wsRef.current = ws;
 
         ws.onopen = () => {
-            console.log('✅ Connected to WebSocket for Chart');
+            console.warn('✅ Connected to WebSocket for Chart');
         };
 
         ws.onmessage = (event) => {

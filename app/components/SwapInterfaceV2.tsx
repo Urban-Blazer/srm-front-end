@@ -6,7 +6,6 @@ import { CONFIG_ID, DEX_MODULE_NAME, PACKAGE_ID } from "../config";
 import { predefinedCoins } from "../data/coins";
 import { PoolStats, SwapInterfaceProps } from "@/app/types";
 
-
 const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
 const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
 const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);     // 5 SRM (adjust if needed)
@@ -42,10 +41,9 @@ export default function SwapInterfaceV2({
     };
 
     const fetchBalance = async (token: any, setBalance: (balance: number) => void) => {
-        if (!walletAddress || !token) return; // ✅ Check for walletAddress
+        if (!walletAddress || !token) return; // 
 
         try {
-            console.log(`Fetching balance for ${token.symbol}...`);
             const { totalBalance } = await provider.getBalance({
                 owner: walletAddress,
                 coinType: token.typeName,
@@ -87,10 +85,7 @@ export default function SwapInterfaceV2({
         }
     };
 
-    // ✅ First define fetchQuote
     const fetchQuote = async (amount: string, isSell: boolean) => {
-        console.log("🏁 fetchQuote called:", { poolId, coinA, coinB, poolStats, amount, isSell });
-
         if (!poolId || !coinA || !coinB || !poolStats) return;
         setPriceImpact(0);
         if (isNaN(Number(amount)) || Number(amount) <= 0) return;
@@ -117,7 +112,6 @@ export default function SwapInterfaceV2({
                 creatorRoyaltyFee: poolStats.creator_royalty_fee.toString(),
                 rewardsFee: poolStats.rewards_fee.toString(),
             });
-            console.log("⚡ Fetching quote with params:", queryParams.toString());
 
             const response = await fetch(`/api/get-quote?${queryParams}`);
             const data = await response.json();
@@ -155,20 +149,6 @@ export default function SwapInterfaceV2({
                     reserveOutDecimals
                 );
 
-                console.log("📊 Price Impact Calc Debug:", {
-                    isSell,
-                    isBuy,
-                    inputAmountHuman,
-                    inputToken: inputToken.symbol,
-                    reserveInRaw,
-                    reserveOutRaw,
-                    reserveIn: reserveInRaw / Math.pow(10, reserveInDecimals),
-                    reserveOut: reserveOutRaw / Math.pow(10, reserveOutDecimals),
-                    reserveInDecimals,
-                    reserveOutDecimals,
-                    priceImpact: impact,
-                });
-
                 setPriceImpact(impact);
 
                 if (isSell && data.buyAmount) {
@@ -185,7 +165,6 @@ export default function SwapInterfaceV2({
         }
     };
 
-    // ✅ THEN define debouncedGetQuote
     const debouncedGetQuote = useCallback((amount: string, isSell: boolean) => {
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
@@ -206,17 +185,17 @@ export default function SwapInterfaceV2({
 
     const handleSwap = async () => {
         if (!walletAddress || !poolId || !coinA || !coinB || !amountIn || !amountOut || !provider) {
-            alert("Missing required information for swap.");
+            console.error("Missing required information for swap.");
             return;
         }
 
         if (priceImpact >= 15) {
-            alert("Swap blocked: Price impact exceeds 15%");
+            console.error("Swap blocked: Price impact exceeds 15%");
             return;
         }
 
         if (!wallet) {
-            alert("⚠️ Wallet not connected.");
+            console.error("⚠️ Wallet not connected.");
             return;
         }
 
@@ -255,8 +234,6 @@ export default function SwapInterfaceV2({
                 coinType: sellToken.typeName,
             });
 
-            console.log({ sellTokenBalance, sellTokenCoins })
-
             if (sellTokenCoins.length === 0) {
                 alert("⚠️ No single coin object has enough balance to cover the sell amount.");
                 console.error("❌ No sufficient Coin Object found:", { sellTokenCoins });
@@ -271,30 +248,6 @@ export default function SwapInterfaceV2({
                 console.error("❌ No enough balance to cover the sell amount:", { sellTokenBalance });
                 return;
             }
-
-            console.log("🔍 Extracted Coins with Balance:", sellTokenCoins);
-
-            // ✅ Determine if pool should be activated
-            const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
-            const suiTypeName = predefinedCoins.find((coin) => coin.symbol === "SUI")?.typeName;
-            const usdcTypeName = predefinedCoins.find((coin) => coin.symbol === "USDC")?.typeName;
-            const srmTypeName = predefinedCoins.find((coin) => coin.symbol === "MOCKSUI")?.typeName;
-            const poolCoinATypeName = coinA?.typeName;
-
-            let shouldUpdateIsActive = false;
-
-            if (poolCoinATypeName === suiTypeName && rewardBalance >= SUI_REWARD_BALANCE) {
-                shouldUpdateIsActive = true;
-            } else if (poolCoinATypeName === usdcTypeName && rewardBalance >= USDC_REWARD_BALANCE) {
-                shouldUpdateIsActive = true;
-            } else if (poolCoinATypeName === srmTypeName && rewardBalance >= SRM_REWARD_BALANCE) {
-                shouldUpdateIsActive = true;
-            }
-
-            console.log(`🔍 isActive check:
-            - Pool CoinA: ${poolCoinATypeName}
-            - Reward Balance: ${rewardBalance}
-            - Should Update: ${shouldUpdateIsActive}`);
 
             const txb = new TransactionBlock();
             let usedCoin;
@@ -351,7 +304,6 @@ export default function SwapInterfaceV2({
                 : `${PACKAGE_ID}::${DEX_MODULE_NAME}::swap_b_for_a_with_coins_and_transfer_to_sender`;
 
             const typeArguments = [coinA.typeName, coinB.typeName];
-            console.log({ usedCoin })
             txb.moveCall({
                 target: swapFunction,
                 typeArguments,
@@ -404,10 +356,25 @@ export default function SwapInterfaceV2({
                 throw new Error("Transaction not confirmed after submission.");
             }
 
-            addLog("✅ Swap completed successfully!");
+            addLog(" Swap completed successfully!");
+
+            const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
+            const suiTypeName = predefinedCoins.find((coin) => coin.symbol === "SUI")?.typeName;
+            const usdcTypeName = predefinedCoins.find((coin) => coin.symbol === "USDC")?.typeName;
+            const srmTypeName = predefinedCoins.find((coin) => coin.symbol === "MOCKSUI")?.typeName;
+            const poolCoinATypeName = coinA?.typeName;
+
+            let shouldUpdateIsActive = false;
+
+            if (poolCoinATypeName === suiTypeName && rewardBalance >= SUI_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            } else if (poolCoinATypeName === usdcTypeName && rewardBalance >= USDC_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            } else if (poolCoinATypeName === srmTypeName && rewardBalance >= SRM_REWARD_BALANCE) {
+                shouldUpdateIsActive = true;
+            }
 
             if (shouldUpdateIsActive) {
-                console.log(`🔹 Updating isActive for pool ${poolId}...`);
                 await updateIsActiveWithRetry(poolId, 3);
             } else {
                 console.log("❌ Skipping isActive update due to insufficient reward balance.");
@@ -416,8 +383,6 @@ export default function SwapInterfaceV2({
             // 🛠 Refresh Balances
             await fetchBalance(coinA, setCoinABalance);
             await fetchBalance(coinB, setCoinBBalance);
-
-            // alert("Swap executed and confirmed!");
 
         } catch (error: any) {
             console.error("Swap failed:", error.message);
@@ -459,11 +424,11 @@ export default function SwapInterfaceV2({
                         console.error(`❌ MoveAbort in ${moduleName}::${functionName} - Code: ${abortCode}`);
                         addLog(`❌ MoveAbort in ${moduleName}::${functionName} - Code: ${abortCode}`);
 
-                        if (abortCode === 3) alert("⚠️ Swap failed: Excessive slippage.");
-                        else if (abortCode === 4) alert("⚠️ Swap failed: Not enough liquidity.");
-                        else alert(`⚠️ Swap failed in ${moduleName}::${functionName} with code ${abortCode}`);
+                        if (abortCode === 3) addLog("⚠️ Swap failed: Excessive slippage.");
+                        else if (abortCode === 4) addLog("⚠️ Swap failed: Not enough liquidity.");
+                        else addLog(`⚠️ Swap failed in ${moduleName}::${functionName} with code ${abortCode}`);
                     } else {
-                        alert(`❌ Transaction failed: ${errorMessage}`);
+                        addLog(`❌ Transaction failed: ${errorMessage}`);
                     }
 
                     return null;
@@ -490,8 +455,6 @@ export default function SwapInterfaceV2({
         let attempt = 0;
         while (attempt < maxRetries) {
             try {
-                console.log("🔍 Sending `poolId`:", poolId, "Type:", typeof poolId);
-
                 const response = await fetch("/api/update-pool-activity", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -510,7 +473,6 @@ export default function SwapInterfaceV2({
                     throw new Error(`HTTP ${response.status}: ${result.error || "Unknown error"}`);
                 }
 
-                console.log(`✅ isActive API Response (Attempt ${attempt + 1}):`, result);
                 addLog(result.message);
                 return; // ✅ Exit on success
 
@@ -520,7 +482,7 @@ export default function SwapInterfaceV2({
 
                 // ✅ If the error is a 409 Conflict, exit gracefully
                 if (error.message.includes("HTTP 409")) {
-                    console.log("⚠️ Pool did not meet conditions, stopping retries.");
+                    console.error("⚠️ Pool did not meet conditions, stopping retries.");
                     return; // ✅ Stop retrying, no need to update
                 }
 
@@ -548,8 +510,6 @@ export default function SwapInterfaceV2({
             Number(poolStats.creator_royalty_fee) +
             Number(poolStats.lp_builder_fee) +
             Number(poolStats.rewards_fee);
-
-        console.log("🧾 Total Fee BPS:", totalFeesBP);
 
         const netAmountBP = 10_000 - totalFeesBP;
 

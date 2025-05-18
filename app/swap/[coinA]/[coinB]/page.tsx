@@ -9,7 +9,7 @@ import PairStats from "@components/PairStats";
 import PoolInfoV2 from "@components/PoolInfoV2";
 import PoolsBar from "@components/PoolsBar";
 import RecentTransactions from "@components/RecentTransactions";
-import { Spinner } from "@components/Spinner";
+// import { Spinner } from "@components/Spinner";
 import SwapInterface from "@components/SwapInterface";
 import { emptyPairAtom } from "@data/store";
 import { Tabs, Tab, Box } from "@mui/material";

@@ -24,7 +24,6 @@ const fetchHolders = async (coinType: string): Promise<Holder[]> => {
         throw new Error('❌ Failed to fetch holders');
     }
     const json: HoldersResponse = await res.json();
-    console.log({json})
     return json.result.data;
 };
 

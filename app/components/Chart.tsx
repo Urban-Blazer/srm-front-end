@@ -39,7 +39,7 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
         wsRef.current = ws;
 
         ws.onopen = () => {
-            console.log('✅ Connected to WebSocket for Chart');
+            console.warn('✅ Connected to WebSocket for Chart');
         };
 
         ws.onmessage = (event) => {
@@ -48,8 +48,7 @@ export default function Chart({ poolId, coinASymbol }: ChartProps) {
                 console.log('📨 WebSocket Event:', data);
 
                 if (data.type === 'swap' && data.poolId === poolId) {
-                    console.log('📈 Live swap detected — refreshing full chart...');
-                    refetchChartData();
+                    console.log('📈 Live swap detected — refreshing full chart...');                    refetchChartData();
                 }
             } catch (err) {
                 console.error('WebSocket message error:', err);

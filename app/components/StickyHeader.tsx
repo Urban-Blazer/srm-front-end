@@ -1,9 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { WalletAccount } from '@mysten/wallet-standard'
 import React, { useEffect } from 'react'
-import { toast } from 'sonner'
 import { getAdapter } from '../misc/adapter'
 import StarryButton from './StarryButton'
-import { WalletAccount } from '@mysten/wallet-standard'
 
 const StickyHeader: React.FC = () => {
   const [userAccount, setUserAccount] = React.useState<WalletAccount | undefined>()

@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+const defaultTheme = require("tailwindcss/defaultTheme");
 
 const config: Config = {
   content: [
@@ -8,6 +9,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        xs: "475px",
+        "3xl": "1920px",
+        ...defaultTheme.screens,
+      },
+      zIndex: {
+        modal: "9999",
+        toast: "50",
+      },
       animation: {
         spin: 'spin 1s linear infinite',
       },

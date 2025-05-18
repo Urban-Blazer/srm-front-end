@@ -47,10 +47,10 @@ export default function NavBar() {
     <nav className="navbar text-white p-4 flex flex-col items-center justify-between relative z-50">
       <div className="flex w-full max-w-3xl mt-4">
         {/* Left Section: Logo */}
-        <div className="flex items-center justify-between">
-          <Link href="/swap/sui/srm" className="relative">
+        <div className="flex w-full items-center justify-between">
+          <Link href="/swap/sui/srm" className="relative w-full flex items-center justify-center sm:justify-start">
             <Image
-              src="/images/logo_wide_1.png"
+              src="/images/logosrm.png"
               alt="Sui Rewards Me App Logo"
               width={300} /* Adjusted size for mobile fit */
               height={120}
@@ -60,7 +60,7 @@ export default function NavBar() {
         </div>
 
         {/* Desktop Wallet Connect Button (Hidden on Mobile) */}
-        <div className="hidden md:flex ml-auto">
+        <div className="min-w-[150px] hidden md:flex ml-auto">
           <ConnectButton />
         </div>
 
@@ -137,7 +137,7 @@ export default function NavBar() {
       {/* Right Section: Mobile Menu Button (Only Visible on Mobile) */}
       <div className="md:hidden ml-auto">
         <button
-          className="text-white text-2xl"
+          className="menu-button text-white text-2xl"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           ☰
@@ -146,11 +146,11 @@ export default function NavBar() {
 
       {/* Mobile Menu (Slide-in) */}
       {isMobileMenuOpen && (
-        <div className="absolute top-16 right-0 bg-darkBlue w-full sm:w-64 p-4 shadow-lg flex flex-col items-start md:hidden">
+        <div className="h-[calc(100vh-64px)] mt-2 bg-black right-0 bg-darkBlue w-full sm:w-64 p-4 shadow-lg flex flex-col items-start md:hidden">
           {["dashboard", "swap", "pools", "launchpad", "info"].map((menu) => (
             <div key={menu} className="w-full">
               <button
-                className="text-white w-full text-left px-4 py-2 hover:bg-softMint"
+                className="text-center text-white menu-button w-full text-left px-4 py-2 hover:bg-softMint"
                 onClick={() => toggleDropdown(menu)}
               >
                 {menu.charAt(0).toUpperCase() + menu.slice(1)}
@@ -202,7 +202,7 @@ export default function NavBar() {
                 className="block w-full"
                 onClick={handleMobileLinkClick}
               >
-                <div className="block w-full bg-[--color-emerald-green] text-white font-semibold text-left px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
+                <div className="menu-button block w-full bg-[#000306] text-white font-semibold text-center px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
                   BRIDGE
                 </div>
               </a>
@@ -210,7 +210,7 @@ export default function NavBar() {
           ])}
 
           {/* Wallet Connect Button for Mobile Menu */}
-          <div className="w-full mt-4 flex justify-center">
+          <div className="w-full mt-4 flex justify-center flex-1 min-w-[150px] max-h-[50px]">
             <ConnectButton />
           </div>
         </div>

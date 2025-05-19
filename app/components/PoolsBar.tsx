@@ -1,3 +1,4 @@
+"use client";
 import { FC } from "react";
 import { usePools } from "../hooks/usePools";
 import { useAtomValue } from "jotai";

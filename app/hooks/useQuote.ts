@@ -10,17 +10,18 @@ const getQuote = async (queryParams: URLSearchParams) => {
     return data;
 };
 
-const useQuote = (queryParams?: URLSearchParams, refetchInterval?: number) => {
+const useQuote = (queryParams?: URLSearchParams, amountIn?: string, refetchInterval?: number) => {
     const poolId = queryParams?.get('poolId');
+    const amount = queryParams?.get('amount');
 
-    const { data, isLoading, error, refetch } = useQuery({
-        queryKey: ['get-quote', queryParams],
+    console.log('useQuote', queryParams, amountIn, amount);
+
+    return useQuery({
+        queryKey: ['get-quote', amountIn, amount],
         queryFn: () => getQuote(queryParams!),
-        enabled: !!poolId && poolId !== 'null',
+        enabled: !!queryParams && !!amountIn && !!amount && poolId !== 'null',
         refetchInterval,
     });
-
-    return { data, isLoading, error, refetch };
 };
 
 export default useQuote;

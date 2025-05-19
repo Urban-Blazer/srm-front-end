@@ -4,6 +4,7 @@ import { usePoolSearch } from "@/app/hooks/usePoolSearch";
 import { usePoolStats } from "@/app/hooks/usePoolStats";
 import { PoolSearchResult } from "@/app/types";
 import Chart from "@components/Chart";
+import ChartHolder from "@components/ChartHolder";
 import Holders from "@components/Holders";
 import PairStats from "@components/PairStats";
 import PoolInfoV2 from "@components/PoolInfoV2";
@@ -176,7 +177,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                         />
                     </div>
                     <div className={`w-full flex flex-col gap-6 col-span-12 md:col-span-7 lg:col-span-8 justify-center ${!poolId || poolId === null ? 'items-center' : ''}`}>
-                        <Chart poolId={chartProps.poolId} coinASymbol={chartProps.coinASymbol} />
+                        <ChartHolder poolId={chartProps.poolId} coinASymbol={chartProps.coinASymbol} />
                     </div>
 
                     <div className="flex flex-col gap-6 col-span-12">

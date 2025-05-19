@@ -1,33 +1,20 @@
 "use client";
 
-// import { ICChevronDown, ICSearch } from "@/app/assets/icons";
 import Avatar from "@/app/components/Avatar";
 import EmptyData from "@/app/components/EmptyData/EmptyData";
 import { isMobileAtom } from "@/app/data/layout.atom";
+import { Dialog, DialogContent, styled } from "@mui/material";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
 import { useRouter } from 'next/navigation';
-// import {
-//   Dialog,
-//   DialogContentDefault,
-//   DialogTrigger,
-// } from "@/app/components/UI/Dialog";
-import { Dialog, DialogContent, styled } from "@mui/material";
 
 import Input from "@/app/components/UI/Input";
-// import Repeat from "@/app/components/UI/Repeat";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/app/components/UI/Sheet";
-// import { Skeleton } from "@/app/components/UI/Skeleton";
-// import { DEFAULT_AG_TOKENS } from "@/app/constants/tokens/defaultAgTokens";
-// import { StaticToken } from "@/app/constants/tokens/staticTokens";
-import useAgTokens from "@/app/hooks/useAgTokens";
-// import useSearchTokens from "@/app/hooks/tokens/useSearchTokens";
 import { predefinedCoins } from "@/app/data/coins";
+import useAgTokens from "@/app/hooks/useAgTokens";
 import { usePools } from "@/app/hooks/usePools";
-import { Token as AppToken, CoinMeta, PoolSearchResult } from "@/app/types"; // Added AppToken alias
+import { Token as AppToken, CoinMeta, PoolSearchResult } from "@/app/types";
 import { TokenAmount } from "@/app/types/token";
 import { getStaticTokenById } from "@/app/utils/token";
-import Repeat from '@components/UI/Repeat';
-import { Skeleton } from '@components/UI/Skeleton';
 import { isBuyAtom } from "@data/store";
 import { AnimatePresence } from "framer-motion";
 import { useAtom, useAtomValue } from "jotai";
@@ -37,6 +24,8 @@ import { useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { VList } from "virtua";
 import TokenItem from "./TokenItem";
+import Repeat from "@components/UI/Repeat";
+import { Skeleton } from "@components/UI/Skeleton";
 
 // Helper function to map AppToken to StaticToken
 const mapAppTokenToStaticToken = (appToken: AppToken): CoinMeta => {

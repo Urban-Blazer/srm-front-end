@@ -11,6 +11,8 @@ import useAccountBalances from "../hooks/useAccountBalances";
 import SRMSwapIcon from "./UI/SRMSwapIcon";
 import { isBuyAtom } from "@data/store";
 import { useAtom } from "jotai";
+import useQuote from "../hooks/useQuote";
+import { Spinner } from "./Spinner";
 
 
 const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
@@ -28,6 +30,7 @@ export default function SwapInterface({
     const [coinABalance, setCoinABalance] = useState<number>(0);
     const [coinBBalance, setCoinBBalance] = useState<number>(0);
     const [amountIn, setAmountIn] = useState<string>("");
+    const [digest, setDigest] = useState<string>("");
     const [amountOut, setAmountOut] = useState<string>("");
     const [fetchingQuote, setFetchingQuote] = useState(false);
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -36,6 +39,7 @@ export default function SwapInterface({
     const [logs, setLogs] = useState<string[]>([]);
     const [transactionProgress, setTransactionProgress] = useState<{ image: string; text: string; } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalTimer, setModalTimer] = useState<NodeJS.Timeout | null>(null);
     const account = useCurrentAccount();
     const wallet = useCurrentWallet()?.currentWallet;
     const walletAddress = account?.address;
@@ -44,6 +48,11 @@ export default function SwapInterface({
     const getImpactColor = (impact: number) =>
         impact >= 15 ? "text-red-500" : impact >= 5 ? "text-yellow-400" : "text-slate-300";
 
+    
+    const [queryParams, setQueryParams] = useState<URLSearchParams | undefined>(undefined);
+    const { data: quote, isPending, isLoading, refetch, isFetching } = useQuote(queryParams, amountIn, 10000);
+    
+    const isAnyLoading = isPending || isLoading || isFetching;
   const { obj: accountBalancesObj } = useAccountBalances();
 
     const addLog = (message: string) => {
@@ -72,6 +81,15 @@ export default function SwapInterface({
     },[isBuy]);
 
     useEffect(() => {
+        console.log('quote', quote, isPending, queryParams);
+        if(!quote || isPending){
+            console.log('Missing required information for quote', quote, isPending);
+            return;
+        }
+        handleGetQuote(amountIn, true);
+    },[quote, isPending]);
+
+    useEffect(() => {
         const fetchBalances = async () => {
             if (walletAddress && coinA) {
                 await fetchBalance(coinA, setCoinABalance);
@@ -85,6 +103,14 @@ export default function SwapInterface({
     }, [coinA, coinB, walletAddress]);
 
     const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log('handleAmountInChange', e.target.value);
+        if(e.target.value === '' || Number(e.target.value) === 0 ){
+            setQueryParams(undefined);
+            setAmountIn('');
+            setAmountOut('');
+            return;
+        }
+        setQueryParams(undefined);
         const value = e.target.value;
         setAmountIn(value);
         if (value && !isNaN(Number(value.replace(/,/g, "")))) {
@@ -92,8 +118,12 @@ export default function SwapInterface({
         }
     };
 
-    const fetchQuote = async (amount: string, isSell: boolean) => {
-        if (!poolId || !coinA || !coinB || !poolStats) return;
+    const getQueryParams = async (amount: string, isSell: boolean) => {
+        console.log('getQueryParams', {amount, amountIn, isSell, poolId, coinA, coinB, poolStats});
+        if (!poolId || !coinA || !coinB || !poolStats) {
+            console.error('Missing required information for quote');
+            return;
+        }
         setPriceImpact(0);
         if (isNaN(Number(amount)) || Number(amount) <= 0) return;
 
@@ -120,53 +150,9 @@ export default function SwapInterface({
                 rewardsFee: poolStats.rewards_fee.toString(),
             });
 
-            const response = await fetch(`/api/get-quote?${queryParams}`);
-            const data = await response.json();
-
-            if (data) {
-                const inputToken = isSell
-                    ? (isBuy ? coinA : coinB)
-                    : (isBuy ? coinB : coinA);
-
-                const inputAmountRaw = Math.floor(Number(amount) * Math.pow(10, inputToken.decimals));
-                const inputAmountHuman = inputAmountRaw / Math.pow(10, inputToken.decimals);
-
-                const reserveInRaw = isSell
-                    ? (isBuy ? poolStats.balance_a : poolStats.balance_b)
-                    : (isBuy ? poolStats.balance_b : poolStats.balance_a);
-
-                const reserveOutRaw = isSell
-                    ? (isBuy ? poolStats.balance_b : poolStats.balance_a)
-                    : (isBuy ? poolStats.balance_a : poolStats.balance_b);
-
-                const reserveInDecimals = isSell
-                    ? (isBuy ? coinA.decimals : coinB.decimals)
-                    : (isBuy ? coinB.decimals : coinA.decimals);
-
-                const reserveOutDecimals = isSell
-                    ? (isBuy ? coinB.decimals : coinA.decimals)
-                    : (isBuy ? coinA.decimals : coinB.decimals);
-
-                const impact = calculatePriceImpact(
-                    inputAmountHuman,
-                    poolStats,
-                    reserveInRaw,
-                    reserveOutRaw,
-                    reserveInDecimals,
-                    reserveOutDecimals
-                );
-
-                setPriceImpact(impact);
-                let _amount;
-
-                if (isSell && data.buyAmount) {
-                    _amount = formatWithCommas(Number(data.buyAmount).toFixed(4));
-                    setAmountOut(_amount);
-                } else if (!isSell && data.sellAmount) {
-                    _amount = formatWithCommas(Number(data.sellAmount).toFixed(4));
-                    setAmountIn(_amount);
-                }
-            }
+            setQueryParams(queryParams);
+            console.log('getQueryParams', amount, isSell, queryParams);
+            refetch();
         } catch (error) {
             console.error("Error fetching quote:", error);
             setPriceImpact(0);
@@ -175,22 +161,82 @@ export default function SwapInterface({
         }
     };
 
-    const debouncedGetQuote = useCallback((amount: string, isSell: boolean) => {
-        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    const handleGetQuote = (amount: string, isSell: boolean) => {
+        console.log('handleGetQuote', amount, isSell);
+        if (!queryParams || !poolId || !coinA || !coinB || !poolStats || !quote) {
+            console.error('Missing required information for quote');
+            return;
+        }
+        if(isPending){
+            console.log('handleGetQuote isPending');
+            return;
+        }
 
+        const data = quote;
+
+        if (data) {
+            const inputToken = isSell
+                ? (isBuy ? coinA : coinB)
+                : (isBuy ? coinB : coinA);
+
+            const inputAmountRaw = Math.floor(Number(amount) * Math.pow(10, inputToken.decimals));
+            const inputAmountHuman = inputAmountRaw / Math.pow(10, inputToken.decimals);
+
+            const reserveInRaw = isSell
+                ? (isBuy ? poolStats.balance_a : poolStats.balance_b)
+                : (isBuy ? poolStats.balance_b : poolStats.balance_a);
+
+            const reserveOutRaw = isSell
+                ? (isBuy ? poolStats.balance_b : poolStats.balance_a)
+                : (isBuy ? poolStats.balance_a : poolStats.balance_b);
+
+            const reserveInDecimals = isSell
+                ? (isBuy ? coinA.decimals : coinB.decimals)
+                : (isBuy ? coinB.decimals : coinA.decimals);
+
+            const reserveOutDecimals = isSell
+                ? (isBuy ? coinB.decimals : coinA.decimals)
+                : (isBuy ? coinA.decimals : coinB.decimals);
+
+            const impact = calculatePriceImpact(
+                inputAmountHuman,
+                poolStats,
+                reserveInRaw,
+                reserveOutRaw,
+                reserveInDecimals,
+                reserveOutDecimals
+            );
+
+            setPriceImpact(impact);
+            let _amount;
+
+            if (isSell && data.buyAmount) {
+                _amount = formatWithCommas(Number(data.buyAmount).toFixed(4));
+                setAmountOut(_amount);
+            } else if (!isSell && data.sellAmount) {
+                _amount = formatWithCommas(Number(data.sellAmount).toFixed(4));
+                setAmountIn(_amount);
+            }
+        }
+    };
+
+    const debouncedGetQuote = useCallback((amount: string, isSell: boolean) => {
+
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        console.log('debouncedGetQuote', amount, isSell);
         debounceTimer.current = setTimeout(() => {
-            fetchQuote(amount, isSell);
+            getQueryParams(amount, isSell);
         }, 300);
-    }, [fetchQuote, amountIn]);
+    }, [getQueryParams, amountIn, isPending]);
 
     const handleQuickSelect = (percent: number) => {
         let suiReserved = 0;
-        if(percent === 100 && isBuy){
-            suiReserved = 1_000_000;   
+        if(isBuy){
+            suiReserved = 55_000_000;   
         }
         const balance = (isBuy ? coinABalance : coinBBalance) - suiReserved;
         const decimals = isBuy ? coinA?.decimals ?? 9 : coinB?.decimals ?? 9;
-        const formattedBalance = balance / Math.pow(10, decimals);
+        const formattedBalance = (balance > 0 ? balance : 0) / Math.pow(10, decimals);
 
         const amount = (formattedBalance * (percent / 100)).toString();
         setAmountIn(formatWithCommas(Number(amount).toFixed(4)));
@@ -233,7 +279,7 @@ export default function SwapInterface({
 
             const maxSlippageInt = BigInt(Math.floor(Number(slippage) * 100));
             const minOutU64 = expectedOutU64 - (expectedOutU64 * maxSlippageInt / BigInt(10000));
-
+            console.log('minOutU64', minOutU64);
             if (minOutU64 <= 0n) {
                 alert("Slippage too high, adjust your slippage setting.");
                 setIsProcessing(false);
@@ -376,10 +422,12 @@ export default function SwapInterface({
             });
 
             const txnDigest = executeResponse?.digest;
-
+            
             if (!txnDigest) {
                 throw new Error("Transaction digest missing after submit.");
             }
+
+            setDigest(txnDigest);
 
             addLog(`🔍 Transaction submitted: ${txnDigest}`);
             addLog("⏳ Waiting for confirmation...");
@@ -430,8 +478,17 @@ export default function SwapInterface({
                 text: '',
             });
         } finally {
+            console.log('finally');
             setIsProcessing(false);
-            setTimeout(()=>setIsModalOpen(false), 5000)
+            if(modalTimer){ 
+                clearTimeout(modalTimer);
+                setModalTimer(null);
+            }
+            setModalTimer(setTimeout(()=>{
+                console.log('closing modal');
+                setIsModalOpen(false); 
+                setDigest('');
+            }, 15000))
         }
     };
 
@@ -671,7 +728,11 @@ export default function SwapInterface({
             </div>
             <div className="flex justify-center">
                 {/* Swap Icon: onclick rotate icon 180 */}
-                <SRMSwapIcon className="w-6 h-6 cursor-pointer hover:scale-110 transition-transform duration-250 hover:rotate-180 active:rotate-180" onClick={() => setIsBuy(!isBuy)} />
+                {isAnyLoading ? (
+                    <Spinner />
+                ) : (
+                    <SRMSwapIcon className="w-6 h-6 cursor-pointer hover:scale-110 transition-transform duration-250 hover:rotate-180 active:rotate-180" onClick={() => setIsBuy(!isBuy)} />
+                )}
             </div>
 
             {/* TO Section */}
@@ -748,7 +809,11 @@ export default function SwapInterface({
                 />
                 <span>%</span>
             </div>
-
+            {priceImpact <= 5 && (
+                <div className={`${getImpactColor(priceImpact)} text-sm text-center mb-2 font-semibold`}>
+                    Price Impact Low ({priceImpact.toFixed(2)}%)
+                </div>
+            )}
             {priceImpact >= 5 && (
                 <div className={`${getImpactColor(priceImpact)} text-sm text-center mb-2 font-semibold`}>
                     {priceImpact >= 15
@@ -779,7 +844,13 @@ export default function SwapInterface({
                                 ? "Buy"
                                 : "Sell"}
             </button>
-            <TransactionModal open={isModalOpen} transactionProgress={transactionProgress ?? undefined} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
+            <TransactionModal open={isModalOpen} transactionProgress={transactionProgress ?? undefined} onClose={() => {
+                setIsModalOpen(false);
+                if(modalTimer){
+                    clearTimeout(modalTimer);
+                    setModalTimer(null);
+                }
+            }} logs={logs} isProcessing={isProcessing} digest={digest} />
 
         </div>
     );

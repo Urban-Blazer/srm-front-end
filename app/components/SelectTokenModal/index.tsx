@@ -1,9 +1,11 @@
+"use client";
+
 // import { ICChevronDown, ICSearch } from "@/app/assets/icons";
-import { useRouter } from 'next/navigation';
 import Avatar from "@/app/components/Avatar";
 import EmptyData from "@/app/components/EmptyData/EmptyData";
 import { isMobileAtom } from "@/app/data/layout.atom";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
+import { useRouter } from 'next/navigation';
 // import {
 //   Dialog,
 //   DialogContentDefault,
@@ -20,21 +22,21 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/app/components/
 import useAgTokens from "@/app/hooks/useAgTokens";
 // import useSearchTokens from "@/app/hooks/tokens/useSearchTokens";
 import { predefinedCoins } from "@/app/data/coins";
+import { usePools } from "@/app/hooks/usePools";
 import { Token as AppToken, CoinMeta, PoolSearchResult } from "@/app/types"; // Added AppToken alias
 import { TokenAmount } from "@/app/types/token";
 import { getStaticTokenById } from "@/app/utils/token";
+import Repeat from '@components/UI/Repeat';
+import { Skeleton } from '@components/UI/Skeleton';
+import { isBuyAtom } from "@data/store";
 import { AnimatePresence } from "framer-motion";
 import { useAtom, useAtomValue } from "jotai";
 import uniqBy from "lodash/uniqBy";
+import { SearchIcon, XIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { VList } from "virtua";
 import TokenItem from "./TokenItem";
-import { isBuyAtom } from "@data/store";
-import { SearchIcon, XIcon } from "lucide-react";
-import { usePools } from "@/app/hooks/usePools";
-import Repeat from '@components/UI/Repeat';
-import { Skeleton } from '@components/UI/Skeleton';
 
 // Helper function to map AppToken to StaticToken
 const mapAppTokenToStaticToken = (appToken: AppToken): CoinMeta => {
@@ -234,7 +236,6 @@ function SelectTokenModal({
   const content = useMemo(
     () => (
       <>
-      <SheetTitle className="text-center">---</SheetTitle>
         <Input
           placeholder="Search coin name, type, package id"
           prefixSlot={
@@ -275,6 +276,7 @@ function SelectTokenModal({
               animation={true}
               className="p-4"
             >
+              <SheetTitle className="text-center">TOKEN LIST</SheetTitle>
               {content}
             </SheetContent>
           )}

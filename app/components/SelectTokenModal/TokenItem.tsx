@@ -1,3 +1,6 @@
+
+"use client";
+
 import Avatar from "@/app/components/Avatar";
 import ExplorerTokenLink from "@/app/components/ExplorerLink/ExplorerTokenLink";
 import TextAmt from "@/app/components/TextAmt";

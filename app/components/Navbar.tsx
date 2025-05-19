@@ -215,9 +215,7 @@ export default function NavBar() {
           </div>
         </div>
       )}
-
-
-<div className="flex w-full border-b p-0 m-0 border-[#5E21A1]">
+      <div className="flex w-full border-b p-0 m-0 border-[#5E21A1]">
       </div>
     </nav>
   );

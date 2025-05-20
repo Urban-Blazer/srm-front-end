@@ -50,16 +50,16 @@ export default function SwapInterface({
 
     
     const [queryParams, setQueryParams] = useState<URLSearchParams | undefined>(undefined);
-    const { data: quote, isPending, isLoading, refetch, isFetching } = useQuote(queryParams, amountIn, 10000);
+    const { data: quote, isLoading, refetch, isPending, isRefetching } = useQuote(queryParams, amountIn, 10000);
     
-    const isAnyLoading = isPending || isLoading || isFetching;
+    const isAnyLoading = isLoading || isRefetching;
   const { obj: accountBalancesObj } = useAccountBalances();
 
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]);
     };
 
-    const fetchBalance = async (token: any, setBalance: (balance: number) => void) => {
+    const fetchBalance = useCallback(async (token: any, setBalance: (balance: number) => void) => {
         if (!walletAddress || !token || !token?.symbol) return; // 
 
         try {
@@ -73,7 +73,7 @@ export default function SwapInterface({
             console.error(`Error fetching balance for ${token.symbol}:`, error);
             setBalance(0);
         }
-    };
+    },[provider, walletAddress]);
 
     useEffect(() => {
         setAmountIn('');
@@ -81,94 +81,34 @@ export default function SwapInterface({
     },[isBuy]);
 
     useEffect(() => {
-        console.log('quote', quote, isPending, queryParams);
-        if(!quote || isPending){
-            console.log('Missing required information for quote', quote, isPending);
-            return;
-        }
-        handleGetQuote(amountIn, true);
-    },[quote, isPending]);
+    const calculatePriceImpact = (
+        amountInHuman: number,
+        poolStats: PoolStats,
+        reserveInRaw: number,
+        reserveOutRaw: number,
+        reserveInDecimals: number,
+        reserveOutDecimals: number
+    ): number => {
+        const effectiveIn = calculateEffectiveAmountIn(amountInHuman, poolStats);
+        if (effectiveIn <= 0 || reserveInRaw <= 0 || reserveOutRaw <= 0) return 0;
 
-    useEffect(() => {
-        const fetchBalances = async () => {
-            if (walletAddress && coinA) {
-                await fetchBalance(coinA, setCoinABalance);
-            }
-            if (walletAddress && coinB) {
-                await fetchBalance(coinB, setCoinBBalance);
-            }
-        };
+        const reserveIn = reserveInRaw / Math.pow(10, reserveInDecimals);
+        const reserveOut = reserveOutRaw / Math.pow(10, reserveOutDecimals);
 
-        fetchBalances();
-    }, [coinA, coinB, walletAddress]);
+        const amountOut = (effectiveIn * reserveOut) / (reserveIn + effectiveIn);
+        const expectedOutNoImpact = effectiveIn * (reserveOut / reserveIn);
 
-    const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        console.log('handleAmountInChange', e.target.value);
-        if(e.target.value === '' || Number(e.target.value) === 0 ){
-            setQueryParams(undefined);
-            setAmountIn('');
-            setAmountOut('');
-            return;
-        }
-        setQueryParams(undefined);
-        const value = e.target.value;
-        setAmountIn(value);
-        if (value && !isNaN(Number(value.replace(/,/g, "")))) {
-            debouncedGetQuote(value.replace(/,/g, ""), true);
-        }
-    };
+        const priceImpact = ((expectedOutNoImpact - amountOut) / expectedOutNoImpact) * 100;
 
-    const getQueryParams = async (amount: string, isSell: boolean) => {
-        console.log('getQueryParams', {amount, amountIn, isSell, poolId, coinA, coinB, poolStats});
-        if (!poolId || !coinA || !coinB || !poolStats) {
-            console.error('Missing required information for quote');
-            return;
-        }
-        setPriceImpact(0);
-        if (isNaN(Number(amount)) || Number(amount) <= 0) return;
-
-        setFetchingQuote(true);
-
-        try {
-            const relevantToken = isSell ? (isBuy ? coinA : coinB) : (isBuy ? coinB : coinA);
-            const amountU64 = Math.floor(Number(amount) * Math.pow(10, relevantToken.decimals ?? 9));
-
-            const queryParams = new URLSearchParams({
-                poolId,
-                amount: amountU64.toString(),
-                isSell: isSell.toString(),
-                isAtoB: isBuy.toString(),
-                outputDecimals: (isSell
-                    ? (isBuy ? coinB.decimals : coinA.decimals)
-                    : (isBuy ? coinA.decimals : coinB.decimals)
-                ).toString(),
-                balanceA: poolStats.balance_a.toString(),
-                balanceB: poolStats.balance_b.toString(),
-                lpBuilderFee: poolStats.lp_builder_fee.toString(),
-                burnFee: poolStats.burn_fee.toString(),
-                creatorRoyaltyFee: poolStats.creator_royalty_fee.toString(),
-                rewardsFee: poolStats.rewards_fee.toString(),
-            });
-
-            setQueryParams(queryParams);
-            console.log('getQueryParams', amount, isSell, queryParams);
-            refetch();
-        } catch (error) {
-            console.error("Error fetching quote:", error);
-            setPriceImpact(0);
-        } finally {
-            setFetchingQuote(false);
-        }
-    };
+        return priceImpact;
+    }
 
     const handleGetQuote = (amount: string, isSell: boolean) => {
-        console.log('handleGetQuote', amount, isSell);
         if (!queryParams || !poolId || !coinA || !coinB || !poolStats || !quote) {
             console.error('Missing required information for quote');
             return;
         }
         if(isPending){
-            console.log('handleGetQuote isPending');
             return;
         }
 
@@ -219,15 +159,95 @@ export default function SwapInterface({
             }
         }
     };
+        console.log('quote', quote, isPending, queryParams);
+        if(!quote || isPending){
+            console.log('Missing required information for quote', quote, isPending);
+            return;
+        }
+        handleGetQuote(amountIn, true);
+    },[quote, isPending, queryParams, amountIn, poolId, coinA, coinB, poolStats, isBuy]);
+
+    useEffect(() => {
+        const fetchBalances = async () => {
+            if (walletAddress && coinA) {
+                await fetchBalance(coinA, setCoinABalance);
+            }
+            if (walletAddress && coinB) {
+                await fetchBalance(coinB, setCoinBBalance);
+            }
+        };
+
+        fetchBalances();
+    }, [coinA, coinB, fetchBalance, walletAddress]);
+
+    const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log('handleAmountInChange', e.target.value);
+        if(e.target.value === '' || Number(e.target.value) === 0 ){
+            setQueryParams(undefined);
+            setAmountIn('');
+            setAmountOut('');
+            return;
+        }
+        setQueryParams(undefined);
+        const value = e.target.value;
+        setAmountIn(value);
+        if (value && !isNaN(Number(value.replace(/,/g, "")))) {
+            debouncedGetQuote(value.replace(/,/g, ""), true);
+        }
+    };
 
     const debouncedGetQuote = useCallback((amount: string, isSell: boolean) => {
+
+
+
+    const getQueryParams = async (amount: string, isSell: boolean) => {
+        if (!poolId || !coinA || !coinB || !poolStats) {
+            console.error('Missing required information for quote');
+            return;
+        }
+        setPriceImpact(0);
+        if (isNaN(Number(amount)) || Number(amount) <= 0) return;
+
+        setFetchingQuote(true);
+
+        try {
+            const relevantToken = isSell ? (isBuy ? coinA : coinB) : (isBuy ? coinB : coinA);
+            const amountU64 = Math.floor(Number(amount) * Math.pow(10, relevantToken.decimals ?? 9));
+
+            const queryParams = new URLSearchParams({
+                poolId,
+                amount: amountU64.toString(),
+                isSell: isSell.toString(),
+                isAtoB: isBuy.toString(),
+                outputDecimals: (isSell
+                    ? (isBuy ? coinB.decimals : coinA.decimals)
+                    : (isBuy ? coinA.decimals : coinB.decimals)
+                ).toString(),
+                balanceA: poolStats.balance_a.toString(),
+                balanceB: poolStats.balance_b.toString(),
+                lpBuilderFee: poolStats.lp_builder_fee.toString(),
+                burnFee: poolStats.burn_fee.toString(),
+                creatorRoyaltyFee: poolStats.creator_royalty_fee.toString(),
+                rewardsFee: poolStats.rewards_fee.toString(),
+            });
+
+            setQueryParams(queryParams);
+            console.log('getQueryParams', amount, isSell, queryParams);
+            refetch();
+        } catch (error) {
+            console.error("Error fetching quote:", error);
+            setPriceImpact(0);
+        } finally {
+            setFetchingQuote(false);
+        }
+    };
 
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         console.log('debouncedGetQuote', amount, isSell);
         debounceTimer.current = setTimeout(() => {
             getQueryParams(amount, isSell);
         }, 300);
-    }, [getQueryParams, amountIn, isPending]);
+    }, [coinA, coinB, isBuy, poolId, poolStats, refetch]);
 
     const handleQuickSelect = (percent: number) => {
         let suiReserved = 0;
@@ -279,7 +299,6 @@ export default function SwapInterface({
 
             const maxSlippageInt = BigInt(Math.floor(Number(slippage) * 100));
             const minOutU64 = expectedOutU64 - (expectedOutU64 * maxSlippageInt / BigInt(10000));
-            console.log('minOutU64', minOutU64);
             if (minOutU64 <= 0n) {
                 alert("Slippage too high, adjust your slippage setting.");
                 setIsProcessing(false);
@@ -478,14 +497,12 @@ export default function SwapInterface({
                 text: '',
             });
         } finally {
-            console.log('finally');
             setIsProcessing(false);
             if(modalTimer){ 
                 clearTimeout(modalTimer);
                 setModalTimer(null);
             }
             setModalTimer(setTimeout(()=>{
-                console.log('closing modal');
                 setIsModalOpen(false); 
                 setDigest('');
             }, 15000))
@@ -619,28 +636,6 @@ export default function SwapInterface({
         }
 
         return (amountIn * netAmountBP) / 10_000;
-    }
-
-    function calculatePriceImpact(
-        amountInHuman: number,
-        poolStats: PoolStats,
-        reserveInRaw: number,
-        reserveOutRaw: number,
-        reserveInDecimals: number,
-        reserveOutDecimals: number
-    ): number {
-        const effectiveIn = calculateEffectiveAmountIn(amountInHuman, poolStats);
-        if (effectiveIn <= 0 || reserveInRaw <= 0 || reserveOutRaw <= 0) return 0;
-
-        const reserveIn = reserveInRaw / Math.pow(10, reserveInDecimals);
-        const reserveOut = reserveOutRaw / Math.pow(10, reserveOutDecimals);
-
-        const amountOut = (effectiveIn * reserveOut) / (reserveIn + effectiveIn);
-        const expectedOutNoImpact = effectiveIn * (reserveOut / reserveIn);
-
-        const priceImpact = ((expectedOutNoImpact - amountOut) / expectedOutNoImpact) * 100;
-
-        return priceImpact;
     }
 
     return (

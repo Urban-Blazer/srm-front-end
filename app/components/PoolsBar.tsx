@@ -16,9 +16,9 @@ const PoolsBar: FC<PoolsBarProps> = () => {
     const { data, isPending, error } = usePools();
 
 
-    if (true) {
+    if (isPending) {
         return (
-            <>Loading...</>
+            <Spinner />
         )
     }
 

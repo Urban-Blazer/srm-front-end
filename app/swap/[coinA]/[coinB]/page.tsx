@@ -4,13 +4,13 @@ import { usePoolSearch } from "@/app/hooks/usePoolSearch";
 import { usePoolStats } from "@/app/hooks/usePoolStats";
 import { PoolSearchResult } from "@/app/types";
 import Chart from "@components/Chart";
+// import Chart from "@components/Chart";
 import ChartHolder from "@components/ChartHolder";
 import Holders from "@components/Holders";
 import PairStats from "@components/PairStats";
 import PoolInfoV2 from "@components/PoolInfoV2";
 import PoolsBar from "@components/PoolsBar";
 import RecentTransactions from "@components/RecentTransactions";
-// import { Spinner } from "@components/Spinner";
 import SwapInterface from "@components/SwapInterface";
 import { emptyPairAtom } from "@data/store";
 import { Tabs, Tab, Box } from "@mui/material";
@@ -98,10 +98,6 @@ const SwapParams: FC<PageProps> = ({ params }) => {
     const coinA = selectedPair?.coinA ?? null;
     const coinB = selectedPair?.coinB ?? null;
 
-    const handleSelectedPool = (result: PoolSearchResult) => {
-        setSelectedPair(result)
-        setPoolId(result.poolId)
-    }
 
     const chartProps = useMemo(
         () => ({ poolId: poolId ?? undefined, coinASymbol: coinA?.symbol }),
@@ -115,6 +111,11 @@ const SwapParams: FC<PageProps> = ({ params }) => {
 
     // 8) Efecto: auto-selección del par
     useEffect(() => {
+
+    const handleSelectedPool = (result: PoolSearchResult) => {
+        setSelectedPair(result)
+        setPoolId(result.poolId)
+    }
         if (searching || searchingPending) return;
         if (results.length === 0) {
             console.warn("No matching pair found");
@@ -136,14 +137,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
         } else {
             console.warn("First result doesn't match params", candidate);
         }
-    }, [
-        results,
-        searching,
-        searchingPending,
-        normalizedA,
-        normalizedB,
-        handleSelectedPool,
-    ]);
+    }, [results, searching, searchingPending, normalizedA, normalizedB, setSelectedPair]);
 
     // ——— Returns condicionales después de todos los hooks ———
 
@@ -177,9 +171,16 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                         />
                     </div>
                     <div className={`w-full flex flex-col gap-6 col-span-12 md:col-span-7 lg:col-span-8 justify-center ${!poolId || poolId === null ? 'items-center' : ''}`}>
-                        <ChartHolder poolId={chartProps.poolId} coinASymbol={chartProps.coinASymbol} />
+                        <Chart poolId={chartProps.poolId} coinASymbol={chartProps.coinASymbol}>
+                        <PairStats
+                                poolId={poolId}
+                                coinA={coinA}
+                                coinB={coinB}
+                                poolStats={poolStats}
+                                variant="mcap"
+                                />
+                        </Chart>
                     </div>
-
                     <div className="flex flex-col gap-6 col-span-12">
                         <PoolsBar />
                     </div>

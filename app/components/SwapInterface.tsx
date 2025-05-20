@@ -3,6 +3,7 @@ import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction, useS
 import { TransactionBlock } from "@mysten/sui.js/transactions"; // for building tx
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CONFIG_ID, DEX_MODULE_NAME, PACKAGE_ID } from "../config";
+import Image from "next/image";
 import { predefinedCoins } from "../data/coins";
 import { PoolStats, SwapInterfaceProps } from "@/app/types";
 import InputCurrency, { formatWithCommas } from "./InputCurrency";
@@ -666,12 +667,12 @@ export default function SwapInterface({
                         <span>From:</span>
                         {isBuy ? (
                             <>
-                                {coinA?.image && <img src={coinA.image} alt={coinA.symbol} className="w-4 h-4 rounded-full" />}
+                                {coinA?.image && <Image src={coinA.image} alt={coinA.symbol} width={16} height={16} className="rounded-full" />}
                                 <span className="text-slate-300 text-xs">{coinA?.symbol}</span>
                             </>
                         ) : (
                             <>
-                                {coinB?.image && <img src={coinB.image} alt={coinB.symbol} className="w-4 h-4 rounded-full" />}
+                                {coinB?.image && <Image src={coinB.image} alt={coinB.symbol} width={16} height={16} className="rounded-full" />}
                                 <span className="text-slate-300 text-xs">{coinB?.symbol}</span>
                             </>
                         )}
@@ -738,12 +739,12 @@ export default function SwapInterface({
                         <span>To:</span>
                         {isBuy ? (
                             <>
-                                {coinB?.image && <img src={coinB.image} alt={coinB.symbol} className="w-4 h-4 rounded-full" />}
+                                {coinB?.image && <Image src={coinB.image} alt={coinB.symbol} width={16} height={16} className="rounded-full" />}
                                 <span className="text-slate-300 text-xs">{coinB?.symbol}</span>
                             </>
                         ) : (
                             <>
-                                {coinA?.image && <img src={coinA.image} alt={coinA.symbol} className="w-4 h-4 rounded-full" />}
+                                {coinA?.image && <Image src={coinA.image} alt={coinA.symbol} width={16} height={16} className="rounded-full" />}
                                 <span className="text-slate-300 text-xs">{coinA?.symbol}</span>
                             </>
                         )}

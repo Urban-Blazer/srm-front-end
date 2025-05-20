@@ -14,6 +14,11 @@ const useQuote = (queryParams?: URLSearchParams, amountIn?: string, refetchInter
     const poolId = queryParams?.get('poolId');
     const amount = queryParams?.get('amount');
 
+    console.log('queryParams', queryParams);
+    console.log('amountIn', amountIn);
+    console.log('amount', amount);
+    console.log('poolId', poolId);
+
     return useQuery({
         queryKey: ['get-quote', amountIn, amount],
         queryFn: () => getQuote(queryParams!),

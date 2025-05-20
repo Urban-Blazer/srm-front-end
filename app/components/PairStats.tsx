@@ -52,11 +52,21 @@ export default function PairStats({
   const { pairStats: statsLifetime, isLoading: isStatsLifetimeLoading } =
     usePairStats(poolId!, "lifetime");
 
-  const { data: coinAPriceUSD } = useCoinPrice("SUI");
-  const { coinSupply } = useCoinSupply(coinB?.typeName);
+  const { data: coinAPriceUSD, isLoading: isCoinPriceLoading } = useCoinPrice(
+    "SUI"
+  );
+  const { coinSupply, isLoading: isCoinSupplyLoading } = useCoinSupply(
+    coinB?.typeName
+  );
   console.log("coinSupply", coinSupply);
   const coinADecimals = coinA?.decimals ?? 0;
   const coinBDecimals = coinB?.decimals ?? 0;
+
+  const isAnyLoading =
+    isLoading ||
+    isStatsLifetimeLoading ||
+    isCoinSupplyLoading ||
+    isCoinPriceLoading;
 
   return (
     <div
@@ -67,9 +77,7 @@ export default function PairStats({
       {variant === "default" && (
         <>
           <div className="flex justify-between items-center mb-4">
-            <div className="flex">
-              {(isLoading || isStatsLifetimeLoading) && <Spinner />}
-            </div>
+            <div className="flex">{isAnyLoading && <Spinner />}</div>
             <select
               className="bg-[#14110c] border border-[#221d14] text-white text-sm px-3 py-1 focus:outline-none"
               value={selectedRange}
@@ -85,7 +93,13 @@ export default function PairStats({
         </>
       )}
 
-      <div className={variant === "mcap" ? "flex flex-col sm:flex-row gap-2 text-sm text-gray-300 overflow-scroll" : "grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-300"}>
+      <div
+        className={
+          variant === "mcap"
+            ? "flex flex-col sm:flex-row gap-2 text-sm text-gray-300 overflow-scroll"
+            : "grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-300"
+        }
+      >
         {variant === "default" && (
           <>
             <Stat label="Buy Tx" value={stats?.buyTx} type="tx" />
@@ -128,44 +142,53 @@ export default function PairStats({
             />
           </>
         )}
-        {statsLifetime && coinSupply && (
-          <Stat
-            label="Circulating Supply"
-            value={
-              Number(coinSupply?.value) - (statsLifetime?.burnedCoins ?? 0)
-            }
-            decimals={coinBDecimals}
-            imageUrl={coinB?.image}
-            variant={variant}
-          />
+
+        {isAnyLoading ? (
+          <div className="w-full h-[20px] animate-pulse flex bg-gray-900 border border-gray-800 shadow-md p-4" />
+        ) : (
+          <>
+            {statsLifetime && coinSupply && (
+              <Stat
+                label="Circulating Supply"
+                value={
+                  Number(coinSupply?.value) - (statsLifetime?.burnedCoins ?? 0)
+                }
+                decimals={coinBDecimals}
+                imageUrl={coinB?.image}
+                variant={variant}
+              />
+            )}
+            {buy1SuiQuote?.buyAmount && statsLifetime && coinSupply && (
+              <Stat
+                label="Market Cap (SUI)"
+                value={
+                  (1 / +buy1SuiQuote?.buyAmount) *
+                  (Number(coinSupply?.value) -
+                    (statsLifetime?.burnedCoins ?? 0))
+                }
+                decimals={coinBDecimals}
+                imageUrl={coinA?.image}
+                variant={variant}
+              />
+            )}
+            {buy1SuiQuote?.buyAmount &&
+              coinAPriceUSD &&
+              statsLifetime &&
+              coinSupply && (
+                <Stat
+                  label="Market Cap ($USDC)"
+                  value={
+                    (1 / +buy1SuiQuote?.buyAmount) *
+                    coinAPriceUSD *
+                    (Number(coinSupply?.value) -
+                      (statsLifetime?.burnedCoins ?? 0))
+                  }
+                  decimals={coinBDecimals}
+                  variant={variant}
+                />
+              )}
+          </>
         )}
-        {buy1SuiQuote?.buyAmount && statsLifetime && coinSupply && (
-          <Stat
-            label="Market Cap (SUI)"
-            value={
-              (1 / +buy1SuiQuote?.buyAmount) *
-              (Number(coinSupply?.value) - (statsLifetime?.burnedCoins ?? 0))
-            }
-            decimals={coinBDecimals}
-            imageUrl={coinA?.image}
-            variant={variant}
-          />
-        )}
-        {buy1SuiQuote?.buyAmount &&
-          coinAPriceUSD &&
-          statsLifetime &&
-          coinSupply && (
-            <Stat
-              label="Market Cap ($USDC)"
-              value={
-                (1 / +buy1SuiQuote?.buyAmount) *
-                coinAPriceUSD *
-                (Number(coinSupply?.value) - (statsLifetime?.burnedCoins ?? 0))
-              }
-              decimals={coinBDecimals}
-              variant={variant}
-            />
-          )}
       </div>
     </div>
   );
@@ -186,16 +209,23 @@ const Stat = ({
   imageUrl?: string;
   variant?: "default" | "mcap";
 }) => {
+  const fractionDigits = variant === "mcap" ? 0 : 2;
   const formattedValue =
     type === "tx"
       ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })
       : (value / Math.pow(10, decimals)).toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
+          minimumFractionDigits: fractionDigits,
+          maximumFractionDigits: fractionDigits,
         });
 
   return (
-    <div className={`flex ${variant === 'mcap' ? 'p-2 flex-row items-center justify-between gap-2 overflow-scroll' : 'flex-col'}`}>
+    <div
+      className={`flex ${
+        variant === "mcap"
+          ? "p-2 flex-row items-center justify-between gap-2 overflow-scroll"
+          : "flex-col"
+      }`}
+    >
       <span className="text-gray-400 text-xs">{label}</span>
       <span className="text-white font-medium flex items-center gap-1">
         {formattedValue}

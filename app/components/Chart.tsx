@@ -181,7 +181,7 @@ export default function Chart({ poolId, coinASymbol, children }: ChartProps) {
         <div className="w-full h-[400px] animate-pulse flex bg-gray-900 border border-gray-800 shadow-md p-4" />
       )}
 
-      <div ref={chartContainerRef} className="w-full h-[400px]" />
+      <div ref={chartContainerRef} className={`w-full h-[400px] ${isAnyLoading ? 'hidden' : ''}`} />
     </div>
   );
 }

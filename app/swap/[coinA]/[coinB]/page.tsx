@@ -229,6 +229,8 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                             )}
                         </CustomTabPanel>
                     </div>
+
+                    <div className="flex flex-col gap-6 col-span-12 mt-16" />
                 </div>
             </div>
         </div>

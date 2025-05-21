@@ -1,16 +1,14 @@
 "use client";
 import { selectedRangeAtom } from "@data/store";
-import { useAtom } from "jotai";
-import usePairStats from "../hooks/usePairStats";
-import { Coin, CoinMeta, rangeMap } from "../types";
-import { SRM_COIN_SUPPLY, SRM_COINTYPE } from "../config";
-import useQuote from "../hooks/useQuote";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
+import { useAtom } from "jotai";
 import useCoinPrice from "../hooks/useCoinPrice";
-import { Spinner } from "./Spinner";
-import { Stats } from "@/app/types";
 import { useCoinSupply } from "../hooks/useCoinSupply";
+import usePairStats from "../hooks/usePairStats";
+import useQuote from "../hooks/useQuote";
+import { CoinMeta, rangeMap } from "../types";
 import Avatar from "./Avatar";
+import { Spinner } from "./Spinner";
 
 export interface PairStatsProps {
   poolId: string | null;
@@ -70,7 +68,7 @@ export default function PairStats({
 
   return (
     <div
-      className={`w-full border border-gray-800 shadow-md ${
+      className={`w-full border border-gray-800 shadow-md overflow-hidden ${
         variant === "mcap" ? "" : "p-4"
       }`}
     >
@@ -96,7 +94,7 @@ export default function PairStats({
       <div
         className={
           variant === "mcap"
-            ? "flex flex-col sm:flex-row gap-2 text-sm text-gray-300 overflow-scroll"
+            ? "flex flex-col lg:flex-row lg:gap-2 text-sm text-gray-300"
             : "grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-300"
         }
       >
@@ -222,7 +220,7 @@ const Stat = ({
     <div
       className={`flex ${
         variant === "mcap"
-          ? "p-2 flex-row items-center justify-between gap-2 overflow-scroll"
+          ? "p-2 flex-row items-center justify-between gap-2"
           : "flex-col"
       }`}
     >

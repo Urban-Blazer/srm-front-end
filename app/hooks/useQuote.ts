@@ -1,30 +1,52 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
 const getQuote = async (queryParams: URLSearchParams) => {
-
-    const res = await fetch(`/api/get-quote?${queryParams}`);
-    if (!res.ok) {
-        throw new Error('❌ Failed to fetch chart data');
-    }
-    const data: { buyAmount?: string; sellAmount?: string; } = await res.json();
-    return data;
+  const res = await fetch(`/api/get-quote?${queryParams}`);
+  if (!res.ok) {
+    throw new Error("❌ Failed to fetch chart data");
+  }
+  const data: { buyAmount?: string; sellAmount?: string } = await res.json();
+  return data;
 };
 
-const useQuote = (queryParams?: URLSearchParams, amountIn?: string, refetchInterval?: number) => {
-    const poolId = queryParams?.get('poolId');
-    const amount = queryParams?.get('amount');
+const useQuote = (
+  queryParams?: URLSearchParams,
+  amountIn?: string,
+  refetchInterval?: number
+) => {
+  const poolId = queryParams?.get("poolId");
+  const amount = queryParams?.get("amount");
+  const balanceA = queryParams?.get("balanceA");
+  const balanceB = queryParams?.get("balanceB");
+  const lpBuilderFee = queryParams?.get("lpBuilderFee");
+  const burnFee = queryParams?.get("burnFee");
+  const creatorRoyaltyFee = queryParams?.get("creatorRoyaltyFee");
+  const rewardsFee = queryParams?.get("rewardsFee");
+  const conditions = [
+    queryParams,
+    amountIn,
+    amount,
+    poolId,
+    balanceA,
+    balanceB,
+    lpBuilderFee,
+    burnFee,
+    creatorRoyaltyFee,
+    rewardsFee,
+  ];
+  const isEnabled =
+    !conditions.includes("null") &&
+    !conditions.includes("undefined") &&
+    !conditions.includes(null) &&
+    !conditions.includes(undefined);
 
-    console.log('queryParams', queryParams);
-    console.log('amountIn', amountIn);
-    console.log('amount', amount);
-    console.log('poolId', poolId);
-
-    return useQuery({
-        queryKey: ['get-quote', amountIn, amount],
-        queryFn: () => getQuote(queryParams!),
-        enabled: !!queryParams && !!amountIn && !!amount && poolId !== 'null',
-        refetchInterval,
-    });
+  return useQuery({
+    queryKey: ["get-quote", poolId, amountIn, amount],
+    queryFn: () => getQuote(queryParams!),
+    enabled: isEnabled,
+    refetchInterval,
+    staleTime: refetchInterval,
+  });
 };
 
 export default useQuote;

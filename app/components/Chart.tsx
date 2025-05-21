@@ -9,9 +9,8 @@ import {
 } from "lightweight-charts";
 import { useEffect, useRef, useState } from "react";
 import useChartData from "../hooks/useChartData";
-import { IntervalType } from "../types";
 import useCoinPrice from "../hooks/useCoinPrice";
-import PairStats from "./PairStats";
+import { IntervalType } from "../types";
 
 interface ChartProps {
   poolId?: string;
@@ -162,7 +161,7 @@ export default function Chart({ poolId, coinASymbol, children }: ChartProps) {
 
   return (
     <div className="w-full min-h-[480px]">
-      <div className="flex flex-col sm:flex-row justify-between gap-2 mb-2 overflow-scroll">
+      <div className="flex flex-col lg:flex-row justify-between gap-2 mb-2 overflow-scroll">
         {children}
         <select
           value={interval}

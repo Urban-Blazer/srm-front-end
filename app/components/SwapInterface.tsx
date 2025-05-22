@@ -16,7 +16,7 @@ import useQuote from "../hooks/useQuote";
 import { Spinner } from "./Spinner";
 
 
-const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
+const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9);  // 50 SUI
 const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
 const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);     // 5 SRM (adjust if needed)
 

@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import Navbar from '../app/components/Navbar';
+import '@mysten/dapp-kit/dist/index.css';
 import './globals.css';
 
-import '@mysten/dapp-kit/dist/index.css';
 import Providers from './components/Providers';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -59,10 +59,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${inter.className} bg-gray-900 text-white h-screen`}>
-        <Providers>
-          <Navbar />
-          <main className="container mx-auto">{children}</main>
-        </Providers>
+          <Providers>
+            <Navbar />
+            <main className="mx-auto">{children}</main>
+          </Providers>
       </body>
     </html>
   );

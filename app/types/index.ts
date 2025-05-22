@@ -80,13 +80,6 @@ export interface CoinMeta {
     symbol: string;
 }
 
-export interface PairStatsProps {
-    poolId: string | null;
-    coinA: CoinMeta | null;
-    coinB: CoinMeta | null;
-    poolStats?: any
-}
-
 
 export interface Token {
     typeName: string;

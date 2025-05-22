@@ -63,7 +63,6 @@ export default function PoolRankingTable() {
             try {
                 const res = await fetch(`/api/pool-ranking?range=${range}`);
                 const json = await res.json();
-                console.log('[DEBUG] Pool data:', json);
                 setData(json);
             } catch (err) {
                 console.error('[DEBUG] Fetch failed:', err);

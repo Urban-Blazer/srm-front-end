@@ -14,7 +14,6 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
     const handleRecentSwapWS = (event: MessageEvent<any>) => {
         try {
             const data = JSON.parse(event.data);
-            console.log('handleRecentSwapWS WS Event:', data.type, data);
 
             if (data.type === 'recentSwap' && data.poolId === poolId) {
                 refetchPoolStats();
@@ -126,10 +125,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
     }
 
     return (
-        <div className="bg-slate-800 rounded-lg p-4 w-full mt-8">
-
-            <h2 className="text-slate-100 font-semibold text-lg mb-4">Recent Transactions</h2>
-
+        <div className="p-4 w-full">
             <div className="overflow-x-auto overflow-y-auto max-h-80 min-w-full">
                 {!recentSwaps || recentSwaps.length === 0 ? (
                     <p className="text-slate-400 text-sm text-center">No recent transactions yet.</p>

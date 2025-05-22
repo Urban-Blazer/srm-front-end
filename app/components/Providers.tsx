@@ -3,11 +3,24 @@
 
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { DEFAULT_NETWORK } from '../config';
 import { networkConfig } from '../networkConfig';
+import { screenSizeAtom } from '@data/layout.atom';
+import { getDefaultStore } from 'jotai';
+import { useScreenSize } from '../hooks/dom/useScreenSize';
+import useTheme from '../hooks/theme/useTheme';
 
 const queryClient = new QueryClient();
+
+const GlobalHooks = () => {
+  useTheme();
+  const screenSize = useScreenSize();
+  useEffect(() => {
+    getDefaultStore().set(screenSizeAtom, screenSize);
+  }, [screenSize]);
+  return null;
+};
 
 export default function Providers({ children }: { children: ReactNode }) {
     return (
@@ -19,6 +32,7 @@ export default function Providers({ children }: { children: ReactNode }) {
                         name: 'Sui Rewards Me',
                     }}
                     >
+                    <GlobalHooks />
                     {children}
                 </WalletProvider>
             </SuiClientProvider>

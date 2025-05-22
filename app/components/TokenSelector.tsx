@@ -4,6 +4,7 @@ import { GETTER_RPC } from "../config";
 import { predefinedCoins } from "@data/coins";
 import { X, Search, PlusCircle, Plus, MinusCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { CoinMeta } from "../types";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -15,17 +16,17 @@ interface Token {
 }
 
 interface TokenSelectorProps {
-    onSelectToken: (token: Token) => void;
+    onSelectToken: (token: CoinMeta) => void;
     onClose: () => void;
 }
 
 export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorProps) {
     const [searchQuery, setSearchQuery] = useState("");
-    const [savedTokens, setSavedTokens] = useState<Token[]>([]);
+    const [savedTokens, setSavedTokens] = useState<CoinMeta[]>([]);
     const [showAddTokenModal, setShowAddTokenModal] = useState(false);
     const [customTypeName, setCustomTypeName] = useState("");
     const [loading, setLoading] = useState(false);
-    const [customToken, setCustomToken] = useState<Token | null>(null);
+    const [customToken, setCustomToken] = useState<CoinMeta | null>(null);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -36,7 +37,7 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
             try {
                 setSavedTokens(JSON.parse(storedTokens));
             } catch (error) {
-                console.error("❌ Error parsing savedTokens from localStorage:", error);
+                console.error("Error parsing savedTokens from localStorage:", error);
                 setSavedTokens([]); // Fallback to empty array if parsing fails
             }
         }
@@ -66,15 +67,13 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
     }, [onClose]);
 
     // Handle Token Selection
-    const handleSelectToken = (token: Token) => {
-        console.log("Selected token:", token); // Debugging
-        console.log("TypeName:", token.typeName); // Ensure it's available
+    const handleSelectToken = (token: CoinMeta) => {
         onSelectToken(token); // Pass the full token to parent
         onClose();
     };
 
     // Handle adding a new token to saved list
-    const handleAddToken = (token: Token) => {
+    const handleAddToken = (token: CoinMeta) => {
         if (!savedTokens.some((t) => t.typeName === token.typeName)) { // ✅ Prevent duplicates
             const updatedTokens = [...savedTokens, token];
             setSavedTokens(updatedTokens);
@@ -84,7 +83,7 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
         }
     };
 
-    const handleRemoveToken = (token: Token) => {
+    const handleRemoveToken = (token: CoinMeta) => {
         const updatedTokens = savedTokens.filter((t) => t.typeName !== token.typeName);
         setSavedTokens(updatedTokens);
         localStorage.setItem("savedTokens", JSON.stringify(updatedTokens)); // Persist removal
@@ -103,11 +102,12 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
             const metadata = await provider.getCoinMetadata({ coinType: customTypeName.trim() });
 
             if (metadata) {
-                const newToken: Token = {
+                const newToken: CoinMeta = {
                     symbol: metadata.symbol || "UNKNOWN",
                     typeName: customTypeName.trim(),
-                    logo: metadata.iconUrl || "https://via.placeholder.com/32",
+                    image: metadata.iconUrl || "https://via.placeholder.com/32",
                     decimals: metadata.decimals ?? 9,
+                    name: metadata.name || "UNKNOWN",
                 };
                 setCustomToken(newToken);
             } else {
@@ -195,7 +195,7 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                                 onClick={() => handleSelectToken(token)} // ✅ Allow selection directly
                             >
                                 <div className="flex items-center">
-                                    <img src={token.logo} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2 sm:w-8 sm:h-8 rounded-full" />
+                                    <img src={token.image} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2 sm:w-8 sm:h-8 rounded-full" />
                                     <span className="text-deepTeal"><strong>{token.symbol}</strong></span>
                                 </div>
                                 <button
@@ -222,10 +222,10 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
                                     onClick={() => handleSelectToken(token)}
                                 >
                                     <div className="flex items-center">
-                                        <img src={token.logo} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2 sm:w-8 sm:h-8 rounded-full" />
+                                        <img src={token.image} alt={token.symbol} width={20} height={20} className="w-6 h-6 mr-2 sm:w-8 sm:h-8 rounded-full" />
                                         <span className="text-deepTeal"><strong>{token.symbol}</strong></span>
                                     </div>
-                                    {/* 🚀 Remove Token Button */}
+                                    {/* Remove Token Button */}
                                     <button
                                         className="bg-royalPurple text-white hover:bg-lavenderGlow p-2 rounded-lg"
                                         onClick={(e) => {
@@ -270,7 +270,7 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
 
                         {customToken && (
                             <div className="flex items-center mt-3 text-black">
-                                <img src={customToken.logo} alt={customToken.symbol} width={20} height={20} className="w-6 h-6 mr-2 sm:w-8 sm:h-8 rounded-full" />
+                                <img src={customToken.image} alt={customToken.symbol} width={20} height={20} className="w-6 h-6 mr-2 sm:w-8 sm:h-8 rounded-full" />
                                 <span>{customToken.symbol}</span>
                             </div>
                         )}

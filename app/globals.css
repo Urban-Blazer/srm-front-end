@@ -1,19 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+.radix-themes {
+  --default-font-family: var(--font-roboto);
+}
 /* 🎨 Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap");
 
 /* 🎨 Define Global Theme Variables */
 :root {
-  --color-deep-teal: #0D3B3E;
-  --color-emerald-green: #21B573;
-  --color-soft-mint: #9FFFCB;
-  --color-royal-purple: #6A1B9A;
-  --color-lavender-glow: #C77DFF;
+  --color-deep-teal: #0d3b3e;
+  --color-emerald-green: #21b573;
+  --color-soft-mint: #9fffcb;
+  --color-royal-purple: #6a1b9a;
+  --color-lavender-glow: #c77dff;
+  --color-srm-green: #61f98a;
 
   --background-main: var(--color-deep-teal);
   --primary-button: var(--color-emerald-green);
@@ -23,9 +26,9 @@
   --highlight-glow: var(--color-lavender-glow);
 
   /* Typography */
-  --font-heading: 'Poppins', sans-serif;
-  --font-body: 'Lato', sans-serif;
-  --font-cta: 'Montserrat', sans-serif;
+  --font-heading: "Poppins", sans-serif;
+  --font-body: "Lato", sans-serif;
+  --font-cta: "Montserrat", sans-serif;
 }
 
 * {
@@ -50,15 +53,15 @@ body {
   color: white;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
-  padding-top: 80px;
 }
 
 /* 🔹 Navbar Styling */
 .navbar {
-  background-color: var(--background-main);
+  /* background-color: transparent; */
+  /* background-color: var(--background-main); */
+  background-image: url("https://suirewardsme.staxenterprise.tech/wp-content/uploads/2025/05/SRM_BG-MEN.jpeg");
   padding: 16px;
   width: 100%;
-  position: fixed;
   top: 0;
   left: 0;
   z-index: 50;
@@ -97,10 +100,19 @@ p {
 }
 
 /* ✅ Buttons */
+.MuiBox-root {
+  padding: 0;
+}
+.MuiTabs-indicator {
+  background-color: #61f98a !important;
+}
+button.MuiTab-root:hover {
+  background-color: rgb(22, 21, 21) !important;
+}
 button {
   font-family: var(--font-cta);
   background-color: var(--primary-button);
-  color: white;
+  color: white !important;
   border-radius: 8px;
   padding: 10px 20px;
   font-weight: 700;
@@ -108,9 +120,33 @@ button {
   transition: all 0.3s ease-in-out;
 }
 
+button.menu-button {
+  font-family: var(--font-cta);
+  background-color: transparent;
+  color: white;
+  border-radius: 0px;
+  padding: 10px 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+button.menu-button:hover {
+  border-bottom: 3px solid var(--color-royal-purple);
+  background-color: transparent;
+  color: var(--color-soft-mint);
+}
+
 button:hover {
   background-color: var(--color-soft-mint);
   color: var(--background-main);
+}
+
+button.rt-BaseTabListTrigger {
+  background-color: transparent;
+}
+
+button.rt-BaseTabListTrigger:hover {
+  color: var(--gray-12);
 }
 
 /* 🔥 Secondary Buttons */
@@ -232,4 +268,192 @@ a:hover {
   .text-m {
     font-size: 14px;
   }
+}
+
+.bg-srm-green {
+  background-color: var(--color-srm-green);
+}
+
+.text-srm-green {
+  color: var(--color-srm-green);
+}
+
+.border-srm-green {
+  border-color: var(--color-srm-green);
+}
+
+.token-icon > img {
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Wallet Connect - Personalización SRM */
+
+/* Estilos de base para todos los elementos del dapp-kit */
+[data-dapp-kit] * {
+  font-family: var(--font-cta) !important;
+  transition: all 0.3s ease;
+}
+
+/* Botones principales de connect wallet y sus variantes */
+[data-dapp-kit] .Button_buttonVariants__x1s81q0,
+[data-dapp-kit].Button_buttonVariants_size_lg__x1s81q4,
+[data-dapp-kit] .Button_buttonVariants_size_lg__x1s81q4,
+[data-dapp-kit].Button_buttonVariants_size_md__x1s81q3,
+[data-dapp-kit] .Button_buttonVariants_size_md__x1s81q3 {
+  background-image: linear-gradient(205deg, #009966 1%, #61f98a 100%);
+  color: #5e21a1 !important;
+  border: 1px solid #61f98a !important;
+  border-radius: 0px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  box-shadow: 0 4px 8px rgba(97, 249, 138, 0.2);
+  padding: 8px 16px !important;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-dapp-kit] .Button_buttonVariants__x1s81q0:hover,
+[data-dapp-kit].Button_buttonVariants_size_lg__x1s81q4:hover,
+[data-dapp-kit] .Button_buttonVariants_size_lg__x1s81q4:hover,
+[data-dapp-kit].Button_buttonVariants_size_md__x1s81q3:hover,
+[data-dapp-kit] .Button_buttonVariants_size_md__x1s81q3:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(97, 249, 138, 0.3);
+  background-image: linear-gradient(205deg, #00b377 1%, #61f98a 100%);
+}
+
+/* Menú desplegable de la cuenta */
+[data-dapp-kit].AccountDropdownMenu_menuContent__div2ql2,
+[data-dapp-kit] .AccountDropdownMenu_menuContent__div2ql2 {
+  background-color: #14110c !important;
+  border: 1px solid #61f98a !important;
+  border-radius: 0px !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5), 0 0 8px rgba(97, 249, 138, 0.2);
+  width: 220px;
+  max-height: 80vh;
+  overflow: hidden;
+  margin-top: 8px;
+  padding: 12px !important;
+  gap: 10px;
+  backdrop-filter: blur(10px);
+}
+
+/* Elementos del menú desplegable */
+[data-dapp-kit] .AccountDropdownMenu_menuItem__div2ql3 {
+  color: #5e21a1 !important;
+  border-radius: 0px !important;
+  padding: 10px 12px !important;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+[data-dapp-kit] .AccountDropdownMenu_menuItem__div2ql3:hover,
+[data-dapp-kit] .AccountDropdownMenu_menuItem__div2ql3[data-highlighted] {
+  background-color: rgba(97, 249, 138, 0.1) !important;
+  color: #61f98a !important;
+  border-left: 3px solid #61f98a;
+}
+
+/* Separador del menú */
+[data-dapp-kit] .AccountDropdownMenu_separator__div2ql5 {
+  background-color: rgba(97, 249, 138, 0.3) !important;
+  height: 1px;
+  margin: 4px 0;
+}
+
+/* Estilo para wallet conectada */
+[data-dapp-kit] .AccountDropdownMenu_connectedAccount__div2ql0 {
+  gap: 10px;
+  color: #61f98a !important;
+  font-weight: 600 !important;
+}
+
+/* Modal de conexión */
+[data-dapp-kit].ConnectModal_overlay__gz8z90,
+[data-dapp-kit] .ConnectModal_overlay__gz8z90 {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+[data-dapp-kit].ConnectModal_content__gz8z92,
+[data-dapp-kit] .ConnectModal_content__gz8z92 {
+  background-color: #14110c !important;
+  border: 1px solid #61f98a !important;
+  border-radius: 0px !important;
+  color: #5e21a1 !important;
+  box-shadow: 0 8px 32px rgba(97, 249, 138, 0.2);
+}
+
+/* Botón de cierre */
+[data-dapp-kit] .IconButton_container__s6n7bq0 {
+  background-color: rgba(97, 249, 138, 0.1) !important;
+  color: #61f98a !important;
+}
+
+[data-dapp-kit] .IconButton_container__s6n7bq0:hover {
+  background-color: rgba(97, 249, 138, 0.2) !important;
+  transform: rotate(90deg);
+}
+
+/* Elementos de la lista de wallets */
+[data-dapp-kit] .WalletListItem_walletItem__1dqqtqs1 {
+  border-radius: 0px !important;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+[data-dapp-kit] .WalletListItem_walletItem__1dqqtqs1:hover {
+  background-color: rgba(97, 249, 138, 0.1) !important;
+  border-left: 3px solid #61f98a;
+}
+
+[data-dapp-kit] .WalletListItem_selectedWalletItem__1dqqtqs2 {
+  background-color: rgba(97, 249, 138, 0.15) !important;
+  border-left: 3px solid #61f98a !important;
+  box-shadow: 0 2px 8px rgba(97, 249, 138, 0.15) !important;
+}
+
+[data-dapp-kit].ConnectModal_walletListContent__gz8z98,
+[data-dapp-kit] .ConnectModal_walletListContent__gz8z98 {
+  background-color: #14110c !important;
+}
+
+/* Iconos de wallet */
+[data-dapp-kit] .WalletListItem_walletIcon__1dqqtqs3,
+[data-dapp-kit] .ConnectionStatus_walletIcon__nckm2d1 {
+  border: 1px solid #61f98a !important;
+}
+
+/* Encabezados y textos */
+[data-dapp-kit] .Heading_headingVariants_size_lg__1aa835k3,
+[data-dapp-kit] .Heading_headingVariants_size_xl__1aa835k4 {
+  color: #5e21a1 !important;
+  font-family: var(--font-heading) !important;
+  font-weight: 600 !important;
+}
+
+[data-dapp-kit] .Text_textVariants_color_muted__2bv1ur5 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Base general para sobrescribir estilos predeterminados */
+[data-dapp-kit]:where(*),
+[data-dapp-kit] :where(*) {
+  font-family: var(--font-body), sans-serif !important;
+  box-sizing: border-box;
+  color: #5e21a1;
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+[data-dapp-kit] .Heading_headingVariants_size_lg__1aa835k3,
+[data-dapp-kit] .Heading_headingVariants_size_xl__1aa835k4,
+[data-dapp-kit].ConnectModal_title__gz8z91,
+[data-dapp-kit] .ConnectModal_title__gz8z91 {
+  color: #fff !important;
 }

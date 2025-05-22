@@ -1,5 +1,6 @@
 import { atom, useAtomValue } from 'jotai';
 import { PoolSearchResult } from '../types';
+import { atomWithStorage } from 'jotai/utils';
 
 export const selectedRangeAtom = atom("24 hour");
 export const useSelectedRange = () => {
@@ -25,7 +26,14 @@ const defaultPair: PoolSearchResult = {
 };
 
 export const selectedPairAtom = atom<PoolSearchResult | null>(defaultPair);
+export const emptyPairAtom = atom<PoolSearchResult | null>(null);
 
+export const selectedPoolId = atom<string | null>(null);
+
+export const isBuyAtom = atomWithStorage<boolean>(
+  "app:isBuy",
+  true,
+);
 
 export const useSelectedPair = () => {
     return useAtomValue(selectedPairAtom);

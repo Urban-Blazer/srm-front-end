@@ -10,16 +10,16 @@ const fetchChartData = async (poolId: string, interval: IntervalType) => {
     return data;
 };
 
-const useChartData = (poolId: string, interval: IntervalType, refetchInterval?: number) => {
+const useChartData = (poolId?: string, interval?: IntervalType, refetchInterval?: number) => {
 
-    const { data, isLoading, error, refetch } = useQuery({
+    const { data, isLoading, error, refetch, isPending } = useQuery({
         queryKey: ['chart-data', poolId, interval],
-        queryFn: () => fetchChartData(poolId, interval),
-        enabled: !!poolId,
+        queryFn: () => fetchChartData(poolId!, interval!),
+        enabled: !!poolId && !!interval,
         refetchInterval,
     });
 
-    return { data, isLoading, error, refetch };
+    return { data, isLoading, error, refetch, isPending };
 };
 
 export default useChartData;

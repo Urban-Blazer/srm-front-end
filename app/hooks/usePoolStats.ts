@@ -5,8 +5,8 @@ import { PoolStats } from "../types";
 /**
  * Devuelve las estadísticas del pool, como los balances y las tarifas.
  */
-export function usePoolStats(poolId: string | null, refetchInterval?: number | undefined) {
-  const { data, isLoading, error, refetch } = useSuiClientQuery(
+export function usePoolStats(poolId?: string | null, refetchInterval?: number | undefined) {
+  const { data, isLoading, isPending, error, refetch } = useSuiClientQuery(
     "getObject", 
     {
       id: poolId!,
@@ -33,5 +33,5 @@ export function usePoolStats(poolId: string | null, refetchInterval?: number | u
     return null; 
   }, [data]);
 
-  return { poolStats, isLoading, error, refetch };
+  return { poolStats, isLoading, isPending, error, refetch };
 }

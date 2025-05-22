@@ -161,7 +161,7 @@ export default function Chart({ poolId, coinASymbol, children }: ChartProps) {
 
   return (
     <div className="w-full min-h-[480px]">
-      <div className="flex flex-col lg:flex-row justify-between gap-2 mb-2 overflow-scroll">
+      <div className="flex flex-col lg:flex-row justify-between gap-2 mb-2 overflow-hidden">
         {children}
         <select
           value={interval}

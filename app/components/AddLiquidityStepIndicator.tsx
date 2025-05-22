@@ -13,7 +13,7 @@ const steps = [
 
 export default function StepIndicator({ step, setStep }: StepIndicatorProps) {
     return (
-        <div className="w-64 min-w-[250px] bg-white p-6 rounded-lg shadow-lg">
+        <div className="w-64 min-w-[250px] p-6 shadow-lg">
             <h1 className="text-lg font-bold mb-4">New Position</h1>
             <ul className="space-y-2"> {/* Ensures proper spacing without affecting layout */}
                 {steps.map((s) => (

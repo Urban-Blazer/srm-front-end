@@ -3,10 +3,12 @@ const nextConfig = {
     images: {
         domains: [
             "suirewardsme.staxenterprise.tech",
+            "circle.com",
             "strapi-dev.scand.app",
             "api.movepump.com",
             "via.placeholder.com",
-            "bafybeif5r3biiwsylqsjkkwh4yrsbltbeetq5w3snuodcw56b7iaaglxoa.ipfs.w3s.link",],
+            "bafybeif5r3biiwsylqsjkkwh4yrsbltbeetq5w3snuodcw56b7iaaglxoa.ipfs.w3s.link",
+        ],
     },
     webpack(config) {
         config.module.rules.push({

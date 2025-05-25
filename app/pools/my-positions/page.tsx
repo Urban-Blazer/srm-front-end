@@ -74,7 +74,8 @@ export default function MyPositions() {
             // ✅ Get all owned objects
             while (true) {
                 const { data: ownedObjectsPage, hasNextPage, nextCursor } = await provider.getOwnedObjects({
-                    owner: account?.address,
+                    owner: '0x627dc5ea4d2e54df9f5d17c37b8e2b0eb9279ae42bb777ca6e944b1f1114827a',
+                    // owner: account?.address,
                     options: { showType: true, showContent: true },
                     cursor,
                 });
@@ -94,6 +95,8 @@ export default function MyPositions() {
                     console.log("🔎 Checking Type:", rawType);
 
                     if (!rawType.includes(`${PACKAGE_ID}::${DEX_MODULE_NAME}::LP<`)) return null;
+
+                    console.log("✅ Found LP Token:", rawType, {obj});
 
                     // ✅ Extract `LP<CoinA, CoinB>`
                     const lpMatch = rawType.match(/LP<([^,]+),\s?([^>]+)>/);
@@ -382,125 +385,143 @@ export default function MyPositions() {
     }, [fetchLPTokens, walletConnected, account?.address]);
 
     return (
-        <div className="flex flex-col items-center min-h-screen p-4 md:p-6 pt-20 pb-20">
-            <h1 className="pt-10 text-2xl md:text-3xl font-bold mb-4 text-center">My Liquidity Positions</h1>
+        <div className="flex flex-col items-center min-h-screen p-4 md:p-6 pt-20 pb-20 text-slate-100">
+            <h1 className="pt-10 text-2xl md:text-3xl font-bold mb-6 text-center">My Liquidity Positions</h1>
 
             {!walletConnected ? (
-                <p className="text-center "><strong>🔌 Connect your wallet to view your LP positions.</strong></p>
+                <p className="text-center text-slate-300"><strong>🔌 Connect your wallet to view your LP positions.</strong></p>
             ) : (
                 <>
                     <button
-                        className="button-primary p-3 rounded-lg mt-4 disabled:opacity-50"
+                        className={`px-4 py-2 rounded-none text-sm font-semibold ${!loading ? 'bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75' : 'bg-[#14110c] text-slate-400'}`}
                         onClick={fetchLPTokens}
                         disabled={loading}
                     >
                         {loading ? "Fetching..." : "View My Positions"}
                     </button>
 
-                        {/* Display LP Positions */}
-                        <div className="w-full max-w-3xl mt-6 px-2 md:px-0">
-                            {lpTokens.length > 0 ? (
-                                lpTokens.map((lp, index) => (
-                                    <div
-                                        key={index}
-                                        className="bg-white p-4 rounded-lg shadow-md mb-4 flex flex-col items-center text-center space-y-3"
-                                    >
-                                        {/* Coin Images & Symbols */}
-                                        <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">
-                                            <Image src={lp.poolData?.coinA_metadata?.image || ''} alt="Coin A" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" unoptimized />
-                                            <span className="text-lg md:text-xl font-semibold">{lp.poolData?.coinA_metadata?.symbol}</span>
-                                            <span className="text-lg">/</span>
-                                            <Image src={lp.poolData?.coinB_metadata?.image || ''} alt="Coin B" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" unoptimized />
-                                            <span className="text-lg md:text-xl font-semibold">{lp.poolData?.coinB_metadata?.symbol}</span>
-                                        </div>
+                    {/* Display LP Positions */}
+                    <div className="w-full max-w-3xl mt-8 px-2 md:px-0">
+                        {lpTokens.length > 0 ? (
+                            lpTokens.map((lp, index) => (
+                                <div
+                                    key={index}
+                                    className="p-5 border border-slate-700 bg-[#14110c] mb-6 flex flex-col items-center text-center space-y-4 rounded-none"
+                                >
+                                    {/* Coin Images & Symbols */}
+                                    <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">
+                                        <Image src={lp.poolData?.coinA_metadata?.image || ''} alt="Coin A" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" unoptimized />
+                                        <span className="text-lg md:text-xl font-semibold text-slate-100">{lp.poolData?.coinA_metadata?.symbol}</span>
+                                        <span className="text-lg text-slate-400">/</span>
+                                        <Image src={lp.poolData?.coinB_metadata?.image || ''} alt="Coin B" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" unoptimized />
+                                        <span className="text-lg md:text-xl font-semibold text-slate-100">{lp.poolData?.coinB_metadata?.symbol}</span>
+                                    </div>
 
-                                        {/* Pool Information */}
-                                        <div className="w-full">
-                                            <p className="text-sm">
-                                                <strong>Pool ID:</strong>
-                                                <span className="text-royalPurple break-all"> {lp.poolData?.poolId || "N/A"}</span>
-                                            </p>
-                                            <p className="text-sm">
-                                                <strong>Balance:</strong> {(Number(lp.balance) / 1e9).toFixed(4)} LP
-                                            </p>
-                                            <p className="text-sm">
-                                                <strong>Your Share:</strong> {lp.userCoinA.toFixed(4)} {lp.poolData?.coinA_metadata?.symbol} / {lp.userCoinB.toFixed(4)} {lp.poolData?.coinB_metadata?.symbol}
-                                            </p>
-                                        </div>
+                                    {/* Pool Information */}
+                                    <div className="w-full">
+                                        <p className="text-sm text-slate-300 mb-1">
+                                            <span className="text-slate-400">Pool ID:</span>
+                                            <span className="text-slate-300 break-all ml-1">{lp.poolData?.poolId.slice(0, 6) + "..." + lp.poolData?.poolId.slice(-6) || "N/A"}</span>
+                                        </p>
+                                        <p className="text-sm text-slate-300 mb-1">
+                                            <span className="text-slate-400">LP Object ID:</span>
+                                            <span className="text-slate-300 break-all ml-1">{lp.objectId.slice(0, 6) + "..." + lp.objectId.slice(-6) || "N/A"}</span>
+                                        </p>
+                                        <p className="text-sm text-slate-300 mb-1">
+                                            <span className="text-slate-400">Balance:</span>
+                                            <span className="text-slate-300 ml-1">{(Number(lp.balance) / 1e9).toFixed(4)} LP</span>
+                                        </p>
+                                        <p className="text-sm text-slate-300">
+                                            <span className="text-slate-400">Your Share:</span>
+                                            <span className="text-slate-300 ml-1">{lp.userCoinA.toFixed(4)} {lp.poolData?.coinA_metadata?.symbol} / {lp.userCoinB.toFixed(4)} {lp.poolData?.coinB_metadata?.symbol}</span>
+                                        </p>
+                                    </div>
 
-                                        {/* 🚀 Action Buttons */}
-                                        <div className="flex space-x-4 mt-3">
-                                            {/* Add Liquidity Button */}
-                                            <a href={`/pools/add-liquidity?coinA=${encodeURIComponent(lp.poolData?.coinA_metadata?.typeName)}&coinB=${encodeURIComponent(lp.poolData?.coinB_metadata?.typeName)}`} className="bg-emeraldGreen text-white px-3 md:px-4 py-1 md:py-2 rounded-md text-xs md:text-sm font-medium hover:bg-softMint transition">
-                                                <strong>➕ ADD LIQUIDITY</strong>
-                                            </a>
+                                    {/* Action Buttons */}
+                                    <div className="flex space-x-4 mt-3">
+                                        {/* Add Liquidity Button */}
+                                        <a 
+                                            href={`/pools/add-liquidity?coinA=${encodeURIComponent(lp.poolData?.coinA_metadata?.typeName)}&coinB=${encodeURIComponent(lp.poolData?.coinB_metadata?.typeName)}`} 
+                                            className="px-4 py-2 rounded-none text-sm font-semibold bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
+                                        >
+                                            ADD LIQUIDITY
+                                        </a>
 
-                                            {/* Remove Liquidity Button */}
-                                            <button
-                                                onClick={() => handleRemoveLiquidity(lp)}
-                                                className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition"
-                                            >
-                                                <strong>❌ Remove Liquidity</strong>
-                                            </button>
-                                        </div>
+                                        {/* Remove Liquidity Button */}
+                                        <button
+                                            onClick={() => handleRemoveLiquidity(lp)}
+                                            className="px-4 py-2 rounded-none text-sm font-semibold bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:text-[#61F98A] hover:opacity-75"
+                                        >
+                                            REMOVE LIQUIDITY
+                                        </button>
+                                    </div>
 
-                                        {/* 🔽 Remove Liquidity UI (if enabled) */}
-                                        {removeOptions[lp.objectId] && (
-                                            <div className="mt-4 w-full bg-softMint p-3 md:p-4 rounded-lg text-sm md:text-base">
-                                                <h2 className="text-lg font-semibold">Select Withdrawal Amount</h2>
+                                    {/* Remove Liquidity UI (if enabled) */}
+                                    {removeOptions[lp.objectId] && (
+                                        <div className="mt-4 w-full bg-[#1a1712] p-4 border border-slate-700 rounded-none text-sm md:text-base">
+                                            <h2 className="text-lg font-semibold text-slate-100 mb-3">Select Withdrawal Amount</h2>
 
-                                                {/* Percentage Quick Select Buttons */}
-                                                <div className="flex space-x-2">
-                                                    {[25, 50, 75, 100].map((percent) => (
-                                                        <button
-                                                            key={percent}
-                                                            onClick={() => handlePercentageClick(lp, percent)}
-                                                            className="button-secondary px-3 py-1 rounded-md text-sm transition"
-                                                        >
-                                                            {percent}%
-                                                        </button>
-                                                    ))}
+                                            {/* Percentage Quick Select Buttons */}
+                                            <div className="flex justify-between mt-2 mb-4">
+                                                {[25, 50, 75, 100].map((percent) => (
+                                                    <button
+                                                        key={percent}
+                                                        onClick={() => handlePercentageClick(lp, percent)}
+                                                        className="flex-1 text-md mx-1 bg-[#14110c] hover:bg-slate-600 rounded-none px-3 py-1 text-slate-300"
+                                                    >
+                                                        {percent}%
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {/* Input for LP Amount */}
+                                            <div className="space-y-1 mb-4">
+                                                <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                                                    <span>LP Amount to Withdraw:</span>
                                                 </div>
-
-                                                {/* Input for LP Amount */}
-                                                <input
-                                                    type="number"
-                                                    className="w-full p-1 md:p-2 border rounded-lg text-black mt-2 text-sm md:text-base"
-                                                    placeholder="Enter LP amount"
-                                                    value={withdrawAmount[lp.objectId] || ""}
-                                                    onChange={(e) => setWithdrawAmount((prev) => ({ ...prev, [lp.objectId]: e.target.value }))}
-                                                />
-
-                                                {/* ✅ Slippage Tolerance Input */}
-                                                <div className="mt-3">
-                                                    <h2 className="text-lg font-semibold">Slippage Tolerance (%)</h2>
+                                                <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
                                                     <input
                                                         type="number"
-                                                        className="w-full md:w-1/2 p-1 md:p-2 border rounded-lg text-black mt-1 text-sm md:text-base"
+                                                        className="max-w-[240px] flex-1 p-2 outline-none bg-transparent text-xl sm:text-lg overflow-hidden grow text-slate-100"
+                                                        placeholder="Enter LP amount"
+                                                        value={withdrawAmount[lp.objectId] || ""}
+                                                        onChange={(e) => setWithdrawAmount((prev) => ({ ...prev, [lp.objectId]: e.target.value }))}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Slippage Tolerance Input */}
+                                            <div className="space-y-1 mb-6">
+                                                <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                                                    <span>Slippage Tolerance (%):</span>
+                                                </div>
+                                                <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
+                                                    <input
+                                                        type="number"
+                                                        className="max-w-[240px] flex-1 p-2 outline-none bg-transparent text-xl sm:text-lg overflow-hidden grow text-slate-100"
                                                         placeholder="Enter slippage (e.g., 1.0)"
                                                         value={slippageTolerance[lp.objectId] || ""}
                                                         onChange={(e) => setSlippageTolerance((prev) => ({ ...prev, [lp.objectId]: e.target.value }))}
                                                     />
                                                 </div>
-
-                                                {/* Confirm Button */}
-                                                <button
-                                                    onClick={() => handleRemoveLiquidityConfirm(lp)}
-                                                    className="button-secondary px-4 py-2 rounded-md text-sm font-medium transition mt-3 w-full"
-                                                >
-                                                    ✅ Confirm Withdraw LP
-                                                </button>
-                                                <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                                             </div>
-                                        )}
 
+                                            {/* Confirm Button */}
+                                            <button
+                                                onClick={() => handleRemoveLiquidityConfirm(lp)}
+                                                className="w-full px-4 py-2 rounded-none text-sm font-semibold bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:text-[#61F98A] hover:opacity-75 transition mt-2"
+                                            >
+                                                ✅ Confirm Withdraw LP
+                                            </button>
+                                            <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                                         </div>
-                                ))
-                            ) : (
-                                    <p className="text-center mt-4"><strong>No LP positions found. Click View My Positions to check your wallet.</strong></p>
-                            )}
-
-                        </div>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-center mt-4 text-slate-300"><strong>No LP positions found. Click View My Positions to check your wallet.</strong></p>
+                        )}
+                    </div>
                 </>
             )}
         </div>

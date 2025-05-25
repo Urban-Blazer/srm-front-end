@@ -1,7 +1,8 @@
 // @ts-nocheck
 "use client";
-import { useReducer, useState, useEffect } from "react";
+import { useReducer, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import StepIndicator from "@components/AddLiquidityStepIndicator";
 import { predefinedCoins } from "@data/coins";
 import { SuiClient } from "@mysten/sui.js/client";
@@ -9,7 +10,9 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../../config";
 import TransactionModal from "@components/TransactionModal";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
+import useGetPoolCoins from "@/app/hooks/useGetPoolCoins";
+import useConvertToU64 from "@/app/hooks/useConvertToU64";
+import useGetCoinInput from "@/app/hooks/useGetCoinInput";
 import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 
 const provider = new SuiClient({ url: GETTER_RPC });
@@ -93,9 +96,28 @@ export default function AddLiquidity() {
         }
     }, [coinA, coinB]);
 
-    const addLog = (message: string) => {
+        const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
     };
+    
+    // Coin types for the pool (derived from state)
+    const coinTypeA = useMemo(() => state.dropdownCoinMetadata?.typeName, [state.dropdownCoinMetadata]);
+    const coinTypeB = useMemo(() => state.customCoinMetadata?.typeName, [state.customCoinMetadata]);
+    
+    // Use our custom hooks
+    const { 
+        coinsA, 
+        coinsB, 
+        isLoading: isLoadingCoins, 
+        error: coinError,
+        refetch: refetchCoins
+    } = useGetPoolCoins(coinTypeA, coinTypeB, walletAddress);
+    
+    // Utility to convert string amounts to BigInt with proper decimals
+    const toU64 = useConvertToU64();
+    
+    // Utility to get the proper coin inputs for transaction building
+    const getCoinInput = useGetCoinInput();
 
     useEffect(() => {
         if (isProcessing) {
@@ -328,17 +350,17 @@ export default function AddLiquidity() {
             console.log("✅ Pool ID:", state.poolData.poolId);
             console.log("✅ Coin Types:", state.dropdownCoinMetadata.typeName, state.customCoinMetadata.typeName);
             const coinTypeA = state.dropdownCoinMetadata.typeName;
-            const coinTypeB = state.customCoinMetadata.typeName;
-            // // ✅ Fetch Owned Coins A and B
-            const { data: coinsA } = await provider.getCoins({
-                owner: userAddress,
-                coinType: coinTypeA
-            });
-
-            const { data: coinsB } = await provider.getCoins({
-                owner: userAddress,
-                coinType: coinTypeB
-            });
+            // ✅ Get pre-fetched coins or refetch if needed
+            // First ensure we refresh the data to get the latest state
+            await refetchCoins();
+            
+            // If we still don't have the data, log an error
+            if (!coinsA || !coinsB) {
+                console.error("❌ Failed to load coin data", { coinError });
+                addLog("❌ Failed to load coin data. Please try again.");
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
+            }
 
             console.log("🔍 Owned Coin Objects:", { coinsA, coinsB }, {coinA, coinB});
             // merge responses
@@ -346,9 +368,9 @@ export default function AddLiquidity() {
 
             console.log("🔍 Extracted Coins with Balances:", coins);
 
-            // ✅ Convert Deposit Amounts to MIST
-            const depositA_U64 = BigInt(Math.floor(parseFloat(state.depositDropdownCoin) * Math.pow(10, decimalsA)));
-            const depositB_U64 = BigInt(Math.floor(parseFloat(state.depositCustomCoin) * Math.pow(10, decimalsB)));
+            // ✅ Convert Deposit Amounts to MIST using our utility hook
+            const depositA_U64 = toU64(state.depositDropdownCoin, decimalsA);
+            const depositB_U64 = toU64(state.depositCustomCoin, decimalsB);
 
             // ✅ Ensure user has enough balance
 
@@ -397,61 +419,22 @@ export default function AddLiquidity() {
 
             let coinAInput, coinBInput;
 
-            const getMergedCoinInput = async (
-                txb: TransactionBlock,
-                coins: any[],
-                coinType: string,
-                amount: bigint
-            ) => {
-                console.log({coins})
-                const matchingCoins = coins.filter((c) => c.coinType === coinType);
-                if (matchingCoins.length === 0) {
-                    throw new Error(`No ${coinType} coins found in wallet`);
-                }
-
-                let accumulated = 0n;
-                const coinsToUse = [];
-                for (const coin of matchingCoins) {
-                    accumulated += BigInt(coin.balance);
-                    coinsToUse.push(coin);
-                    if (accumulated >= amount) break;
-                }
-
-                if (coinsToUse.length === 0) {
-                    throw new Error(`Not enough ${coinType} balance`);
-                }
-
-                if (coinsToUse.length === 1) {
-                    return txb.splitCoins(
-                        txb.object(coinsToUse[0].coinObjectId),
-                        [txb.pure.u64(amount)]
-                    );
-                } else {
-                    const baseCoin = coinsToUse[0];
-                    const rest = coinsToUse.slice(1).map((c) => txb.object(c.coinObjectId));
-                    txb.mergeCoins(txb.object(baseCoin.coinObjectId), rest);
-                    const [splitCoin] = txb.splitCoins(
-                        txb.object(baseCoin.coinObjectId),
-                        [txb.pure.u64(amount)]
-                    );
-                    return splitCoin;
-                }
-            };
+            // We're now using the getCoinInput hook instead of this function
 
             const suiType = "0x2::sui::SUI";
             const isCoinADepositSui = expectedCoinA === suiType;
             const isCoinBDepositSui = expectedCoinB === suiType;
 
-            if (isCoinADepositSui) {
-                coinAInput = txb.splitCoins(txb.gas, [txb.pure.u64(depositA_U64)]);
-            } else {
-                coinAInput = await getMergedCoinInput(txb, coins, expectedCoinA, depositA_U64);
-            }
-
-            if (isCoinBDepositSui) {
-                coinBInput = txb.splitCoins(txb.gas, [txb.pure.u64(depositB_U64)]);
-            } else {
-                coinBInput = await getMergedCoinInput(txb, coins, expectedCoinB, depositB_U64);
+            try {
+                // Use our hook for coin input preparation (handles SUI vs non-SUI automatically)
+                coinAInput = await getCoinInput(txb, coins, expectedCoinA, depositA_U64);
+                coinBInput = await getCoinInput(txb, coins, expectedCoinB, depositB_U64);
+            } catch (error) {
+                console.error("❌ Error preparing coin inputs:", error);
+                addLog(`❌ Error: ${error.message}`);
+                alert(`⚠️ ${error.message}`);
+                dispatch({ type: "SET_LOADING", payload: false });
+                return;
             }
 
             txb.setGasBudget(GAS_BUDGET);
@@ -607,14 +590,10 @@ export default function AddLiquidity() {
 
 
     return (
-        <div className="min-h-screen overflow-y-auto flex flex-col md:flex-row bg-gray-100 p-4 md:p-6 pb-20">
-            <div className="hidden md:flex flex-col items-start justify-start w-72 min-w-[280px] h-full bg-white shadow-md p-6 rounded-lg">
-                <StepIndicator step={state.step} setStep={(step) => dispatch({ type: "SET_STEP", payload: step })} />
-            </div>
+        <div className="min-h-screen overflow-y-auto flex flex-col md:flex-row bg-[#000306] p-4 md:p-6 pb-20">
+            <StepIndicator step={state.step} setStep={(step) => dispatch({ type: "SET_STEP", payload: step })} />
 
-
-
-            <div className="flex-1 bg-white p-4 md:p-8 rounded-lg shadow-lg">
+            <div className="flex-1 p-4 md:p-8">
                 <h1 className="text-2xl font-bold mb-6">Create Liquidity</h1>
 
                 {/* Step 1: Select Coins */}
@@ -624,25 +603,27 @@ export default function AddLiquidity() {
 
                         {/* Dropdown for Predefined Coins */}
                         <div className="mb-4 relative">
-                            <label className="block text-gray-700 mb-2"><strong>Select First Coin:</strong></label>
-                            <button className="w-full flex items-center justify-between p-2 border rounded-lg bg-white text-black"
+                            <label className="block text-slate-300 mb-2"><strong>Select First Coin:</strong></label>
+                            <button className="rounded-none w-full flex items-center justify-between p-2 border border-slate-600 bg-[#14110c]"
                                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
                             >
                                 <div className="flex items-center space-x-2">
-                                    <img src={state.selectedCoin.logo} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
+                                    <Image src={state.selectedCoin.image} alt={state.selectedCoin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                     <span>{state.selectedCoin.symbol}</span>
                                 </div>
-                                <span className="text-gray-600">▼</span>
+                                <span className="text-slate-400">▼</span>
                             </button>
 
                             {state.dropdownOpen && (
-                                <div className="absolute left-0 mt-1 w-full bg-white border rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                                <div className="absolute left-0 mt-1 w-full bg-[#14110c] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
                                     {predefinedCoins.map((coin) => (
-                                        <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-softMint cursor-pointer text-black"
+                                        <div key={coin.symbol} className="flex items-center px-3 py-2 hover:bg-slate-700 cursor-pointer"
                                             onClick={() => dispatch({ type: "SET_COIN", payload: coin })}
                                         >
-                                            <img src={coin.logo} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
-                                            <span className="ml-2">{coin.symbol}</span>
+                                            <div className="flex items-center space-x-2">
+                                                <Image src={coin.image} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
+                                                <span className="ml-2">{coin.symbol}</span>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -651,10 +632,10 @@ export default function AddLiquidity() {
 
                         {/* Input field for custom coin */}
                         <div className="mb-4">
-                            <label className="block text-gray-700"><strong>Enter Second Coin TypeName:</strong></label>
+                            <label className="block text-slate-300"><strong>Enter Second Coin TypeName:</strong></label>
                             <input
                                 type="text"
-                                className="w-full p-2 border rounded-lg text-black placeholder-gray-500"
+                                className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
                                 placeholder="Enter coin type (e.g., 0x2::sui::SUI)"
                                 value={state.customCoin}
                                 onChange={(e) => dispatch({ type: "SET_CUSTOM_COIN", payload: e.target.value })}
@@ -662,49 +643,48 @@ export default function AddLiquidity() {
                         </div>
 
                         {/* Display Pool Info */}
-                        <div className="mt-6 p-4 border rounded-lg bg-gray-50 overflow-hidden">
+                        <div className="mt-6 p-4 border border-slate-600 bg-[#000306] overflow-hidden">
                             {!state.poolChecked ? (
-                                <p className="text-royalPurple"><strong>Set your coin pair and click Get Pool Info</strong></p>
+                                <p className="text-[#61F98A]"><strong>Set your coin pair and click Get Pool Info</strong></p>
                             ) : state.poolData ? (
                                 <div>
-                                    <p className="text-deepTeal text-m font-semibold break-all">
-                                        Pool ID: <span className="text-royalPurple text-m">{state.poolData.poolId}</span>
+                                    <p className="text-slate-300 text-m font-semibold break-all">
+                                        Pool ID: <span className="text-[#61F98A] text-m">{state.poolData.poolId}</span>
                                     </p>
                                     <div className="flex items-center space-x-4 mt-2">
                                         {/* CoinA */}
                                         <div className="flex items-center space-x-2">
-                                                <img
-                                                src={state.selectedCoin.logo}
+                                                <Image
+                                                src={state.selectedCoin.image}
                                                 alt={state.selectedCoin.symbol}
-                                                    width={20} height={20}
+                                                width={20} height={20}
                                                 className="w-6 h-6 rounded-full"
                                             />
-                                                <span className="text-deepTeal text-m font-medium"><strong>{state.selectedCoin.symbol}</strong></span>
+                                                <span className="text-slate-300 text-m font-medium"><strong>{state.selectedCoin.symbol}</strong></span>
                                         </div>
-                                            <span className="text-deepTeal text-m font-medium"><strong>/</strong></span>
+                                            <span className="text-slate-300 text-m font-medium"><strong>/</strong></span>
                                             {/* CoinB */}
                                             <div className="flex items-center space-x-2">
-                                                <img
+                                                <Image
                                                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                                                     alt={state.customCoinMetadata?.symbol || "Token"}
                                                     width={20} height={20}
                                                     className="w-6 h-6 rounded-full"
                                                 />
-                                                <span className="text-deepTeal text-m font-medium">
+                                                <span className="text-slate-300 text-m font-medium">
                                                     <strong>{state.customCoinMetadata?.symbol ? state.customCoinMetadata.symbol : "Unknown"}</strong>
                                                 </span>
                                             </div>
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-royalPurple">Pool not found. Create a new one.</p>
+                                <p className="text-[#61F98A]">Pool not found. Create a new one.</p>
                             )}
                         </div>
 
-                        {/* Fetch Pool Data Button */}
                         <button
-                            className="w-full md:w-auto button-secondary mr-2 p-2 md:p-3 rounded-lg mt-4 text-sm md:text-base"
                             onClick={fetchPoolData}
+                            className="w-full rounded-none md:w-auto p-2 md:p-3 bg-[#61F98A] hover:bg-[#52d879] text-black font-medium text-sm md:text-base transition-colors duration-300 mr-2 mt-4"
                             disabled={state.loading}
                         >
                             {state.loading ? "Fetching..." : "Get Pool Info"}
@@ -713,7 +693,7 @@ export default function AddLiquidity() {
 
                 {/* Navigation Button */}
                         <button
-                            className="w-full ml-2 md:w-1/3 p-2 md:p-3 rounded-lg mt-4 text-sm md:text-base"
+                            className={`w-full rounded-none ml-2 md:w-1/3 p-2 md:p-3 mt-4 text-sm md:text-base font-medium transition-colors duration-300 ${state.poolChecked ? (state.poolData ? "bg-[#61F98A] hover:bg-[#52d879] text-black" : "bg-[#8d67f8] hover:bg-[#7654d4]") : "bg-gray-500 cursor-not-allowed"}`}
                             onClick={async () => {
                                 if (state.poolData) {
                                     await fetchPoolStats(state.poolData.poolId);
@@ -728,12 +708,8 @@ export default function AddLiquidity() {
                                 }
                             }}
                             disabled={!state.poolChecked}
-                            style={{
-                                backgroundColor: state.poolChecked ? (state.poolData ? "green" : "purple") : "gray",
-                                color: "white",
-                            }}
                         >
-                            {state.poolData ? "Proceed to Step 2" : "Create a New Pool"}
+                            {state.poolData ? "Proceed to Step 2" : "Create Pool"}
                         </button>
 
                     </div>
@@ -745,47 +721,47 @@ export default function AddLiquidity() {
                         <h2 className="text-xl font-semibold mb-4">Deposit Liquidity</h2>
 
                         {/* Pool Stats */}
-                        <div className="bg-softMint p-3 md:p-4 rounded-lg shadow-md mb-4 text-sm md:text-base">
-                            <h2 className="text-lg font-semibold">Pool Stats</h2>
+                        <div className="bg-[#14110c] border border-slate-600 p-3 md:p-4 shadow-md mb-4 text-sm md:text-base">
+                            <h2 className="text-lg font-semibold text-slate-300">Pool Stats</h2>
 
                             {/* Balances */}
-                            <h3 className="text-sm font-semibold text-black"><strong>Balances</strong></h3>
-                            <p className="text-sm text-gray-700">
+                            <h3 className="text-sm font-semibold text-slate-300"><strong>Balances</strong></h3>
+                            <p className="text-sm text-slate-400">
                                 <strong>Balance Coin A: {(state.poolStats.balance_a / Math.pow(10, decimalsA)).toFixed(4)}</strong>
                             </p>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-slate-400">
                                 <strong>Balance Coin B: {(state.poolStats.balance_b / Math.pow(10, decimalsB)).toFixed(4)}</strong>
                             </p>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-slate-400">
                                 <strong>Pool Locked Coins: {(state.poolStats.burn_balance_b / 1e9).toFixed(4)}</strong>
                             </p>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-slate-400">
                                 <strong>Pool Locked LP: {(state.poolStats.locked_lp_balance / 1e9).toFixed(4)}</strong>
                             </p>
 
                             {/* Fees */}
-                            <h3 className="text-sm font-semibold text-black mt-2"><strong>Fees</strong></h3>
-                            <p className="text-sm text-gray-700">
+                            <h3 className="text-sm font-semibold text-slate-300 mt-2"><strong>Fees</strong></h3>
+                            <p className="text-sm text-slate-400">
                                 <strong>LP Builder Fee: {(state.poolStats.lp_builder_fee / 100).toFixed(2)}%</strong>
                             </p>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-slate-400">
                                 <strong>Burn Fee: {(state.poolStats.burn_fee / 100).toFixed(2)}%</strong>
                             </p>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-slate-400">
                                 <strong>Rewards Fee: {(state.poolStats.rewards_fee / 100).toFixed(2)}%</strong>
                             </p>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-slate-400">
                                 <strong>Creator Royalty Fee: {(state.poolStats.creator_royalty_fee / 100).toFixed(2)}%</strong>
                             </p>
                         </div>
 
                         {/* Slippage Tolerance Input */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h2 className="text-lg font-semibold">Slippage Tolerance</h2>
+                        <div className="bg-[#14110c] border border-slate-600 p-4 shadow-md mb-4">
+                            <h2 className="text-lg font-semibold text-slate-300">Slippage Tolerance</h2>
                             <div className="flex items-center space-x-2 mt-2">
                                 <input
                                     type="number"
-                                    className="bg-white text-black text-lg md:text-2xl font-semibold p-2 rounded-lg w-full md:w-20 border outline-none"
+                                    className="bg-[#000306] text-lg md:text-2xl font-semibold p-2 w-full md:w-20 border border-slate-600 outline-none"
                                     placeholder="0.5"
                                     value={state.slippageTolerance}
                                     onChange={(e) => {
@@ -795,49 +771,49 @@ export default function AddLiquidity() {
                                         dispatch({ type: "SET_SLIPPAGE", payload: newSlippage });
                                     }}
                                 />
-                                <span className="text-black text-lg font-medium">%</span>
+                                <span className="text-lg font-medium">%</span>
                             </div>
-                            <p className="text-gray-600 text-sm mt-1">
+                            <p className="text-slate-400 text-sm mt-1">
                                 Set the maximum slippage tolerance.
                             </p>
                         </div>
 
                         {/* Deposit Inputs */}
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-                            <h2 className="text-lg font-semibold">Deposit Tokens</h2>
+                        <div className="bg-[#14110c] border border-slate-600 p-4 shadow-md mb-4">
+                            <h2 className="text-lg font-semibold text-slate-300">Deposit Tokens</h2>
 
-                            <div className="flex items-center p-3 bg-gray-50 rounded-lg mb-2">
-                                <img
+                            <div className="flex items-center p-3 bg-[#000306] border border-slate-600 mb-2">
+                                <Image
                                     src={state.dropdownCoinMetadata?.image || "/default-coin.png"}
                                     alt={state.dropdownCoinMetadata?.symbol || "Coin A"}
-                                    width={20} height={20}
+                                    width={32} height={32}
                                     className="w-8 h-8 rounded-full mr-2"
                                 />
-                                <span className="text-deepTeal font-medium mr-2">
+                                <span className="text-slate-300 font-medium mr-2">
                                     <strong>{state.dropdownCoinMetadata?.symbol || "Coin A"}</strong>
                                 </span>
                                 <input
                                     type="number"
-                                    className="bg-transparent text-2xl font-semibold text-black w-full outline-none"
+                                    className="bg-transparent text-2xl font-semibold w-full outline-none"
                                     placeholder="0"
                                     value={state.depositDropdownCoin}
                                     onChange={(e) => handleCoinAChange(e.target.value)}
                                 />
                             </div>
 
-                            <div className="flex items-center p-3 bg-gray-50 rounded-lg mb-2">
-                                <img
+                            <div className="flex items-center p-3 bg-[#000306] border border-slate-600 mb-2">
+                                <Image
                                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                                     alt={state.customCoinMetadata?.symbol || "Coin B"}
-                                    width={20} height={20}
+                                    width={32} height={32}
                                     className="w-8 h-8 rounded-full mr-2"
                                 />
-                                <span className="text-deepTeal font-medium mr-2">
+                                <span className="text-slate-300 font-medium mr-2">
                                     <strong>{state.customCoinMetadata?.symbol || "Coin B"}</strong>
                                 </span>
                                 <input
                                     type="number"
-                                    className="bg-transparent text-2xl font-semibold text-black w-full outline-none"
+                                    className="bg-transparent text-2xl font-semibold w-full outline-none"
                                     placeholder="0"
                                     value={state.depositCustomCoin}
                                     onChange={(e) => handleCoinBChange(e.target.value)}
@@ -847,7 +823,7 @@ export default function AddLiquidity() {
 
                         {/* Add Liquidity Button */}
                         <button
-                            className="button-primary p-3 rounded-lg w-full mt-4 disabled:opacity-50"
+                            className="bg-[#61F98A] hover:bg-[#52d879] text-black font-semibold p-3 w-full mt-4 disabled:opacity-50 transition-colors duration-300"
                             onClick={handleAddLiquidity}
                             disabled={!state.depositDropdownCoin || !state.depositCustomCoin || state.loading}
                         >
@@ -863,25 +839,25 @@ export default function AddLiquidity() {
                     <div className="pb-20">
                         <h2 className="text-xl font-semibold mb-4">Liquidity Successfully Added! 🎉</h2>
 
-                        <div className="bg-green-100 p-4 rounded-lg shadow-md mb-4">
-                            <h3 className="text-lg font-semibold text-deepTeal">Transaction Summary</h3>
+                        <div className="bg-[#14110c] border border-[#61F98A] p-4 shadow-md mb-4">
+                            <h3 className="text-lg font-semibold text-[#61F98A]">Transaction Summary</h3>
 
-                            <p className="text-deepTeal text-sm font-semibold">Liquidity Pool:</p>
-                            <p className="text-gray-700 text-sm break-all">{state.liquidityData.poolId}</p>
+                            <p className="text-[#61F98A] text-sm font-semibold">Liquidity Pool:</p>
+                            <p className="text-slate-300 text-sm break-all">{state.liquidityData.poolId}</p>
 
-                            <h3 className="text-sm font-semibold text-deepTeal mt-2">Your Deposits:</h3>
-                            <p className="text-sm text-gray-700">
+                            <h3 className="text-sm font-semibold text-[#61F98A] mt-2">Your Deposits:</h3>
+                            <p className="text-sm text-slate-300">
                                 {state.liquidityData.depositA.toFixed(4)} {state.dropdownCoinMetadata?.symbol}
                             </p>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-slate-300">
                                 {state.liquidityData.depositB.toFixed(4)} {state.customCoinMetadata?.symbol}
                             </p>
 
-                            <h3 className="text-sm font-semibold text-deepTeal mt-2">LP Tokens Minted:</h3>
-                            <p className="text-sm text-gray-700">{state.liquidityData.lpMinted.toFixed(4)} LP Tokens</p>
+                            <h3 className="text-sm font-semibold text-[#61F98A] mt-2">LP Tokens Minted:</h3>
+                            <p className="text-sm text-slate-300">{state.liquidityData.lpMinted.toFixed(4)} LP Tokens</p>
 
-                            <h3 className="text-sm font-semibold text-deepTeal mt-2">Transaction Digest:</h3>
-                            <p className="text-sm text-blue-700 break-all cursor-pointer"
+                            <h3 className="text-sm font-semibold text-[#61F98A] mt-2">Transaction Digest:</h3>
+                            <p className="text-sm text-[#61F98A] underline break-all cursor-pointer hover:text-[#52d879] transition-colors duration-300"
                                 onClick={() => window.open(`https://suiexplorer.com/tx/${state.liquidityData.txnDigest}`, "_blank")}
                             >
                                 {state.liquidityData.txnDigest}
@@ -890,7 +866,7 @@ export default function AddLiquidity() {
 
                         {/* Final Action */}
                         <button
-                            className="button-secondary p-3 rounded-lg w-full mt-4"
+                            className="button-secondary p-3 w-full mt-4"
                             onClick={() => router.push("/pools")}
                         >
                             Back to Pools

@@ -1,5 +1,9 @@
 import { CoinMeta } from "../types";
 
+export const whitelistedCoins = [
+    "0x2::sui::SUI",
+];
+
 export const predefinedCoins: CoinMeta[] = [
   {
     symbol: "SUI",

@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 .radix-themes {
   --default-font-family: var(--font-roboto);
 }
@@ -67,33 +68,6 @@ body {
   z-index: 50;
 }
 
-/* 🎨 Headings */
-h1,
-h2,
-h3 {
-  font-family: var(--font-heading);
-  font-weight: 800;
-}
-
-h1 {
-  color: var(--color-royal-purple);
-}
-
-h2 {
-  color: var(--color-deep-teal);
-}
-
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
-  font-weight: 600;
-}
-
-label {
-  color: var(--color-emerald-green);
-}
-
 p {
   font-family: var(--font-body);
   font-weight: 400;
@@ -109,7 +83,30 @@ p {
 button.MuiTab-root:hover {
   background-color: rgb(22, 21, 21) !important;
 }
-button {
+
+.css-1usuzwp-MuiButtonBase-root-MuiTab-root {
+    background-color: transparent !important;
+    color: white !important;
+}
+
+.css-1usuzwp-MuiButtonBase-root-MuiTab-root:hover {
+    background-color: transparent !important;
+    color: var(--primary-button) !important;
+}
+
+.css-1usuzwp-MuiButtonBase-root-MuiTab-root.Mui-selected {
+    background-color: var(--primary-button) !important;
+    color: white !important;
+}
+
+.css-1usuzwp-MuiButtonBase-root-MuiTab-root.Mui-selected:hover {
+    opacity: 0.8;
+    background-color: var(--primary-button) !important;
+    color: white !important;
+}
+
+
+button.custom-button {
   font-family: var(--font-cta);
   background-color: var(--primary-button);
   color: white !important;
@@ -136,7 +133,7 @@ button.menu-button:hover {
   color: var(--color-soft-mint);
 }
 
-button:hover {
+button.custom-button:hover {
   background-color: var(--color-soft-mint);
   color: var(--background-main);
 }

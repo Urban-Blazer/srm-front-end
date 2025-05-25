@@ -1,6 +1,5 @@
-// @ts-nocheck
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { SuiClient } from "@mysten/sui.js/client";
 import { useCurrentWallet, useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME } from "../../config";
@@ -14,7 +13,6 @@ export default function MyPositions() {
     const wallet = useCurrentWallet()?.currentWallet;
     const account = useCurrentAccount();
     const walletConnected = !!wallet && !!account;
-    const walletAddress = account?.address || null;
     const [lpTokens, setLpTokens] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -61,30 +59,29 @@ export default function MyPositions() {
     };
 
     // ✅ Fetch LP Tokens
-    const fetchLPTokens = async () => {
-        if (!wallet || !walletAddress) {
-            alert("⚠️ Please connect your wallet first.");
+    const fetchLPTokens = useCallback(async () => {
+        if (!walletConnected || !account?.address) {
+            console.error("⚠️ Please connect your wallet first.");
             return;
         }
 
         setLoading(true);
 
         try {
-            const ownerAddress = typeof walletAddress === "string" ? walletAddress : walletAddress.address;
-
-            if (!ownerAddress.startsWith("0x") || ownerAddress.length !== 66) {
-                console.error("❌ Invalid Sui address:", ownerAddress);
-                alert("⚠️ Wallet address is invalid. Please reconnect.");
-                return;
-            }
-
-            console.log("🔗 Fetching LP tokens for wallet:", ownerAddress);
-
+            console.log("🔗 Fetching LP tokens for wallet:", account?.address);
+            let cursor: string | null | undefined = undefined;
+            let ownedObjects: any[] = [];
             // ✅ Get all owned objects
-            const { data: ownedObjects } = await provider.getOwnedObjects({
-                owner: ownerAddress,
-                options: { showType: true, showContent: true },
-            });
+            while (true) {
+                const { data: ownedObjectsPage, hasNextPage, nextCursor } = await provider.getOwnedObjects({
+                    owner: account?.address,
+                    options: { showType: true, showContent: true },
+                    cursor,
+                });
+                ownedObjects = [...ownedObjects, ...ownedObjectsPage];
+                if (!hasNextPage) break;
+                cursor = nextCursor;
+            }
 
             console.log("🔍 Owned Objects:", ownedObjects);
 
@@ -123,9 +120,9 @@ export default function MyPositions() {
                             ? BigInt(obj.data?.content?.fields?.balance)
                             : BigInt(0);
 
-                        const totalLpSupply = BigInt(poolStats.total_lp_supply || 0);
-                        const balanceA = BigInt(poolStats.balance_a || 0);
-                        const balanceB = BigInt(poolStats.balance_b || 0);
+                        const totalLpSupply = BigInt(poolStats?.total_lp_supply || 0);
+                        const balanceA = BigInt(poolStats?.balance_a || 0);
+                        const balanceB = BigInt(poolStats?.balance_b || 0);
 
                         const ownershipPercentage = totalLpSupply > 0
                             ? Number(userLpBalance) / Number(totalLpSupply)
@@ -158,22 +155,22 @@ export default function MyPositions() {
 
             if (validLpTokens.length === 0) {
                 setLpTokens([]);
-                alert("No LP positions found.");
+                console.error("No LP positions found.");
                 setLoading(false);
                 return;
             }
 
             setLpTokens(validLpTokens);
-        } catch (error) {
+        } catch (error: any) {
             console.error("❌ Error fetching LP tokens:", error);
             alert(`Failed to fetch LP tokens: ${error.message}`);
         }
 
         setLoading(false);
-    };
+    }, [walletConnected, account?.address]);
 
     // ✅ Fetch Pool Stats Function
-    const fetchPoolStats = async (poolObjectId) => {
+    const fetchPoolStats = async (poolObjectId: string) => {
         if (!poolObjectId) return null;
 
         console.log("Fetching Pool Stats with ID:", poolObjectId);
@@ -186,8 +183,8 @@ export default function MyPositions() {
 
             console.log("Pool Object Response:", poolObject);
 
-            if (poolObject?.data?.content?.fields) {
-                const fields = poolObject.data.content.fields;
+            if ((poolObject?.data?.content as any)?.fields) {
+                const fields = (poolObject?.data?.content as any).fields;
                 return {
                     balance_a: fields.balance_a || 0,
                     balance_b: fields.balance_b || 0,
@@ -208,7 +205,7 @@ export default function MyPositions() {
         setIsProcessing(true); // 🔥 Set processing state
         setIsModalOpen(true); // Open modal
         
-        if (!wallet || !walletAddress) {
+        if (!walletConnected || !account?.address) {
             alert("⚠️ Please connect your wallet first.");
             return;
         }
@@ -224,10 +221,8 @@ export default function MyPositions() {
 
             setLoading(true);
 
-            const userAddress = walletAddress;
-
-            if (!userAddress) {
-                alert("⚠️ No accounts found. Please reconnect your wallet.");
+            if (!account?.address) {
+                console.error("⚠️ No accounts found. Please reconnect your wallet.");
                 setLoading(false);
                 return;
             }
@@ -260,8 +255,8 @@ export default function MyPositions() {
             const minAOut = (estimatedAOut * BigInt(Math.floor(slippageMultiplier * 1_000_000))) / BigInt(1_000_000);
             const minBOut = (estimatedBOut * BigInt(Math.floor(slippageMultiplier * 1_000_000))) / BigInt(1_000_000);
 
-            addLog("🔢 minAOut:", minAOut.toString(), "minBOut:", minBOut.toString());
-            console.log("🔢 minAOut:", minAOut.toString(), "minBOut:", minBOut.toString());
+            addLog(`🔢 minAOut: ${minAOut.toString()}, minBOut: ${minBOut.toString()}`);
+            console.log(`🔢 minAOut: ${minAOut.toString()}, minBOut: ${minBOut.toString()}`);
 
             // ✅ Use the object ID we already have
             const lpObjectId = lp.objectId;
@@ -282,7 +277,7 @@ export default function MyPositions() {
                 ],
             });
 
-            let executeResponse;
+            let executeResponse: { digest: string } | undefined;
 
             await new Promise<void>((resolve, reject) => {
                 signAndExecuteTransaction(
@@ -309,7 +304,7 @@ export default function MyPositions() {
             console.log("✅ Transaction Submitted!");
 
             // ✅ Track Transaction Digest
-            const txnDigest = executeResponse.digest;
+            const txnDigest = executeResponse?.digest;
             addLog(`🔍 Transaction Digest: ${txnDigest}`);
             console.log(`🔍 Transaction Digest: ${txnDigest}`);
 
@@ -336,7 +331,7 @@ export default function MyPositions() {
             alert(`✅ Successfully removed ${inputAmount} LP from ${lp.poolData?.poolId}`);
             setIsProcessing(false); // ✅ Ensure modal does not close early
         } catch (error) {
-            addLog("❌ Remove Liquidity Transaction failed:", error);
+            addLog(`❌ Remove Liquidity Transaction failed: ${error}`);
             console.error("❌ Remove Liquidity Transaction failed:", error);
             alert("Transaction failed. Check the console.");
         } finally {
@@ -347,7 +342,7 @@ export default function MyPositions() {
     };
 
     // ✅ Add this function before calling it in handleRemoveLiquidityConfirm
-    const fetchTransactionWithRetry = async (txnDigest, retries = 20, delay = 5000) => {
+    const fetchTransactionWithRetry = async (txnDigest: string, retries = 20, delay = 5000) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 console.log(`🔍 Attempt ${attempt}: Fetching transaction details for digest: ${txnDigest}`);
@@ -381,17 +376,17 @@ export default function MyPositions() {
     };
 
     useEffect(() => {
-        if (walletAddress) {
-            fetchLPTokens(walletAddress);
+        if (walletConnected && account?.address) {
+            fetchLPTokens();
         }
-    }, [walletAddress]);
+    }, [fetchLPTokens, walletConnected, account?.address]);
 
     return (
-        <div className="flex flex-col items-center min-h-screen p-4 md:p-6 pt-20 pb-20 bg-gray-100">
+        <div className="flex flex-col items-center min-h-screen p-4 md:p-6 pt-20 pb-20">
             <h1 className="pt-10 text-2xl md:text-3xl font-bold mb-4 text-center">My Liquidity Positions</h1>
 
             {!walletConnected ? (
-                <p className="text-deepTeal text-center "><strong>🔌 Connect your wallet to view your LP positions.</strong></p>
+                <p className="text-center "><strong>🔌 Connect your wallet to view your LP positions.</strong></p>
             ) : (
                 <>
                     <button
@@ -412,23 +407,23 @@ export default function MyPositions() {
                                     >
                                         {/* Coin Images & Symbols */}
                                         <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">
-                                            <img src={lp.poolData?.coinA_metadata?.image} alt="Coin A" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" />
-                                            <span className="text-lg md:text-xl font-semibold text-deepTeal">{lp.poolData?.coinA_metadata?.symbol}</span>
-                                            <span className="text-deepTeal text-lg">/</span>
-                                            <img src={lp.poolData?.coinB_metadata?.image} alt="Coin B" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" />
-                                            <span className="text-lg md:text-xl font-semibold text-deepTeal">{lp.poolData?.coinB_metadata?.symbol}</span>
+                                            <Image src={lp.poolData?.coinA_metadata?.image || ''} alt="Coin A" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" unoptimized />
+                                            <span className="text-lg md:text-xl font-semibold">{lp.poolData?.coinA_metadata?.symbol}</span>
+                                            <span className="text-lg">/</span>
+                                            <Image src={lp.poolData?.coinB_metadata?.image || ''} alt="Coin B" width={20} height={20} className="w-8 md:w-10 h-8 md:h-10 rounded-full" unoptimized />
+                                            <span className="text-lg md:text-xl font-semibold">{lp.poolData?.coinB_metadata?.symbol}</span>
                                         </div>
 
                                         {/* Pool Information */}
                                         <div className="w-full">
-                                            <p className="text-deepTeal text-sm">
+                                            <p className="text-sm">
                                                 <strong>Pool ID:</strong>
                                                 <span className="text-royalPurple break-all"> {lp.poolData?.poolId || "N/A"}</span>
                                             </p>
-                                            <p className="text-sm text-deepTeal">
+                                            <p className="text-sm">
                                                 <strong>Balance:</strong> {(Number(lp.balance) / 1e9).toFixed(4)} LP
                                             </p>
-                                            <p className="text-sm text-deepTeal">
+                                            <p className="text-sm">
                                                 <strong>Your Share:</strong> {lp.userCoinA.toFixed(4)} {lp.poolData?.coinA_metadata?.symbol} / {lp.userCoinB.toFixed(4)} {lp.poolData?.coinB_metadata?.symbol}
                                             </p>
                                         </div>
@@ -502,12 +497,10 @@ export default function MyPositions() {
                                         </div>
                                 ))
                             ) : (
-                                    <p className="text-deepTeal text-center mt-4"><strong>No LP positions found. Click View My Positions to check your wallet.</strong></p>
+                                    <p className="text-center mt-4"><strong>No LP positions found. Click View My Positions to check your wallet.</strong></p>
                             )}
 
                         </div>
-
-
                 </>
             )}
         </div>

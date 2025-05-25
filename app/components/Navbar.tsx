@@ -1,10 +1,24 @@
 "use client";
 
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { ConnectButton } from "@mysten/dapp-kit";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+
+// Material UI imports
+import { styled, useTheme } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import List from "@mui/material/List";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import Collapse from "@mui/material/Collapse";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 
 // Estilos globales para animaciones
 const globalStyles = `
@@ -68,12 +82,6 @@ const NAVIGATION_ITEMS = [
     ],
   },
   {
-    id: "launchpad",
-    label: "APPLY TO LAUNCH",
-    path: "https://form.typeform.com/to/wbCfCQeb",
-    external: true,
-  },
-  {
     id: "info",
     label: "INFO",
     path: "/info",
@@ -108,6 +116,12 @@ const NAVIGATION_ITEMS = [
 
 const EXTERNAL_LINKS = [
   {
+    id: "launchpad",
+    label: "APPLY TO LAUNCH",
+    path: "https://form.typeform.com/to/wbCfCQeb",
+    external: true,
+  },
+  {
     id: "bridge-link",
     label: "BRIDGE",
     path: "https://bridge.sui.io/",
@@ -119,19 +133,19 @@ const EXTERNAL_LINKS = [
 interface NavLinkProps {
   href: string;
   external?: boolean;
-  onClick?: () => void;
   className: string;
   children: React.ReactNode;
   style?: React.CSSProperties;
+  onClick?: () => void;
 }
 
 const NavLink: React.FC<NavLinkProps> = ({
   href,
   external,
-  onClick,
   className,
   children,
   style,
+  onClick,
 }) => {
   if (external) {
     return (
@@ -140,8 +154,8 @@ const NavLink: React.FC<NavLinkProps> = ({
         target="_blank"
         rel="noopener noreferrer"
         className={className}
-        onClick={onClick}
         style={style}
+        onClick={onClick}
       >
         {children}
       </a>
@@ -149,7 +163,7 @@ const NavLink: React.FC<NavLinkProps> = ({
   }
 
   return (
-    <Link href={href} className={className} onClick={onClick} style={style}>
+    <Link href={href} className={className} style={style} onClick={onClick}>
       {children}
     </Link>
   );
@@ -172,7 +186,7 @@ interface DropdownProps {
     submenu?: SubmenuItem[];
   };
   isMobile?: boolean;
-  onLinkClick?: () => void;
+  onLinkClick?: (path: string, isExternal?: boolean) => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
 }
@@ -273,33 +287,120 @@ const Dropdown: React.FC<DropdownProps> = ({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      {menu.submenu?.map((item, index) => (
-        <NavLink
-          key={item.id}
-          href={item.path}
-          external={item.external}
-          className={`${linkClasses}`}
-          onClick={onLinkClick}
-          style={{
-            animationDelay: `${index * 50}ms`,
-            opacity: 0,
-            animation: `slideIn 0.3s ease-out forwards ${index * 50}ms`,
-          }}
-        >
-          {item.label}
-        </NavLink>
-      ))}
+      {menu.submenu?.map((item, index) => {
+        // Create element for each item
+        return item.external ? (
+          <a
+            key={item.id}
+            href={item.path}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${linkClasses} cursor-pointer`}
+            onClick={() => {
+              if (onLinkClick) onLinkClick(item.path, true);
+            }}
+            style={{
+              animationDelay: `${index * 50}ms`,
+              opacity: 0,
+              animation: `slideIn 0.3s ease-out forwards ${index * 50}ms`,
+            }}
+          >
+            {item.label}
+          </a>
+        ) : (
+          <a
+            key={item.id}
+            href={item.path}
+            className={`${linkClasses} cursor-pointer`}
+            onClick={() => {
+              if (onLinkClick) onLinkClick(item.path, false);
+            }}
+            style={{
+              animationDelay: `${index * 50}ms`,
+              opacity: 0,
+              animation: `slideIn 0.3s ease-out forwards ${index * 50}ms`,
+            }}
+          >
+            {item.label}
+          </a>
+        );
+      })}
     </div>
   );
 };
 
+// Drawer header component
+const DrawerHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(0, 1),
+  ...theme.mixins.toolbar,
+  justifyContent: 'flex-end',
+  backgroundColor: '#000306',
+}));
+
+// Mobile menu item for Material UI drawer
+const MobileMenuItem = ({ 
+  label, 
+  path, 
+  isExternal = false, 
+  onClick,
+  isSubmenu = false,
+}: { 
+  label: string; 
+  path: string; 
+  isExternal?: boolean; 
+  onClick?: () => void;
+  isSubmenu?: boolean;
+}) => {
+  const handleClick = () => {
+    // Execute the onClick callback if provided
+    if (onClick) onClick();
+    
+    // Handle navigation
+    if (isExternal) {
+      window.open(path, '_blank');
+    } else {
+      window.location.href = path;
+    }
+  };
+
+  return (
+    <ListItem 
+      disablePadding 
+      sx={{ 
+        pl: isSubmenu ? 4 : 2,
+        '& .MuiListItemButton-root:hover': {
+          backgroundColor: '#5E21A1',
+          color: 'white',
+        }
+      }}
+    >
+      <ListItemButton onClick={handleClick}>
+        <ListItemText 
+          primary={label} 
+          primaryTypographyProps={{ 
+            sx: { 
+              color: 'white',
+              fontWeight: isSubmenu ? 'normal' : 'bold' 
+            } 
+          }} 
+        />
+      </ListItemButton>
+    </ListItem>
+  );
+};
+
 export default function NavBar() {
-  // Utilizar caché para almacenar el estado del menú
+  // Desktop dropdown state
   const [activeDropdown, setActiveDropdown] = useLocalStorage<string | null>(
     "navbar_active_dropdown",
     null
   );
+  // Mobile menu states
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileActiveDropdown, setMobileActiveDropdown] = useState<string | null>(null);
+  
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
   const { width } = useWindowSize(); // Hook para detectar cambios en el tamaño de la pantalla
   const pathname = usePathname(); // Hook para obtener la ruta actual
@@ -328,6 +429,7 @@ export default function NavBar() {
     if (prevPathRef.current && prevPathRef.current !== pathname) {
       setIsMobileMenuOpen(false);
       setActiveDropdown(null);
+      setMobileActiveDropdown(null);
     }
     prevPathRef.current = pathname;
   }, [pathname, setActiveDropdown]);
@@ -389,11 +491,6 @@ export default function NavBar() {
       setActiveDropdown(null);
     }, 300); // Small delay prevents accidental closing
     setHoverTimeout(timeout);
-  }, [setActiveDropdown]);
-
-  const handleMobileLinkClick = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    setActiveDropdown(null);
   }, [setActiveDropdown]);
 
   return (
@@ -486,86 +583,142 @@ export default function NavBar() {
       </div>
 
       {/* Mobile Menu Button */}
-      <div className="md:hidden ml-auto">
-        <button
-          className="menu-button text-white text-2xl"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle mobile menu"
+      <div className="md:hidden ml-auto mr-2">
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="end"
+          onClick={() => setIsMobileMenuOpen(true)}
+          sx={{ color: 'white' }}
         >
-          ☰
-        </button>
+          <HamburgerMenuIcon width={24} height={24} />
+        </IconButton>
       </div>
 
-      {/* Mobile Menu with Animation */}
-      {isMobileMenuOpen && (
-        <div
-          className="h-[calc(100vh-64px)] mt-2 bg-black right-0 bg-darkBlue w-full sm:w-64 p-4 shadow-lg flex flex-col items-start md:hidden animate-fadeIn"
-          style={{ animationDuration: "0.2s" }}
-        >
-          {NAVIGATION_ITEMS.map((menu, index) => {
+      {/* Material UI Drawer for Mobile Navigation */}
+      <Drawer
+        sx={{
+          width: 280,
+          flexShrink: 0,
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            width: 280,
+            boxSizing: 'border-box',
+            backgroundColor: '#000306',
+            borderRight: '1px solid #5E21A1',
+          },
+        }}
+        variant="temporary"
+        anchor="left"
+        open={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      >
+        <DrawerHeader>
+          <Image 
+            src="/images/logosrm.png" 
+            alt="Sui Rewards Me Logo"
+            width={180} 
+            height={60}
+            className="mx-auto"
+          />
+          <IconButton onClick={() => setIsMobileMenuOpen(false)} sx={{ color: '#5E21A1' }}>
+            <span className="text-xl">&larr;</span>
+          </IconButton>
+        </DrawerHeader>
+        
+        <Divider sx={{ backgroundColor: '#5E21A1', height: '2px' }} />
+        
+        <List>
+          {/* Direct menu items without submenu */}
+          {NAVIGATION_ITEMS.filter(menu => !menu.submenu).map((menu) => (
+            <MobileMenuItem
+              key={menu.id}
+              label={menu.label}
+              path={menu.path}
+              isExternal={!!menu.external}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          ))}
+        </List>
+        
+        <Divider sx={{ backgroundColor: '#5E21A1', opacity: 0.5 }} />
+        
+        <List>
+          {/* Menu items with submenus */}
+          {NAVIGATION_ITEMS.filter(menu => menu.submenu).map((menu) => {
+            // Use menu ID for the open state key
+            const menuKey = menu.id;
             const isActive = pathname?.startsWith(menu.path);
-
-            if (!menu.submenu) {
-              return (
-                <div key={menu.id} className="w-full mt-1">
-                  <NavLink
-                    href={menu.path}
-                    external={menu.external}
-                    className="block w-full"
-                    onClick={handleMobileLinkClick}
-                  >
-                    <div className="menu-button block w-full bg-[#000306] text-white font-semibold text-center px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
-                      {menu.label}
-                    </div>
-                  </NavLink>
-                </div>
-              );
-            }
-
+            
             return (
-              <div key={menu.id} className="w-full mt-1">
-                <button
-                  className={`text-center text-white menu-button w-full text-left px-4 py-2 hover:bg-softMint transition-colors ${
-                    isActive ? "border-l-4 border-[#5E21A1]" : ""
-                  }`}
-                  onClick={() => toggleDropdown(menu.id)}
-                >
-                  {menu.label}
-                </button>
-
-                {activeDropdown === menu.id && (
-                  <Dropdown
-                    menu={menu}
-                    isMobile={true}
-                    onLinkClick={handleMobileLinkClick}
-                  />
-                )}
-              </div>
+              <React.Fragment key={menuKey}>
+                <ListItem disablePadding>
+                  <ListItemButton 
+                    onClick={() => {
+                      // Toggle the dropdown state for this specific menu
+                      const newState = mobileActiveDropdown === menuKey ? null : menuKey;
+                      console.log(`Toggling mobile dropdown: ${menuKey}, current: ${mobileActiveDropdown}, new: ${newState}`);
+                      setMobileActiveDropdown(newState);
+                    }}
+                    sx={{
+                      backgroundColor: isActive ? 'rgba(94, 33, 161, 0.2)' : 'transparent',
+                      '&:hover': {
+                        backgroundColor: 'rgba(94, 33, 161, 0.4)',
+                      },
+                    }}
+                  >
+                    <ListItemText 
+                      primary={menu.label} 
+                      primaryTypographyProps={{ sx: { color: 'white', fontWeight: 'bold', paddingLeft: '16px' } }} 
+                    />
+                    <span style={{ color: 'white', fontSize: '1.2rem' }}>
+                      {mobileActiveDropdown === menuKey ? <ChevronUp /> : <ChevronDown />}
+                    </span>
+                  </ListItemButton>
+                </ListItem>
+                
+                <Collapse in={mobileActiveDropdown === menuKey} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {menu.submenu?.map(subItem => (
+                      <MobileMenuItem
+                        key={subItem.id}
+                        label={subItem.label}
+                        path={subItem.path}
+                        isExternal={subItem.path.startsWith('http')}
+                        onClick={() => {
+                          // Close the mobile menu and reset dropdown state
+                          setIsMobileMenuOpen(false);
+                          setMobileActiveDropdown(null);
+                        }}
+                        isSubmenu={true}
+                      />
+                    ))}
+                  </List>
+                </Collapse>
+              </React.Fragment>
             );
           })}
-
-          {/* External Links */}
-          {EXTERNAL_LINKS.map((link) => (
-            <div key={link.id} className="w-full mt-1">
-              <NavLink
-                href={link.path}
-                external={link.external}
-                className="block w-full"
-                onClick={handleMobileLinkClick}
-              >
-                <div className="menu-button block w-full bg-[#000306] text-white font-semibold text-center px-4 py-2 rounded-md hover:bg-softMint hover:text-black transition-colors duration-200">
-                  {link.label}
-                </div>
-              </NavLink>
-            </div>
+        </List>
+        
+        <Divider sx={{ backgroundColor: '#5E21A1', opacity: 0.5 }} />
+        
+        {/* External Links */}
+        <List>
+          {EXTERNAL_LINKS.map(link => (
+            <MobileMenuItem
+              key={link.id}
+              label={link.label}
+              path={link.path}
+              isExternal={true}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
           ))}
-
-          {/* Mobile Wallet Connect Button */}
-          <div className="w-full mt-4 flex justify-center flex-1 min-w-[160px] max-h-[50px]">
-            <ConnectButton />
-          </div>
-        </div>
-      )}
+        </List>
+        
+        <Box sx={{ mt: 'auto', p: 2, display: 'flex', justifyContent: 'center' }}>
+          <ConnectButton />
+        </Box>
+      </Drawer>
 
       <div className="flex w-full border-b p-0 m-0 border-[#5E21A1]" />
     </nav>

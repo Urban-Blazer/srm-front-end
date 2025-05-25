@@ -64,9 +64,7 @@ export default function MyPositions() {
             console.error("⚠️ Please connect your wallet first.");
             return;
         }
-
         setLoading(true);
-
         try {
             console.log("🔗 Fetching LP tokens for wallet:", account?.address);
             let cursor: string | null | undefined = undefined;

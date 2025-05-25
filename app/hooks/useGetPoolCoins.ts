@@ -1,12 +1,6 @@
 import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
+import { CoinMetadata, CoinStruct } from "@mysten/sui/client";
 import { useMemo } from "react";
-import { PaginatedCoins } from "@mysten/sui/client";
-
-interface CoinObject {
-  coinObjectId: string;
-  balance: string;
-  coinType: string;
-}
 
 export function useGetPoolCoins(
   coinTypeA?: string,
@@ -58,12 +52,12 @@ export function useGetPoolCoins(
   );
 
   // Process Coins A
-  const coinsA = useMemo<CoinObject[] | undefined>(() => {
+  const coinsA = useMemo<CoinStruct[] | undefined>(() => {
     return dataA?.data;
   }, [dataA]);
 
   // Process Coins B
-  const coinsB = useMemo<CoinObject[] | undefined>(() => {
+  const coinsB = useMemo<CoinStruct[] | undefined>(() => {
     return dataB?.data;
   }, [dataB]);
 

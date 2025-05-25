@@ -4,6 +4,7 @@ const nextConfig = {
         domains: [
             "suirewardsme.staxenterprise.tech",
             "circle.com",
+            "api.suiai.fun",
             "strapi-dev.scand.app",
             "api.movepump.com",
             "via.placeholder.com",

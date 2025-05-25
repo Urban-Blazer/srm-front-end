@@ -14,6 +14,7 @@ import { isBuyAtom } from "@data/store";
 import { useAtom } from "jotai";
 import useQuote from "../hooks/useQuote";
 import { Spinner } from "./Spinner";
+import Button from "./UI/Button";
 
 
 const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9);  // 50 SUI
@@ -801,7 +802,7 @@ export default function SwapInterface({
                         }
                     }}
                     className="bg-transparent w-16 text-center text-slate-100 outline-none border border-slate-600 py-1
-                    appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <span>%</span>
             </div>
@@ -819,27 +820,23 @@ export default function SwapInterface({
             )}
 
             {/* Execute Swap Button */}
-            <button
+            <Button
                 onClick={handleSwap}
                 disabled={fetchingQuote || !amountIn || !amountOut || isProcessing || Math.abs(priceImpact) >= 15}
-
-                className={`mt-6 w-full rounded-none ${isProcessing || priceImpact >= 15
-                    ? 'bg-gray-500 cursor-not-allowed'
-                    : isBuy
-                        ? 'bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75' // bg-green-600 hover:bg-green-500
-                        : 'bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:text-[#5E21A1] hover:opacity-75'
-                    } text-white py-3 font-semibold text-lg transition disabled:opacity-50`}
+                processing={isProcessing}
+                variant={isProcessing || Math.abs(priceImpact) >= 15 ? "disabled" : isBuy ? "primary" : "secondary"}
+                size="full"
+                rounded={false}
+                className="mt-6 transition"
             >
-                {isProcessing
-                    ? "Processing..."
-                    : Math.abs(priceImpact) >= 15
-                        ? "Swap Disabled – High Impact"
-                        : Math.abs(priceImpact) >= 5
-                            ? "Swap Anyway"
-                            : isBuy
-                                ? "Buy"
-                                : "Sell"}
-            </button>
+                {Math.abs(priceImpact) >= 15
+                    ? "Swap Disabled – High Impact"
+                    : Math.abs(priceImpact) >= 5
+                        ? "Swap Anyway"
+                        : isBuy
+                            ? "Buy"
+                            : "Sell"}
+            </Button>
             <TransactionModal open={isModalOpen} transactionProgress={transactionProgress ?? undefined} onClose={() => {
                 setIsModalOpen(false);
                 if(modalTimer){

@@ -74,8 +74,7 @@ export default function MyPositions() {
             // ✅ Get all owned objects
             while (true) {
                 const { data: ownedObjectsPage, hasNextPage, nextCursor } = await provider.getOwnedObjects({
-                    owner: '0x627dc5ea4d2e54df9f5d17c37b8e2b0eb9279ae42bb777ca6e944b1f1114827a',
-                    // owner: account?.address,
+                    owner: account?.address,
                     options: { showType: true, showContent: true },
                     cursor,
                 });

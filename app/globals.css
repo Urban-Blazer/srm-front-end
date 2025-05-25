@@ -83,6 +83,29 @@ p {
 button.MuiTab-root:hover {
   background-color: rgb(22, 21, 21) !important;
 }
+
+.css-1usuzwp-MuiButtonBase-root-MuiTab-root {
+    background-color: transparent !important;
+    color: white !important;
+}
+
+.css-1usuzwp-MuiButtonBase-root-MuiTab-root:hover {
+    background-color: transparent !important;
+    color: var(--primary-button) !important;
+}
+
+.css-1usuzwp-MuiButtonBase-root-MuiTab-root.Mui-selected {
+    background-color: var(--primary-button) !important;
+    color: white !important;
+}
+
+.css-1usuzwp-MuiButtonBase-root-MuiTab-root.Mui-selected:hover {
+    opacity: 0.8;
+    background-color: var(--primary-button) !important;
+    color: white !important;
+}
+
+
 button.custom-button {
   font-family: var(--font-cta);
   background-color: var(--primary-button);

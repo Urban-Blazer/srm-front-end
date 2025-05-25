@@ -184,7 +184,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                     <div className="flex flex-col gap-6 col-span-12">
                         <PoolsBar />
                     </div>
-                    <div className="flex flex-col gap-6 col-span-12">
+                    <div className="flex flex-col gap-6 col-span-12 text-white">
                         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                             <Tabs value={value} onChange={handleChange} aria-label="tabs"
                                 variant="scrollable"

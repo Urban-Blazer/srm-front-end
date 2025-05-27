@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 import { useReducer, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -32,6 +31,7 @@ const initialState = {
     poolStats: null,
     liquidityData: null,
     slippageTolerance: 0.5,
+    transactionProgress: null,
 };
 
 function reducer(state: any, action: any) {
@@ -52,6 +52,8 @@ function reducer(state: any, action: any) {
             return { ...state, poolData: action.payload, poolChecked: true };
         case "SET_LOADING":
             return { ...state, loading: action.payload };
+        case "SET_TRANSACTION_PROGRESS":
+            return { ...state, transactionProgress: action.payload };
         case "TOGGLE_DROPDOWN":
             return { ...state, dropdownOpen: !state.dropdownOpen };
         case "SET_COIN":
@@ -325,8 +327,11 @@ export default function AddLiquidity() {
         const decimalsA = state.dropdownCoinMetadata?.decimals ?? 9;
         const decimalsB = state.customCoinMetadata?.decimals ?? 9;
 
+        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_loading.png", text: "Processing Transaction..." } });
+
         if (!wallet || !walletAddress) {
             alert("⚠️ Please connect your wallet first.");
+            dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
             return;
         }
 
@@ -338,12 +343,14 @@ export default function AddLiquidity() {
             if (!userAddress) {
                 alert("⚠️ No accounts found. Please reconnect your wallet.");
                 dispatch({ type: "SET_LOADING", payload: false });
+                dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
                 return;
             }
 
             if (!state.poolData?.poolId || !state.dropdownCoinMetadata?.typeName || !state.customCoinMetadata?.typeName) {
                 alert("⚠️ Missing pool or coin metadata. Please restart the process.");
                 dispatch({ type: "SET_LOADING", payload: false });
+                dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
                 return;
             }
 
@@ -429,7 +436,7 @@ export default function AddLiquidity() {
                 // Use our hook for coin input preparation (handles SUI vs non-SUI automatically)
                 coinAInput = await getCoinInput(txb, coins, expectedCoinA, depositA_U64);
                 coinBInput = await getCoinInput(txb, coins, expectedCoinB, depositB_U64);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("❌ Error preparing coin inputs:", error);
                 addLog(`❌ Error: ${error.message}`);
                 alert(`⚠️ ${error.message}`);
@@ -621,7 +628,7 @@ export default function AddLiquidity() {
                                             onClick={() => dispatch({ type: "SET_COIN", payload: coin })}
                                         >
                                             <div className="flex items-center space-x-2">
-                                                <Image src={coin.image} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
+                                                <Image src={coin.image || "/default-coin.png"} alt={coin.symbol} width={20} height={20} className="w-6 h-6 rounded-full" />
                                                 <span className="ml-2">{coin.symbol}</span>
                                             </div>
                                         </div>
@@ -655,7 +662,7 @@ export default function AddLiquidity() {
                                         {/* CoinA */}
                                         <div className="flex items-center space-x-2">
                                                 <Image
-                                                src={state.selectedCoin.image}
+                                                src={state.selectedCoin.image || "/default-coin.png"}
                                                 alt={state.selectedCoin.symbol}
                                                 width={20} height={20}
                                                 className="w-6 h-6 rounded-full"
@@ -829,7 +836,7 @@ export default function AddLiquidity() {
                         >
                             {state.loading ? "Processing..." : "Add Liquidity ✅"}
                         </button>
-                        <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
+                        <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} digest={state.liquidityData?.txnDigest} transactionProgress={state.transactionProgress} />
 
                     </div>
                 )}

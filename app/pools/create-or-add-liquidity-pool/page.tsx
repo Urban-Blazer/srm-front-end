@@ -211,11 +211,7 @@ export default function CreateOrAddLiquidityPool() {
     }
   }, [isProcessing]);
 
-  useEffect(() => {
-    if (isLoading) {
-      console.log("Loading..."); 
-    }
-  }, [isLoading]);
+
 
   // Helper to add logs to the state
   const addLog = (message: string) => {

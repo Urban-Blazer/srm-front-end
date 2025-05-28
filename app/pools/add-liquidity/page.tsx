@@ -130,7 +130,7 @@ export default function AddLiquidity() {
     // ✅ Fetch Pool Data
     const fetchPoolData = async () => {
         if (!state.customCoin.trim()) {
-            alert("Please enter a valid token type for CoinB.");
+            addLog("⚠️ Please enter a valid token type for CoinB.");
             return;
         }
 
@@ -162,8 +162,8 @@ export default function AddLiquidity() {
                 dispatch({ type: "SET_POOL_DATA", payload: null });
             }
         } catch (error) {
-            console.error("Error fetching pool data:", error);
-            alert("Failed to fetch pool info.");
+
+            addLog("⚠️ Failed to fetch pool info.");
         }
 
         dispatch({ type: "SET_LOADING", payload: false });
@@ -183,12 +183,25 @@ export default function AddLiquidity() {
         rewards_fee?: number;
     }
 
+    // Default pool stats object to avoid repetition
+    const defaultPoolStats = {
+        balance_a: 0, 
+        balance_b: 0, 
+        burn_balance_b: 0, 
+        burn_fee: 0,
+        creator_royalty_fee: 0, 
+        creator_royalty_wallet: "", 
+        locked_lp_balance: 0,
+        lp_builder_fee: 0, 
+        reward_balance_a: 0, 
+        rewards_fee: 0,
+        lp_supply: 0
+    };
+
     //Fetch Pool Stats
     const fetchPoolStats = async (poolObjectId: string) => {
-
         if (!poolObjectId) return;
 
-        console.log("Fetching Pool Stats with ID:", poolObjectId);
         dispatch({ type: "SET_POOL_STATS", payload: null });
 
         try {
@@ -197,13 +210,11 @@ export default function AddLiquidity() {
                 options: { showContent: true },
             });
 
-            console.log("Pool Object Response:", poolObject);
-
             if (
                 poolObject?.data?.content &&
                 "fields" in poolObject.data.content
             ) {
-                const fields = poolObject.data.content.fields as PoolFields; // ✅ Type casting
+                const fields = poolObject.data.content.fields as PoolFields;
 
                 dispatch({
                     type: "SET_POOL_STATS",
@@ -222,26 +233,16 @@ export default function AddLiquidity() {
                     },
                 });
             } else {
-                console.warn("Missing pool fields:", poolObject);
                 dispatch({
                     type: "SET_POOL_STATS",
-                    payload: {
-                        balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                        creator_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
-                        lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
-                    },
+                    payload: defaultPoolStats
                 });
             }
         } catch (error) {
-            console.error("Error fetching pool stats:", error);
-            alert("⚠️ Failed to fetch pool stats. Please try again.");
+            addLog("⚠️ Failed to fetch pool stats. Please try again.");
             dispatch({
                 type: "SET_POOL_STATS",
-                payload: {
-                    balance_a: 0, balance_b: 0, burn_balance_b: 0, burn_fee: 0,
-                    creator_royalty_fee: 0, creator_royalty_wallet: "", locked_lp_balance: 0,
-                    lp_builder_fee: 0, reward_balance_a: 0, rewards_fee: 0
-                },
+                payload: defaultPoolStats
             });
         }
     };
@@ -330,7 +331,7 @@ export default function AddLiquidity() {
         dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_loading.png", text: "Processing Transaction..." } });
 
         if (!wallet || !walletAddress) {
-            alert("⚠️ Please connect your wallet first.");
+            addLog("⚠️ Please connect your wallet first.");
             dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
             return;
         }
@@ -341,21 +342,20 @@ export default function AddLiquidity() {
             const userAddress = walletAddress;
 
             if (!userAddress) {
-                alert("⚠️ No accounts found. Please reconnect your wallet.");
+                addLog("⚠️ No accounts found. Please reconnect your wallet.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
                 return;
             }
 
             if (!state.poolData?.poolId || !state.dropdownCoinMetadata?.typeName || !state.customCoinMetadata?.typeName) {
-                alert("⚠️ Missing pool or coin metadata. Please restart the process.");
+                addLog("⚠️ Missing pool or coin metadata. Please restart the process.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
                 return;
             }
 
-            console.log("✅ Pool ID:", state.poolData.poolId);
-            console.log("✅ Coin Types:", state.dropdownCoinMetadata.typeName, state.customCoinMetadata.typeName);
+
             const coinTypeA = state.dropdownCoinMetadata.typeName;
             // ✅ Get pre-fetched coins or refetch if needed
             // First ensure we refresh the data to get the latest state
@@ -369,11 +369,8 @@ export default function AddLiquidity() {
                 return;
             }
 
-            console.log("🔍 Owned Coin Objects:", { coinsA, coinsB }, {coinA, coinB});
             // merge responses
             const coins = [...coinsA, ...coinsB];
-
-            console.log("🔍 Extracted Coins with Balances:", coins);
 
             // ✅ Convert Deposit Amounts to MIST using our utility hook
             const depositA_U64 = toU64(state.depositDropdownCoin, decimalsA);
@@ -392,17 +389,12 @@ export default function AddLiquidity() {
             });
 
             if (BigInt(coinABalance.totalBalance) < depositA_U64 || BigInt(coinBBalance.totalBalance) < depositB_U64) {
-                alert("⚠️ Insufficient coin balance in wallet.");
-                console.error("❌ Balance Check Failed!");
+                addLog("⚠️ Insufficient coin balance in wallet.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
 
             addLog("✅ Balance Check Passed!");
-            console.log("✅ Balance Check Passed!");
-            console.log("💰 Selected Coin Objects for Deposit:");
-            console.log(`${state.dropdownCoinMetadata.symbol}:`, coinTypeA, "Balance:", coinABalance.totalBalance.toString());
-            console.log(`${state.customCoinMetadata.symbol}:`, coinTypeB, "Balance:", coinBBalance.totalBalance.toString());
 
             // ✅ Match a single coin object for CoinA with enough balance
             const expectedCoinA = state.dropdownCoinMetadata.typeName;
@@ -410,54 +402,50 @@ export default function AddLiquidity() {
             // ✅ Match a single coin object for CoinB with enough balance
             const expectedCoinB = state.customCoinMetadata.typeName;
 
-            console.log("💰 Deposit Amounts (in MIST):", depositA_U64.toString(), depositB_U64.toString());
+
 
             // ✅ Get user-selected slippage
             const userSlippageTolerance = state.slippageTolerance || 0.5;
 
             // ✅ Calculate minimum LP tokens expected
             const minLpOut = calculateMinLP(depositA_U64, depositB_U64, state.poolStats, userSlippageTolerance);
-            addLog("✅ Calculated min_lp_out:");
-            console.log("✅ Calculated min_lp_out:", minLpOut.toString());
+            addLog("✅ Calculated min_lp_out: " + minLpOut.toString());
 
+            // Create transaction block
             const txb = new TransactionBlock();
-
             const GAS_BUDGET = 150_000_000;
 
+            // Prepare transaction inputs
             let coinAInput, coinBInput;
-
-            // We're now using the getCoinInput hook instead of this function
-
-            const suiType = "0x2::sui::SUI";
-            const isCoinADepositSui = expectedCoinA === suiType;
-            const isCoinBDepositSui = expectedCoinB === suiType;
-
+            
             try {
                 // Use our hook for coin input preparation (handles SUI vs non-SUI automatically)
                 coinAInput = await getCoinInput(txb, coins, expectedCoinA, depositA_U64);
                 coinBInput = await getCoinInput(txb, coins, expectedCoinB, depositB_U64);
+
+                // Set gas budget
+                txb.setGasBudget(GAS_BUDGET);
+                
+                // Add the move call
+                txb.moveCall({
+                    target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::add_liquidity_with_coins_and_transfer_to_sender`,
+                    typeArguments: [expectedCoinA, expectedCoinB],
+                    arguments: [
+                        txb.object(state.poolData.poolId), // Pool ID
+                        coinAInput,
+                        txb.pure.u64(depositA_U64),
+                        coinBInput,
+                        txb.pure.u64(depositB_U64),
+                        txb.pure.u64(minLpOut),
+                        txb.object("0x6"),
+                    ],
+                });
             } catch (error: any) {
-                console.error("❌ Error preparing coin inputs:", error);
                 addLog(`❌ Error: ${error.message}`);
-                alert(`⚠️ ${error.message}`);
+
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
-
-            txb.setGasBudget(GAS_BUDGET);
-            txb.moveCall({
-                target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::add_liquidity_with_coins_and_transfer_to_sender`,
-                typeArguments: [expectedCoinA, expectedCoinB],
-                arguments: [
-                    txb.object(state.poolData.poolId), // Pool ID
-                    coinAInput,
-                    txb.pure.u64(depositA_U64),
-                    coinBInput,
-                    txb.pure.u64(depositB_U64),
-                    txb.pure.u64(minLpOut),
-                    txb.object("0x6"),
-                ],
-            });
 
             let executeResponse: any;
 
@@ -473,9 +461,7 @@ export default function AddLiquidity() {
                             resolve();
                         },
                         onError: (error) => {
-                            console.error("❌ Liquidity transaction failed:", error);
-                            addLog(`❌ Transaction failed: ${error.message}`);
-                            alert("⚠️ Liquidity transaction failed. See console for details.");
+                            addLog(`⚠️ Transaction failed: ${error.message}`);
                             reject(error);
                         },
                     }
@@ -489,7 +475,7 @@ export default function AddLiquidity() {
             addLog(`🔍 Transaction Digest: ${txnDigest}`);
 
             if (!txnDigest) {
-                alert("Transaction failed. Please check the console.");
+                addLog("⚠️ Transaction failed.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
@@ -499,7 +485,7 @@ export default function AddLiquidity() {
             let txnDetails = await fetchTransactionWithRetry(txnDigest);
 
             if (!txnDetails) {
-                alert("Transaction not successful. Please retry.");
+                addLog("⚠️ Transaction not successful. Please retry.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
@@ -512,14 +498,14 @@ export default function AddLiquidity() {
             );
 
             if (!liquidityEvent) {
-                console.warn(`⚠️ LiquidityAdded event missing! Retrying...`);
+    
                 await new Promise((res) => setTimeout(res, 5000));
                 txnDetails = await fetchTransactionWithRetry(txnDigest);
                 liquidityEvent = txnDetails?.events?.find((event) => event.type.includes("LiquidityAdded"));
             }
 
             if (!liquidityEvent) {
-                alert("⚠️ Liquidity addition event missing. Please verify manually.");
+                addLog("⚠️ Liquidity addition event missing. Please verify manually.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
@@ -527,12 +513,12 @@ export default function AddLiquidity() {
             // ✅ Extract Liquidity Event Data
             const liquidityData: any = liquidityEvent.parsedJson;
             if (!liquidityData) {
-                alert("⚠️ Event detected but no data available.");
+                addLog("⚠️ Event detected but no data available.");
                 dispatch({ type: "SET_LOADING", payload: false });
                 return;
             }
 
-            console.log("✅ Liquidity Event Data:", liquidityData);
+
 
             // ✅ Store LP Minted Data in State
             dispatch({
@@ -553,8 +539,7 @@ export default function AddLiquidity() {
             dispatch({ type: "SET_STEP", payload: 3 });
 
         } catch (error) {
-            console.error("❌ Transaction failed:", error);
-            alert("Transaction failed. Check the console.");
+            addLog(`⚠️ Transaction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
             setIsProcessing(false); // ✅ Ensure modal does not close early
@@ -562,43 +547,50 @@ export default function AddLiquidity() {
         }
     };
 
-    const fetchTransactionWithRetry = async (txnDigest: any, retries = 20, delay = 5000) => {
+    // Simplified retry function to wait for transaction propagation
+    const fetchTransactionWithRetry = async (
+        txnDigest: string,
+        retries = 20,
+        delay = 5000
+    ) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
-                console.log(`🔍 Attempt ${attempt}: Fetching transaction details for digest: ${txnDigest}`);
                 const txnDetails = await provider.getTransactionBlock({
                     digest: txnDigest,
                     options: { showEffects: true, showEvents: true },
                 });
 
-                if (txnDetails) {
-                    console.log("✅ Full Transaction Details:", txnDetails);
-
-                    if (txnDetails.effects && txnDetails.effects.status) {
-                        console.log("📡 Transaction Status:", txnDetails.effects.status);
-
-                        if (txnDetails.effects.status.status === "success") {
-                            return txnDetails; // ✅ Transaction confirmed
-                        } else {
-                            console.error("❌ Transaction Failed!", txnDetails.effects.status.error);
-                            return null; // ❌ Stop if transaction failed
-                        }
+                // Check if transaction succeeded
+                if (txnDetails?.effects?.status) {
+                    if (txnDetails.effects.status.status === "success") {
+                        return txnDetails; // Return only successful transactions
+                    } else {
+                        // Transaction was found but failed
+                        addLog(`Transaction failed with status: ${txnDetails.effects.status.status}`);
+                        return null;
                     }
                 }
+
+                // Transaction details exist but no status - return it anyway
+                if (txnDetails) {
+                    return txnDetails;
+                }
             } catch (error) {
-                console.warn(`⚠️ Attempt ${attempt} failed. Retrying in ${delay / 1000}s...`, error);
+                // Silently retry after delay
                 await new Promise((res) => setTimeout(res, delay));
             }
         }
 
-        console.error("❌ All retry attempts failed. Transaction might not be indexed yet.");
-        return null;  
-    }; 
+        addLog(`Transaction not confirmed after ${retries} attempts`);
+        return null;
+    };
 
 
     return (
         <div className="min-h-screen overflow-y-auto flex flex-col md:flex-row bg-[#000306] p-4 md:p-6 pb-20">
-            <StepIndicator step={state.step} setStep={(step) => dispatch({ type: "SET_STEP", payload: step })} />
+            <div className="hidden md:block">
+                <StepIndicator step={state.step} setStep={(step) => dispatch({ type: "SET_STEP", payload: step })} />
+            </div>
 
             <div className="flex-1 p-4 md:p-8">
                 <h1 className="text-2xl font-bold mb-6">Create Liquidity</h1>

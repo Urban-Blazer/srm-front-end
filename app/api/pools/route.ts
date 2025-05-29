@@ -1,6 +1,3 @@
-// app/api/pools/route.ts  (Next 13 App Router)
-
-// Fuerza ejecución en Node.js y deshabilita caché/SSG
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

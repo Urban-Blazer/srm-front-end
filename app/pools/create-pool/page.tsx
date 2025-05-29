@@ -23,6 +23,7 @@ import useGetPoolCoins from "@/app/hooks/useGetPoolCoins";
 import useConvertToU64 from "@/app/hooks/useConvertToU64";
 import useGetCoinInput from "@/app/hooks/useGetCoinInput";
 import { isValidSuiAddress } from "@mysten/sui/utils";
+import Button from "@components/UI/Button";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -238,9 +239,7 @@ export default function Pools() {
       dispatch({ type: "SET_LOADING", payload: true });
 
       const userAddress = walletAddress;
-
-
-      // ✅ Validate metadata before proceeding
+      
       if (
         !state.dropdownCoinMetadata?.typeName ||
         !state.customCoinMetadata?.typeName
@@ -251,10 +250,7 @@ export default function Pools() {
         dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
         return;
       }
-
-
-
-      // ✅ Find matching coin objects
+      
       const expectedCoinA = state.dropdownCoinMetadata.typeName;
       const expectedCoinB = state.customCoinMetadata.typeName;
 
@@ -393,6 +389,8 @@ export default function Pools() {
             },
             onError: (error) => {
               addLog(`⚠️ Transaction failed: ${error.message}`);
+              dispatch({ type: "SET_LOADING", payload: false });
+              dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
               reject(error);
             },
           }
@@ -550,6 +548,7 @@ export default function Pools() {
         addLog(userErrorMessage);
       } else {
         addLog("⚠️ Transaction failed.");
+
       }
       dispatch({ type: "SET_LOADING", payload: false });
     } finally {
@@ -693,15 +692,18 @@ export default function Pools() {
                 }
               />
             </div>
-
             {/* Continue Button */}
-            <button
-                className="w-full rounded-none md:w-auto p-2 md:p-3 bg-[#61F98A] hover:bg-[#52d879] text-black font-medium text-sm md:text-base transition-colors duration-300 mr-2 mt-4"
+            <Button
                 onClick={fetchMetadata}
                 disabled={state.loading}
+                processing={state.loading}
+                variant={state.loading ? "disabled" : "primary"}
+                size="full"
+                rounded={false}
+                className="mt-6 transition"
             >
                 {state.loading ? "Fetching..." : "Continue"}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -832,28 +834,28 @@ export default function Pools() {
 
               {/* Navigation Buttons */}
               <div className="sticky bottom-0 p-4 shadow-lg w-full flex flex-col sm:flex-row gap-2">
-                <button
-                  className="button-secondary bg-500 p-3 "
+                <Button
+                  variant="secondary"
+                  size="full"
+                  rounded={false}
                   onClick={() => dispatch({ type: "SET_STEP", payload: 1 })}
                 >
-                  ← Back to Step 1
-                </button>
+                  Back
+                </Button>
 
-                <button
-                  className={`p-3  ${
-                    isValidSuiAddress(state.deployerRoyaltyWallet) &&
-                    state.deployerRoyaltyWallet
-                      ? "button-primary"
-                      : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                  }`}
+                <Button
                   disabled={
                     !isValidSuiAddress(state.deployerRoyaltyWallet) ||
                     !state.deployerRoyaltyWallet
                   }
+                  processing={state.loading}
+                  variant={state.loading ? "disabled" : "primary"}
+                  size="full"
+                  rounded={false}
                   onClick={() => dispatch({ type: "SET_STEP", payload: 3 })}
                 >
-                  Proceed to Step 3 →
-                </button>
+                  Next
+                </Button>
               </div>
             </div>
           )}
@@ -1046,20 +1048,24 @@ export default function Pools() {
               </div>
             </div>
             {/* Navigation Buttons */}
-            <div className="sticky bottom-0 p-4 shadow-lg w-full flex justify-between">
-              <button
-                className="button-secondary bg-500  p-3 "
+            <div className="sticky bottom-0 gap-2 p-4 shadow-lg w-full flex justify-between">
+              <Button
+                variant="secondary"
+                size="full"
+                rounded={false}
                 onClick={() => dispatch({ type: "SET_STEP", payload: 2 })}
               >
-                ← Back to Step 2
-              </button>
+                Back
+              </Button>
 
-              <button
-                className="button-primary  p-3 "
+              <Button
+                variant="primary"
+                size="full"
+                rounded={false}
                 onClick={() => dispatch({ type: "SET_STEP", payload: 4 })}
               >
-                Proceed to Step 4 →
-              </button>
+                Next
+              </Button>
             </div>
           </div>
         )}
@@ -1155,21 +1161,25 @@ export default function Pools() {
             </div>
 
             {/* Action Buttons */}
-            <div className="sticky bottom-0 p-4 shadow-lg w-full flex justify-between">
-              <button
-                className="button-secondary bg-500  p-3 "
+            <div className="sticky bottom-0 p-4 gap-2 shadow-lg w-full flex justify-between">
+              <Button
+                variant="secondary"
+                size="full"
+                rounded={false}
                 onClick={() => dispatch({ type: "SET_STEP", payload: 3 })}
               >
-                ← Back to Step 3
-              </button>
+                Back
+              </Button>
 
-              <button
-                className="button-primary  p-3  disabled:opacity-50"
+              <Button
+                variant="primary"
+                size="full"
+                rounded={false}
                 onClick={() => handleCreatePool()}
-                disabled={state.loading} // ✅ Prevent multiple clicks
+                disabled={state.loading}
               >
-                {state.loading ? "Processing..." : "Create Pool ✅"}
-              </button>
+                {state.loading ? "Processing..." : "Create Pool"}
+              </Button>
               <TransactionModal
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -1341,12 +1351,14 @@ export default function Pools() {
             )}
 
             <div className="sticky bottom-0 p-4 shadow-lg w-full flex justify-center">
-              <button
-                className="button-primary p-3 "
+              <Button
+                variant="primary"
+                size="full"
+                rounded={false}
                 onClick={() => dispatch({ type: "SET_STEP", payload: 1 })}
               >
-                🔄 Create Another Pool
-              </button>
+                Create Another Pool
+              </Button>
             </div>
           </div>
         )}

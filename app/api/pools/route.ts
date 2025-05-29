@@ -1,9 +1,12 @@
 // app/api/pools/route.ts  (Next 13 App Router)
+
+// Fuerza ejecución en Node.js y deshabilita caché/SSG
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
-  DynamoDBDocumentClient,
-  ScanCommand,
-} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { NextResponse } from "next/server";
 
 // Configuración desde env vars
@@ -11,11 +14,6 @@ const TABLE_NAME = process.env.DYNAMODB_TABLE_POOLID!;
 const REGION = process.env.AWS_REGION;
 const ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID!;
 const SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY!;
-
-// const POOL_WHITELIST = [
-//     '0xbad96d82f84d3fa3b31d49054e277eed973347382835b479622f277641abc693',
-//     '0x7c82f69c879d2160c5b5d7f09d731b04e46324a9500ed1e023768713c8ceb03e',
-// ];
 
 // Cliente DynamoDB
 const dynamoDBClient = new DynamoDBClient({
@@ -45,8 +43,7 @@ export async function GET() {
       }
       ExclusiveStartKey = response.LastEvaluatedKey;
     } while (ExclusiveStartKey);
-    console.log({items})
-    // Formateo final
+
     const formatted = items.map((item) => ({
       poolId: item.poolId,
       coinA: {
@@ -64,14 +61,27 @@ export async function GET() {
         symbol: item.coinB_symbol,
       },
     }));
-    // .filter((p)=>POOL_WHITELIST.includes(p.poolId));
 
-    return NextResponse.json({ pairs: formatted });
+    return NextResponse.json(
+      { pairs: formatted },
+      {
+        status: 200,
+        headers: {
+          // Evita cualquier cache en Edge/CDN y forzar siempre datos frescos
+          "Cache-Control": "no-store, max-age=0, must-revalidate",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("DynamoDB Scan Error:", error);
     return NextResponse.json(
       { error: "Failed to scan database" },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store, max-age=0, must-revalidate",
+        },
+      }
     );
   }
 }

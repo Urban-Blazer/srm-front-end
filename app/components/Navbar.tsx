@@ -4,10 +4,10 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ConnectButton } from "@mysten/dapp-kit";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 // Material UI imports
-import { styled, useTheme } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";

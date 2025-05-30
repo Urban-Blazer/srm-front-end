@@ -368,9 +368,9 @@ export default function PoolRankingTable() {
                       <Typography variant="body2" sx={{ color: "#fff" }}>
                         {pool.sellVolume}
                       </Typography>
-                      {pool.coinB_image && (
+                      {pool.coinA_image && (
                         <Avatar
-                          src={pool.coinB_image}
+                          src={pool.coinA_image}
                           className="w-5 h-5 aspect-square rounded-full token-icon"
                           alt="coinB"
                         />
@@ -389,9 +389,9 @@ export default function PoolRankingTable() {
                       <Typography variant="body2" sx={{ color: "#fff" }}>
                         {pool.totalVolume}
                       </Typography>
-                      {pool.coinB_image && (
+                      {pool.coinA_image && (
                         <Avatar
-                          src={pool.coinB_image}
+                          src={pool.coinA_image}
                           className="w-5 h-5 aspect-square rounded-full token-icon"
                           alt="coinB"
                         />

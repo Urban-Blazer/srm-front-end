@@ -17,7 +17,11 @@ const useAgTokens = () => {
   const agTokenASet = new Set(data?.map((token) => token.coinA.typeName));
   const agTokenBSet = new Set(data?.map((token) => token.coinB.typeName));
   const agTokenSet = new Set([...agTokenASet, ...agTokenBSet]);
+  const agTokenAList = new Set(data?.map((token) => token.coinA));
+  const agTokenBList = new Set(data?.map((token) => token.coinB));
+  const tokenList = new Set([...agTokenAList, ...agTokenBList]);
   return {
+    tokenList: [...tokenList],
     list: data,
     set: agTokenSet,
   };

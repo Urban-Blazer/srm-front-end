@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/app/components/
 import { predefinedCoins } from "@/app/data/coins";
 import useAgTokens from "@/app/hooks/useAgTokens";
 import { usePools } from "@/app/hooks/usePools";
-import { Token as AppToken, CoinMeta, PoolSearchResult } from "@/app/types";
+import { Token as AppToken, CoinMeta } from "@/app/types";
 import { TokenAmount } from "@/app/types/token";
 import { getStaticTokenById } from "@/app/utils/token";
 import { isBuyAtom } from "@data/store";

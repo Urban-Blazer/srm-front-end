@@ -20,10 +20,22 @@ function getSinceTimestamp(range: string): number {
 
 const fetchStats = async (poolId?: string, range?: string, since?: number) => {
     if(!poolId || !range || !since) return;
+    
+    // Use fetch options that work well with our server-side caching strategy
+    const fetchOptions: RequestInit = {
+        // Use cache: 'default' to allow the browser to use its HTTP cache
+        // This works with our server's Cache-Control headers
+        cache: 'default',
+        // We don't need to revalidate on every request because our server
+        // already handles that with stale-while-revalidate
+        next: { revalidate: 0 }
+    };
+    
     const [statsRes, rewardsRes] = await Promise.all([
-        fetch(`/api/pair-stats?poolId=${poolId}&range=${range}`),
-        fetch(`/api/get-rewards?poolId=${poolId}&since=${since}`)
+        fetch(`/api/pair-stats?poolId=${poolId}&range=${range}`, fetchOptions),
+        fetch(`/api/get-rewards?poolId=${poolId}&since=${since}`, fetchOptions)
     ]);
+    
     if (!statsRes.ok || !rewardsRes.ok) {
         throw new Error('❌ Failed to fetch pair stats');
     }
@@ -47,9 +59,12 @@ const usePairStats = (poolId?: string, range?: string, refetchInterval?: number)
         queryKey: ['pair-stats', poolId, range, sinceForDynamo],
         queryFn: () => fetchStats(poolId, range, sinceForDynamo),
         enabled: (!!poolId && !!range && !!sinceForDynamo),
-        refetchInterval,
-        staleTime: 10 * 1000,
-
+        refetchInterval: refetchInterval || 30 * 1000, // Default to 30 seconds if not specified
+        staleTime: 30 * 1000, // Increased from 10s to 30s to align with server cache strategy
+        // Only refetch on window focus if data is older than staleTime
+        refetchOnWindowFocus: 'always',
+        // Use minimal loading states to prevent UI flicker during background refreshes
+        refetchOnMount: true,
     });
 
 

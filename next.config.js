@@ -5,6 +5,7 @@ const nextConfig = {
             "suirewardsme.staxenterprise.tech",
             "circle.com",
             "api.suiai.fun",
+            "blob.suiget.xyz",
             "strapi-dev.scand.app",
             "api.movepump.com",
             "via.placeholder.com",

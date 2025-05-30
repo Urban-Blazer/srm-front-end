@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
+// Set cache control for this route
+export const dynamic = 'force-dynamic'; // Defaults to auto
+export const revalidate = 3; // Revalidate every 3 seconds
+
 const client = new DynamoDBClient({
     region: process.env.AWS_REGION!,
     credentials: {
@@ -48,7 +52,13 @@ export async function GET(req: NextRequest) {
             return sum + (isNaN(amount) ? 0 : amount);
         }, 0) ?? 0;
 
-        return NextResponse.json({ rewardsDistributed: total });
+        return NextResponse.json({ rewardsDistributed: total }, {
+            headers: {
+                // s-maxage=3: Cache for 3 seconds at the edge (CDN/Vercel)
+                // stale-while-revalidate=7: Continue serving stale content for up to 7 additional seconds while fetching new data
+                'Cache-Control': 'public, s-maxage=3, stale-while-revalidate=7',
+            }
+        });
     } catch (err) {
         console.error("❌ Error fetching rewards from DynamoDB:", err);
         return NextResponse.json({ error: "Failed to fetch rewards" }, { status: 500 });

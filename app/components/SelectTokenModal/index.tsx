@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/app/components/
 import { predefinedCoins } from "@/app/data/coins";
 import useAgTokens from "@/app/hooks/useAgTokens";
 import { usePools } from "@/app/hooks/usePools";
-import { Token as AppToken, CoinMeta, PoolSearchResult } from "@/app/types";
+import { Token as AppToken, CoinMeta } from "@/app/types";
 import { TokenAmount } from "@/app/types/token";
 import { getStaticTokenById } from "@/app/utils/token";
 import { isBuyAtom } from "@data/store";
@@ -20,7 +20,7 @@ import { AnimatePresence } from "framer-motion";
 import { useAtom, useAtomValue } from "jotai";
 import uniqBy from "lodash/uniqBy";
 import { SearchIcon, XIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { VList } from "virtua";
 import TokenItem from "./TokenItem";
@@ -62,12 +62,12 @@ function SelectTokenModal({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debounceSearchTerm] = useDebounce(searchTerm, 200);
-  const { set: supportedTokenSet, list: supportedTokenList } = useAgTokens();
+  const { set: supportedTokenSet, list: supportedTokenList, tokenList: agTokenList } = useAgTokens();
   const { data: pools, isPending: poolsPending, error: poolsError } = usePools();
 
   const [isBuy, setIsBuy] = useAtom(isBuyAtom);
 
-  const handleTokenSelect = (token: CoinMeta) => {
+  const handleTokenSelect = useCallback((token: CoinMeta) => {
     if(!pools){
       console.error('No pools found');
       return;
@@ -95,8 +95,7 @@ function SelectTokenModal({
       console.error('Token not found in pools');
     }
     setOpen(false);
-    };
-
+  }, [pools, pivotTokenId, isIn, setIsBuy, router]);
 
   const tokenBalances: TokenAmount[] = useMemo(() => {
     if (!debounceSearchTerm) {
@@ -130,47 +129,30 @@ function SelectTokenModal({
     }
     console.log('supportedTokenList', supportedTokenList);
     console.log('pools', pools);
+    console.log('debounceSearchTerm', debounceSearchTerm);
+    console.log('agTokenList', agTokenList);
     // Handle searched/filtered tokens from supportedTokenList (which are PoolSearchResult[])
-    return (supportedTokenList || [] as PoolSearchResult[]) // Ensure supportedTokenList is not undefined
+    return (agTokenList || [] as AppToken[]) // Ensure supportedTokenList is not undefined
       .filter(
-        (pool) =>
-          (pool.coinA.typeName.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
-          pool.coinB.typeName.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
-          pool.coinA.symbol.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
-          pool.coinB.symbol.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
-          pool.coinA.name.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
-          pool.coinB.name.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
-          (isBuy ? pool.coinA : pool.coinB).typeName === pivotTokenId) ||
-          (debounceSearchTerm && (pool.coinA.typeName === pivotTokenId || pool.coinB.typeName === pivotTokenId))
+        (token: AppToken) =>
+          (token.typeName.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
+          token.symbol.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
+          token.name.toLowerCase().includes(debounceSearchTerm.toLowerCase()))
       )
-      .map((pool): TokenAmount | null => {
-        // Decide which coin to present or if the pool itself is the token
-        // For now, let's assume we are primarily interested in coinA from the pool for selection
-        // and map it to StaticToken
-        // You might need a more sophisticated logic if coinB can also be selected independently
-        // or if the pool represents a pair to be selected.
-        const staticVersionOfCoin = mapAppTokenToStaticToken(isBuy ? pool.coinA : pool.coinB);
-        console.log('staticVersionOfCoin', staticVersionOfCoin);
-        console.log('pivotTokenId', pivotTokenId);
-        // if (staticVersionOfCoin.typeName === pivotTokenId) return null; // double check pivot
-        if (token?.typeName === pool.coinA.typeName || token?.typeName === pool.coinB.typeName) return null; // double check pivot
-
+      .map((token: AppToken): TokenAmount | null => {
+        console.log('token', token);
+        const staticVersionOfCoin = mapAppTokenToStaticToken(token);
+        if(token.typeName === pivotTokenId) return null;
         return {
           token: staticVersionOfCoin,
           amount: accountBalancesObj?.[staticVersionOfCoin.typeName] || "0",
-        };
+        }
       })
-      .filter((item): item is TokenAmount => item !== null) // Remove nulls from pivot filtering
-      .sort((a, b) => {
+      .filter((item: TokenAmount | null): item is TokenAmount => item !== null)
+      .sort((a: TokenAmount, b: TokenAmount) => {
         return Number(b.amount) - Number(a.amount);
       });
-  }, [
-    debounceSearchTerm,
-    accountBalancesObj,
-    supportedTokenList, // Added supportedTokenList to dependency array
-    supportedTokenSet, // kept supportedTokenSet in case it's used by getStaticTokenById indirectly or future logic
-    pivotTokenId,
-  ]);
+  }, [debounceSearchTerm, supportedTokenList, pools, agTokenList, accountBalancesObj, supportedTokenSet, token?.typeName, pivotTokenId]);
 
   const trigger = useMemo(
     () => (
@@ -220,7 +202,7 @@ function SelectTokenModal({
         ))}
       </VList>
     );
-  }, [tokenBalances, searchTerm, handleTokenSelect]);
+  }, [searchTerm, poolsPending, tokenBalances, handleTokenSelect]);
 
   const content = useMemo(
     () => (

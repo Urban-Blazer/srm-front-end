@@ -6,6 +6,13 @@ export const whitelistedCoins = [
 
 export const predefinedCoins: CoinMeta[] = [
   {
+    typeName: "0x983fe8c1ced6003c42908a2942c63dd5e42f001c0a58717666a5bbffef469a54::tki::TKI",
+    decimals: 9,
+    image: "https://blob.suiget.xyz/uploads/img_67c8c261609fe6.63620796.jpeg",
+    name: "Tokifi",
+    symbol: "TKI"
+  },
+  {
     symbol: "SUI",
     name: "SUI",
     typeName: "0x2::sui::SUI",

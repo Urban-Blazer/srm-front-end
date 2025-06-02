@@ -11,6 +11,7 @@ import PairStats from "@components/PairStats";
 import PoolInfoV2 from "@components/PoolInfoV2";
 import PoolsBar from "@components/PoolsBar";
 import RecentTransactions from "@components/RecentTransactions";
+import SearchBar from "@components/SearchBar";
 import SwapInterface from "@components/SwapInterface";
 import { emptyPairAtom } from "@data/store";
 import { Tabs, Tab, Box } from "@mui/material";
@@ -160,6 +161,11 @@ const SwapParams: FC<PageProps> = ({ params }) => {
             </div> */}
             <div className="w-full p-6 border-b border-gray-800 max-w-screen-2xl mx-auto">
 
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="flex flex-col gap-6 col-span-12 md:col-span-5 lg:col-span-4 h-full pb-10">
+                        <SearchBar  />
+                        </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     {/* Sidebar */}
                     <div className="flex flex-col gap-6 col-span-12 md:col-span-5 lg:col-span-4 h-full pb-10">

@@ -1,61 +1,43 @@
 // components/SearchBar.tsx
 "use client";
-import { useState, useEffect, FC } from "react";
-import { PoolSearchResult } from "@/app/types";
-import { PrimitiveAtom, useAtom } from "jotai";
 import { usePoolSearch } from "@/app/hooks/usePoolSearch";
+import { PoolSearchResult } from "@/app/types";
+import { emptyPairAtom } from "@data/store";
+import { useAtom } from "jotai";
 import { useRouter } from "next/navigation";
+import { FC, useState } from "react";
+import Avatar from "./Avatar";
 
-type WithInitialValue<Value> = {
-  init: Value;
-};
 
-interface SearchBarProps {
-  useDefaultPair?: boolean;
-  defaultAtom:  PrimitiveAtom<PoolSearchResult | null> & WithInitialValue<PoolSearchResult | null>;
-  onSelectPair: (data: PoolSearchResult) => void;
-}
-
-const SearchBar: FC<SearchBarProps> = ({ useDefaultPair, defaultAtom, onSelectPair }) => {
+const SearchBar: FC = () => {
   const router = useRouter();
-  const [query, setQuery] = useState("");
-  const { data: results = [], isLoading } = usePoolSearch(query);
-  const showDropdown = query.length > 0 && results.length > 0;
-
-  const [selectedPair, setSelectedPair] = useAtom(defaultAtom);
-
-  // On mount, re-fire onSelectPair if we already have one
-  useEffect(() => {
-    if (selectedPair && useDefaultPair) {
-      onSelectPair(selectedPair);
-      useDefaultPair = false;
-    }
-    if(!useDefaultPair)  setSelectedPair(null);
-  }, []);
+  const [query, setQuery] = useState<string | null>(null);
+  const { data: results = [], isLoading } = usePoolSearch(query ?? "");
+  const showDropdown = query && query.length > 0 && results.length > 0;
+  
+  const [selectedPair, setSelectedPair] = useAtom(emptyPairAtom);
 
   const handleSelect = (pair: PoolSearchResult) => {
-    // setSelectedPair(pair);
-    setQuery("");
-    onSelectPair(pair);
+    setSelectedPair(pair);
+    setQuery(null);
     router.push(`/swap/${pair.coinA.symbol.toLocaleLowerCase()}/${pair.coinB.symbol.toLocaleLowerCase()}`);
   };
 
   const handleClear = () => {
-    setSelectedPair(null);
-    setQuery("");
+    setQuery('');
   };
 
   return (
     <div className="relative w-full max-w-lg">
         {isLoading ?? (<>Loading...</>)}
-      {selectedPair ? (
+      {selectedPair?.coinA && selectedPair.coinB && query === null ? (
         <div className="w-full px-4 py-2 text-white border border-[#61F98A] flex items-center space-x-2">
-          <img
+          <Avatar
             src={selectedPair.coinA.image}
             alt={selectedPair.coinA.symbol}
             className="w-5 h-5 rounded-full"
           />
-          <img
+          <Avatar
             src={selectedPair.coinB.image}
             alt={selectedPair.coinB.symbol}
             className="w-5 h-5 rounded-full"
@@ -65,7 +47,7 @@ const SearchBar: FC<SearchBarProps> = ({ useDefaultPair, defaultAtom, onSelectPa
           </span>
           <button
             onClick={handleClear}
-            className="bg-[#000306] ml-auto rounded-none text-white border border-[#5E21A1] hover:text-red-400 text-xs"
+            className="bg-[#000306] ml-auto rounded-none text-white border border-[#5E21A1] hover:text-red-400 text-xs px-2 py-1"
           >
             Clear
           </button>
@@ -75,7 +57,7 @@ const SearchBar: FC<SearchBarProps> = ({ useDefaultPair, defaultAtom, onSelectPa
           type="text"
           className="w-full px-4 py-2 bg-gray-900 text-white border border-gray-700 focus:outline-none"
           placeholder="Search by symbol or typename (e.g., SUI or 0x2::coin::SUI)"
-          value={query}
+          value={query ?? ""}
           onChange={(e) => setQuery(e.target.value)}
         />
       )}
@@ -89,16 +71,16 @@ const SearchBar: FC<SearchBarProps> = ({ useDefaultPair, defaultAtom, onSelectPa
               className="px-4 py-2 cursor-pointer hover:bg-gray-700 flex items-center space-x-2"
             >
               <div className="flex items-center space-x-1">
-                <img
+                <Avatar
                   src={result.coinA.image}
                   alt={result.coinA.symbol}
-                  className="w-5 h-5"
+                  className="w-5 h-5 rounded-full"
                 />
                 <span className="text-white">/</span>
-                <img
+                <Avatar
                   src={result.coinB.image}
                   alt={result.coinB.symbol}
-                  className="w-5 h-5"
+                  className="w-5 h-5 rounded-full"
                 />
               </div>
               <span className="text-white ml-2">

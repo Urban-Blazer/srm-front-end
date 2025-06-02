@@ -24,6 +24,7 @@ import useConvertToU64 from "@/app/hooks/useConvertToU64";
 import useGetCoinInput from "@/app/hooks/useGetCoinInput";
 import { isValidSuiAddress } from "@mysten/sui/utils";
 import Button from "@components/UI/Button";
+import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -135,6 +136,8 @@ export default function Pools() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+    const { coins } = usePredefinedCoins();
+    const predefinedCoins = coins.filter((coin) => coin.lists?.includes("strict"));
 
   // Coin types for the pool (derived from state)
   const coinTypeA = useMemo(
@@ -652,7 +655,6 @@ export default function Pools() {
               {state.dropdownOpen && (
                 <div className="absolute left-0 mt-1 w-full  border border-slate-600 shadow-lg z-10 bg-[#14110c]">
                   {predefinedCoins
-                    .filter((coin) => whitelistedCoins.includes(coin.typeName))
                     .map((coin) => (
                       <div
                         key={coin.symbol}

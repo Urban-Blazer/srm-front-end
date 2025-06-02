@@ -15,6 +15,7 @@ import { useAtom } from "jotai";
 import useQuote from "../hooks/useQuote";
 import { Spinner } from "./Spinner";
 import Button from "./UI/Button";
+import Avatar from "./Avatar";
 
 
 const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9);  // 50 SUI
@@ -668,12 +669,12 @@ export default function SwapInterface({
                         <span>From:</span>
                         {isBuy ? (
                             <>
-                                {coinA?.image && <Image src={coinA.image} alt={coinA.symbol} width={16} height={16} className="rounded-full" />}
+                                {coinA?.image && <Avatar src={coinA.image} alt={coinA.symbol} className="w-6 h-6 rounded-full" />}
                                 <span className="text-slate-300 text-xs">{coinA?.symbol}</span>
                             </>
                         ) : (
                             <>
-                                {coinB?.image && <Image src={coinB.image} alt={coinB.symbol} width={16} height={16} className="rounded-full" />}
+                                {coinB?.image && <Avatar src={coinB.image} alt={coinB.symbol} className="w-6 h-6 rounded-full" />}
                                 <span className="text-slate-300 text-xs">{coinB?.symbol}</span>
                             </>
                         )}
@@ -740,12 +741,12 @@ export default function SwapInterface({
                         <span>To:</span>
                         {isBuy ? (
                             <>
-                                {coinB?.image && <Image src={coinB.image} alt={coinB.symbol} width={16} height={16} className="rounded-full" />}
+                                {coinB?.image && <Avatar src={coinB.image} alt={coinB.symbol} className="w-6 h-6 rounded-full" />}
                                 <span className="text-slate-300 text-xs">{coinB?.symbol}</span>
                             </>
                         ) : (
                             <>
-                                {coinA?.image && <Image src={coinA.image} alt={coinA.symbol} width={16} height={16} className="rounded-full" />}
+                                {coinA?.image && <Avatar src={coinA.image} alt={coinA.symbol} className="w-6 h-6 rounded-full" />}
                                 <span className="text-slate-300 text-xs">{coinA?.symbol}</span>
                             </>
                         )}

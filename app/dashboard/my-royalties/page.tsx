@@ -1,17 +1,19 @@
-// @ts-nocheck
 "use client";
-import { useEffect, useState } from "react";
-import { SuiClient } from "@mysten/sui.js/client";
-import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME, CONFIG_ID } from "../../config";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import Avatar from "@components/Avatar";
 import TransactionModal from "@components/TransactionModal";
-import Image from "next/image";
+import Button from "@components/UI/Button";
 import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { SuiClient } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { DEX_MODULE_NAME, GETTER_RPC, PACKAGE_ID } from "../../config";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
 export default function MyPositions() {
-    const [pools, setPools] = useState([]); // Stores API pool data
+    const router = useRouter();
+    const [pools, setPools] = useState<any[]>([]); // Stores API pool data
     const [loading, setLoading] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,6 +26,25 @@ export default function MyPositions() {
     const addLog = (message: string) => {
         setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
     };
+
+    const fetchCreatorBalances = useCallback(async (pools: any[]) => {
+        try {
+            const updatedPools = await Promise.all(
+                pools.map(async (pool) => {
+                    const stats = await fetchPoolStats(pool.poolId); // Fetch from RPC
+                    return {
+                        ...pool,
+                        balance_a: stats?.balance_a || 0, // ✅ Store `creator_balance_a`
+                    };
+                })
+            );
+
+            console.log("✅ Updated Pools with Reward Balances:", updatedPools);
+            setPools(updatedPools);
+        } catch (error) {
+            console.error("❌ Error fetching reward balances:", error);
+        }
+    },[]);
 
     useEffect(() => {
         if (isProcessing) {
@@ -55,7 +76,7 @@ export default function MyPositions() {
         };
 
         fetchUserPools();
-    }, [walletAddress]);
+    }, [fetchCreatorBalances, walletAddress]);
 
     // ✅ Step 1: Fetch Pool Data from API
     const fetchPools = async (walletAddress: string) => {
@@ -82,28 +103,8 @@ export default function MyPositions() {
         }
     };
 
-    // ✅ Step 2: Fetch Creator Balance for each Pool
-    const fetchCreatorBalances = async (pools) => {
-        try {
-            const updatedPools = await Promise.all(
-                pools.map(async (pool) => {
-                    const stats = await fetchPoolStats(pool.poolId); // Fetch from RPC
-                    return {
-                        ...pool,
-                        balance_a: stats?.balance_a || 0, // ✅ Store `creator_balance_a`
-                    };
-                })
-            );
-
-            console.log("✅ Updated Pools with Reward Balances:", updatedPools);
-            setPools(updatedPools);
-        } catch (error) {
-            console.error("❌ Error fetching reward balances:", error);
-        }
-    };
-
     // ✅ Fetch Pool Stats from Sui RPC
-    const fetchPoolStats = async (poolObjectId) => {
+    const fetchPoolStats = async (poolObjectId: any) => {
         if (!poolObjectId) return null;
 
         console.log("🔍 Fetching Creator Balance from RPC for Pool ID:", poolObjectId);
@@ -114,9 +115,9 @@ export default function MyPositions() {
                 options: { showContent: true },
             });
 
-            if (poolObject?.data?.content?.fields) {
+            if ((poolObject?.data?.content as any)?.fields) {
                 return {
-                    balance_a: Number(poolObject.data.content.fields.creator_balance_a) || 0, // ✅ Only fetch balance
+                    balance_a: Number((poolObject?.data?.content as any)?.fields.creator_balance_a) || 0, // ✅ Only fetch balance
                 };
             } else {
                 console.warn("⚠️ Missing balance field in RPC response:", poolObject);
@@ -129,7 +130,7 @@ export default function MyPositions() {
     };
 
     // ✅ Function to Handle Claiming Rewards
-    const handleClaimRewards = async (pool) => {
+    const handleClaimRewards = async (pool: any) => {
         setIsProcessing(true);
         setIsModalOpen(true);
         setTimeout(() => setLogs([]), 100);
@@ -170,7 +171,7 @@ export default function MyPositions() {
                 arguments: [txb.object(pool.poolId)], // Pool ID (mutable)
             });
 
-            let executeResponse;
+            let executeResponse: any;
 
             await new Promise<void>((resolve, reject) => {
                 signAndExecuteTransaction(
@@ -234,7 +235,7 @@ export default function MyPositions() {
         }
     };
 
-    const fetchTransactionWithRetry = async (txnDigest, retries = 5, delay = 2000) => {
+    const fetchTransactionWithRetry = async (txnDigest: string, retries = 5, delay = 2000) => {
         for (let i = 0; i < retries; i++) {
             try {
                 console.log(`🔄 Attempt ${i + 1}: Fetching transaction status for ${txnDigest}...`);
@@ -259,11 +260,11 @@ export default function MyPositions() {
     };
 
     return (
-        <div className="flex flex-col bg-white items-center w-full min-h-screen px-4">
+        <div className="flex flex-col bg-[#000306] items-center w-full min-h-[80vh] px-4">
             {/* ✅ Keep <h1> at the top */}
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-center mt-6 mb-6">My Royalties</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-center mt-6 mb-6">MY ROYALTIES</h1>
 
-            <div className="flex items-center justify-center gap-2 sm:gap-4 p-3 sm:p-4 bg-royalPurple rounded-lg mb-4 w-full max-w-2xl">
+            <div className="flex items-center justify-center gap-2 sm:gap-4 p-3 sm:p-4 bg-royalPurple mb-4 w-full max-w-2xl">
                 <p className="text-highlight text-center text-sm sm:text-m mt-1">
                     Creator Rewards are automatically distributed once the balance exceeds 0.1 Sui or 100 USDC Coins.<br />
                     Alternatively, you can claim here at any time.
@@ -279,12 +280,14 @@ export default function MyPositions() {
                 <div className="flex flex-col items-center text-center mt-6 px-4">
                     <p className="text-base sm:text-lg font-medium text-deepTeal"><strong>No royalties available</strong></p>
                     <p className="text-sm sm:text-md text-gray-500 mb-4">Create a new pool to start earning royalties.</p>
-                    <a
-                        href="/pools/create-pool"
-                        className="bg-emeraldGreen text-white px-4 py-2 rounded-md text-sm sm:text-base font-medium hover:bg-softMint transition"
+                    {/* href="/pools/create-pool" */}
+                    <Button
+                        variant="primary"
+                        size="full"
+                        onClick={() => router.push("/pools/create-pool")}
                     >
-                        ➕ Create Pool
-                    </a>
+                        Create Pool
+                    </Button>
                 </div>
             )}
 
@@ -295,24 +298,20 @@ export default function MyPositions() {
                     .map((pool, index) => (
                         <div
                             key={index}
-                            className="bg-white p-3 sm:p-4 rounded-lg shadow-md mb-4 flex flex-col items-center text-center space-y-3 w-full max-w-md sm:max-w-lg"
+                            className="bg-white p-3 sm:p-4 shadow-md mb-4 flex flex-col items-center text-center space-y-3 w-full max-w-md sm:max-w-lg"
                         >
                             {/* Coin Images & Symbols */}
                             <div className="flex items-center justify-center space-x-1 sm:space-x-2 flex-wrap">
-                                <img
+                                <Avatar
                                     src={pool.coinA_image}
                                     alt={pool.coinA_symbol}
-                                    width={20}
-                                    height={20}
                                     className="w-6 sm:w-8 md:w-10 h-6 sm:h-8 md:h-10 rounded-full"
                                 />
                                 <span className="text-md sm:text-lg md:text-xl font-semibold text-deepTeal">{pool.coinA_symbol}</span>
                                 <span className="text-deepTeal text-md sm:text-lg">/</span>
-                                <img
+                                <Avatar
                                     src={pool.coinB_image}
                                     alt={pool.coinB_symbol}
-                                    width={20}
-                                    height={20}
                                     className="w-6 sm:w-8 md:w-10 h-6 sm:h-8 md:h-10 rounded-full"
                                 />
                                 <span className="text-md sm:text-lg md:text-xl font-semibold text-deepTeal">{pool.coinB_symbol}</span>
@@ -320,11 +319,11 @@ export default function MyPositions() {
 
                             {/* Pool Information */}
                             <div className="w-full px-2">
-                                <p className="text-deepTeal text-xs sm:text-sm">
+                                <p className="text-xs sm:text-sm">
                                     <strong>Pool ID:</strong>
                                     <span className="text-royalPurple break-all"> {pool.poolId || "N/A"}</span>
                                 </p>
-                                <p className="text-xs sm:text-sm text-deepTeal">
+                                <p className="text-xs sm:text-sm">
                                     <strong>Available Rewards:</strong> {(Number(pool.balance_a) / 10 ** pool.coinA_decimals).toFixed(4)} {pool.coinA_symbol}
                                 </p>
                             </div>
@@ -332,12 +331,13 @@ export default function MyPositions() {
                             {/* 🚀 Action Buttons */}
                             <div className="flex flex-wrap justify-center space-x-2 sm:space-x-4 mt-3">
                                 {/* Claim Rewards Button */}
-                                <button
-                                    className="bg-emeraldGreen text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-softMint transition"
+                                <Button
+                                    variant="primary"
+                                    size="full"
                                     onClick={() => handleClaimRewards(pool)}
                                 >
                                     🎁 CLAIM REWARDS
-                                </button>
+                                </Button>
                                 <TransactionModal open={isModalOpen} onClose={() => setIsModalOpen(false)} logs={logs} isProcessing={isProcessing} />
                             </div>
                         </div>

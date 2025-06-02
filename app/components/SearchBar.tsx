@@ -8,43 +8,46 @@ import { useRouter } from "next/navigation";
 import { FC, useState } from "react";
 import Avatar from "./Avatar";
 
-
 const SearchBar: FC = () => {
   const router = useRouter();
   const [query, setQuery] = useState<string | null>(null);
   const { data: results = [], isLoading } = usePoolSearch(query ?? "");
   const showDropdown = query && query.length > 0 && results.length > 0;
-  
+
   const [selectedPair, setSelectedPair] = useAtom(emptyPairAtom);
 
   const handleSelect = (pair: PoolSearchResult) => {
     setSelectedPair(pair);
     setQuery(null);
-    router.push(`/swap/${pair.coinA.symbol.toLocaleLowerCase()}/${pair.coinB.symbol.toLocaleLowerCase()}`);
+    router.push(
+      `/swap/${pair.coinA.symbol.toLocaleLowerCase()}/${pair.coinB.symbol.toLocaleLowerCase()}`
+    );
   };
 
   const handleClear = () => {
-    setQuery('');
+    setQuery("");
   };
 
   return (
     <div className="relative w-full max-w-lg">
-        {isLoading ?? (<>Loading...</>)}
+      {isLoading ?? <>Loading...</>}
       {selectedPair?.coinA && selectedPair.coinB && query === null ? (
-        <div className="w-full px-4 py-2 text-white border border-[#61F98A] flex items-center space-x-2">
-          <Avatar
-            src={selectedPair.coinA.image}
-            alt={selectedPair.coinA.symbol}
-            className="w-5 h-5 rounded-full"
-          />
-          <Avatar
-            src={selectedPair.coinB.image}
-            alt={selectedPair.coinB.symbol}
-            className="w-5 h-5 rounded-full"
-          />
-          <span className="text-white text-sm">
-            {selectedPair.coinA.symbol}/{selectedPair.coinB.symbol}
-          </span>
+        <div className="w-full px-4 py-2 text-white border border-[#61F98A] flex items-center space-x-2 justify-between">
+          <div className="flex items-center space-x-2">
+            <Avatar
+              src={selectedPair.coinA.image}
+              alt={selectedPair.coinA.symbol}
+              className="w-5 h-5 rounded-full"
+            />
+            <Avatar
+              src={selectedPair.coinB.image}
+              alt={selectedPair.coinB.symbol}
+              className="w-5 h-5 rounded-full"
+            />
+            <span className="text-white text-sm">
+              {selectedPair.coinA.symbol}/{selectedPair.coinB.symbol}
+            </span>
+          </div>
           <button
             onClick={handleClear}
             className="bg-[#000306] ml-auto rounded-none text-white border border-[#5E21A1] hover:text-red-400 text-xs px-2 py-1"
@@ -56,7 +59,7 @@ const SearchBar: FC = () => {
         <input
           type="text"
           className="w-full px-4 py-2 bg-gray-900 text-white border border-gray-700 focus:outline-none"
-          placeholder="Search by symbol or typename (e.g., SUI or 0x2::coin::SUI)"
+          placeholder="Search by CA or Symbol (e.g., 0x2::coin::SUI or SUI)"
           value={query ?? ""}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -94,9 +97,7 @@ const SearchBar: FC = () => {
         </ul>
       )}
 
-      {isLoading && (
-        <p className="text-sm mt-1 text-gray-400">Searching...</p>
-      )}
+      {isLoading && <p className="text-sm mt-1 text-gray-400">Searching...</p>}
     </div>
   );
 };

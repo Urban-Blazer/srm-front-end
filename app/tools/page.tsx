@@ -4,11 +4,14 @@ import { coinWithBalance, Transaction } from "@mysten/sui/transactions";
 import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useSuiClient } from "@mysten/dapp-kit";
+import { predefinedCoins } from "@/app/data/coins";
+import { useState } from "react";
 
 export default function ToolsPage() {
   const provider = useSuiClient();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const account = useCurrentAccount();
+  const [status, setStatus] = useState<string>("");
 
   const handleSpamObjects = async () => {
     if (!account) {
@@ -30,7 +33,6 @@ export default function ToolsPage() {
     });
     // 0x9b8a82822335e9c5a4379f7752ec017afdf9127a34024bdc0e672264b947d237::test_coin_e::TEST_COIN_E
     //  0x9b8a82822335e9c5a4379f7752ec017afdf9127a34024bdc0e672264b947d237::test_coin_d::TEST_COIN_D
-    // 0xa7d6ad203334c6e96dfa8881fbe33596c3ef7fddc7bd8cd2a628cd1d0a6c3563::stax::STAX
     // 0x9b8a82822335e9c5a4379f7752ec017afdf9127a34024bdc0e672264b947d237::test_coin_c::TEST_COIN_C
 
     for(let i = 0; i < 100; i++){
@@ -85,10 +87,51 @@ export default function ToolsPage() {
     );
   };
 
+  const handleCreatePredefinedCoins = async () => {
+    
+    try {
+      // Start creating coins
+      setStatus("Creating predefined coins...");
+      
+      // Process each predefined coin
+      for (const coin of predefinedCoins) {
+        const response = await fetch('/api/coins/all', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(coin)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          console.log(`Created coin ${coin.symbol} successfully`);
+        } else {
+          // If the coin already exists (409) that's okay, otherwise log the error
+          if (response.status === 409) {
+            console.log(`Coin ${coin.symbol} already exists, skipping...`);
+          } else {
+            console.error(`Failed to create coin ${coin.symbol}:`, result.error);
+          }
+        }
+      }
+      
+      setStatus("All coins created successfully!");
+      alert("Predefined coins created successfully!");
+    } catch (error) {
+      console.error("Error creating predefined coins:", error);
+      setStatus("Error creating coins");
+      alert("Error creating predefined coins. Check console for details.");
+    }
+  };
+  
+
   return (
     <div>
       <h1>Tools</h1>
       <button onClick={handleSpamObjects}>Spam Objects</button>
+      <button onClick={handleCreatePredefinedCoins}>Create Predefined Coins</button>
     </div>
   );
 }

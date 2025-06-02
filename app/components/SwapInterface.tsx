@@ -469,7 +469,7 @@ export default function SwapInterface({
             const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
             const suiTypeName = predefinedCoins.find((coin) => coin.symbol === "SUI")?.typeName;
             const usdcTypeName = predefinedCoins.find((coin) => coin.symbol === "USDC")?.typeName;
-            const srmTypeName = predefinedCoins.find((coin) => coin.symbol === "MOCKSUI")?.typeName;
+            const srmTypeName = predefinedCoins.find((coin) => coin.symbol === "SRM")?.typeName;
             const poolCoinATypeName = coinA?.typeName;
 
             let shouldUpdateIsActive = false;

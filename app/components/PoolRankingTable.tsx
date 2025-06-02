@@ -23,6 +23,7 @@ import {
   Chip,
 } from "@mui/material";
 import Avatar from "./Avatar";
+import Link from "next/link";
 
 type Pool = {
   pool_id: string;
@@ -328,9 +329,11 @@ export default function PoolRankingTable() {
                           alt=""
                         />
                       )}
-                      <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {pool.coinA_symbol} / {pool.coinB_symbol}
-                      </Typography>
+                      <Link href={`/swap/${pool.coinA_symbol}/${pool.coinB_symbol}`}>
+                        <Typography variant="body2" sx={{ color: "#fff" }}>
+                          {pool.coinA_symbol} / {pool.coinB_symbol}
+                        </Typography>
+                      </Link>
                     </Box>
                   </TableCell>
                   <TableCell align="center">{pool.buyTxCount}</TableCell>

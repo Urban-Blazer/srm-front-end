@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC } from "../config";
-import { predefinedCoins } from "@data/coins";
+// import { predefinedCoins } from "@data/coins";
 import { X, Search, PlusCircle, Plus, MinusCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { CoinMeta } from "../types";
+import { usePredefinedCoins } from "../hooks/usePredefinedCoins";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -29,6 +30,8 @@ export default function TokenSelector({ onSelectToken, onClose }: TokenSelectorP
     const [customToken, setCustomToken] = useState<CoinMeta | null>(null);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const modalRef = useRef<HTMLDivElement | null>(null);
+
+    const { coins: predefinedCoins, pagination, goToNextPage, goToPreviousPage, goToPage, currentPage } = usePredefinedCoins();
 
     // Load user-saved tokens from localStorage
     useEffect(() => {

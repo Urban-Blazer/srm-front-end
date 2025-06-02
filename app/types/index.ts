@@ -78,21 +78,13 @@ export interface CoinMeta {
     typeName: string;
     name: string;
     symbol: string;
-}
-
-
-export interface Token {
-    typeName: string;
-    decimals: number;
-    image: string;
-    name: string;
-    symbol: string;
+    lists?: string[];
 }
 
 export interface PoolSearchResult {
     poolId: string;
-    coinA: Token;
-    coinB: Token;
+    coinA: CoinMeta;
+    coinB: CoinMeta;
 }
 
 

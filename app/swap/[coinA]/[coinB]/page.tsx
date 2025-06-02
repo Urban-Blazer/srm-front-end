@@ -177,10 +177,15 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                         />
                     </div>
                     <div className={`w-full flex flex-col gap-6 col-span-12 md:col-span-7 lg:col-span-8 justify-center ${!poolId || poolId === null ? 'items-center' : ''}`}>
-                        <Chart poolId={chartProps.poolId} coinASymbol={chartProps.coinASymbol}>
+                        <Chart 
+                            poolId={chartProps.poolId} 
+                            coinASymbol={chartProps.coinASymbol}
+                            coinA={coinA ?? undefined}
+                            coinB={coinB ?? undefined}
+                        >
                         <PairStats
                                 poolId={poolId}
-                                coinA={coinA}
+                                coinA={coinA!}
                                 coinB={coinB}
                                 poolStats={poolStats}
                                 variant="mcap"

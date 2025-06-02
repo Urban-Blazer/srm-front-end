@@ -10,15 +10,10 @@ import {
 import { useEffect, useRef, useState } from "react";
 import useChartData from "../hooks/useChartData";
 import useCoinPrice from "../hooks/useCoinPrice";
-import { IntervalType } from "../types";
+import { ChartProps, IntervalType } from "../types";
 
-interface ChartProps {
-  poolId?: string;
-  coinASymbol?: string; // "SUI" | "USDC"
-  children?: React.ReactNode;
-}
 
-export default function Chart({ poolId, coinASymbol, children }: ChartProps) {
+export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: ChartProps) {
   const websocketUrl = "wss://api.suirewards.me";
   const wsRef = useRef<WebSocket | null>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -74,14 +69,26 @@ export default function Chart({ poolId, coinASymbol, children }: ChartProps) {
 
     const setChartData = async () => {
       const rawData = chartData;
-
-      const usdCandles: CandlestickData[] = rawData.map((candle) => ({
-        time: candle.time,
-        open: candle.open * coinAPriceUSD,
-        high: candle.high * coinAPriceUSD,
-        low: candle.low * coinAPriceUSD,
-        close: candle.close * coinAPriceUSD,
-      }));
+      const coinADecimals = coinA?.decimals ?? 9;
+      const coinBDecimals = coinB?.decimals ?? 9;
+      let usdCandles: CandlestickData[] = [];
+      if(coinBDecimals === 9){
+        usdCandles = rawData.map((candle) => ({
+          time: candle.time,
+          open: candle.open * coinAPriceUSD,
+          high: candle.high * coinAPriceUSD,
+          low: candle.low * coinAPriceUSD,
+          close: candle.close * coinAPriceUSD,
+        }));
+      } else {
+        usdCandles = rawData.map((candle) => ({
+          time: candle.time,
+          open: ((candle.open / Math.pow(10, 9)) * Math.pow(10, coinBDecimals)) * coinAPriceUSD,
+          high: ((candle.high / Math.pow(10, 9)) * Math.pow(10, coinBDecimals)) * coinAPriceUSD,
+          low: ((candle.low / Math.pow(10, 9)) * Math.pow(10, coinBDecimals)) * coinAPriceUSD,
+          close: ((candle.close / Math.pow(10, 9)) * Math.pow(10, coinBDecimals)) * coinAPriceUSD,
+        }));
+      }
 
       latestCandles.current = usdCandles; // ✍️ Save in ref
       series.setData(usdCandles);

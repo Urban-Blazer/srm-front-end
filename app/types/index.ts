@@ -8,6 +8,15 @@ export interface Coin {
     symbol?: string;
 }
 
+
+export interface ChartProps {
+  poolId?: string;
+  coinASymbol?: string; // "SUI" | "USDC"
+  coinA?: Coin;
+  coinB?: Coin;
+  children?: React.ReactNode;
+}
+
 export interface RecentSwap {
     wallet: string;
     tokenin: any;

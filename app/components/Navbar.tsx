@@ -74,11 +74,6 @@ const NAVIGATION_ITEMS = [
         label: "Add Liquidity",
         path: "/pools/add-liquidity",
       },
-      {
-        id: "burn-liquidity",
-        label: "Burn Liquidity",
-        path: "/pools/burn-liquidity",
-      },
     ],
   },
   {

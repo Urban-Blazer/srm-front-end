@@ -3,16 +3,16 @@ import TransactionModal from "./TransactionModal";
 import Button from "./UI/Button";
 import { SuiClient } from "@mysten/sui/client";
 import { DEX_MODULE_NAME, GETTER_RPC, PACKAGE_ID } from "../config";
-import { useCurrentAccount, useCurrentWallet, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useCurrentWallet,
+  useSignAndExecuteTransaction,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
-export const BurnLPPositionCard = ({
-  lp,
-}: {
-  lp: any;
-}) => {
+export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
   const wallet = useCurrentWallet()?.currentWallet;
   const account = useCurrentAccount();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
@@ -21,49 +21,53 @@ export const BurnLPPositionCard = ({
   // Transaction modal state
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  
-  
-    const [removeOptions, setRemoveOptions] = useState<{
-      [key: string]: boolean;
-    }>({});
-    const [burnAmount, setBurnAmount] = useState<{ [key: string]: string }>({});
-    const [burnAgreement, setBurnAgreement] = useState<{
-      [key: string]: boolean;
-    }>({});
+
+  const [removeOptions, setRemoveOptions] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [removePercentage, setRemovePercentage] = useState<{
+    [key: string]: number;
+  }>({});
+  const [burnAmount, setBurnAmount] = useState<{ [key: string]: string }>({});
+  const [burnAgreement, setBurnAgreement] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
   };
 
+  // ✅ Handle Percentage Click
+  const handlePercentageClick = (lp: any, percentage: number) => {
+    if (!lp.balance) return;
+    if (percentage < 0 || percentage > 100) return;
+    setRemovePercentage((prev) => ({
+      ...prev,
+      [lp.objectId]: percentage,
+    }));
+    const calculatedAmount = (
+      (Number(lp.balance) / 1e9) *
+      (percentage / 100)
+    ).toFixed(4); // Convert from MIST
+    setBurnAmount((prev) => ({
+      ...prev,
+      [lp.objectId]: calculatedAmount,
+    }));
+  };
 
-  
-    // ✅ Handle Percentage Click
-    const handlePercentageClick = (lp: any, percentage: number) => {
-      const calculatedAmount = (
-        (Number(lp.balance) / 1e9) *
-        (percentage / 100)
-      ).toFixed(4); // Convert from MIST
-      setBurnAmount((prev) => ({
-        ...prev,
-        [lp.objectId]: calculatedAmount,
-      }));
-    };
+  // ✅ Toggle Remove Liquidity UI for a specific LP
+  const handleRemoveLiquidity = (lp: any) => {
+    setRemoveOptions((prev) => ({
+      ...prev,
+      [lp.objectId]: !prev[lp.objectId], // Toggle state
+    }));
 
-
-  
-    // ✅ Toggle Remove Liquidity UI for a specific LP
-    const handleRemoveLiquidity = (lp: any) => {
-      setRemoveOptions((prev) => ({
-        ...prev,
-        [lp.objectId]: !prev[lp.objectId], // Toggle state
-      }));
-  
-      // Reset Withdraw Amount
-      setBurnAmount((prev) => ({
-        ...prev,
-        [lp.objectId]: "", // Clear previous input when toggling
-      }));
-    };
+    // Reset Withdraw Amount
+    setBurnAmount((prev) => ({
+      ...prev,
+      [lp.objectId]: "", // Clear previous input when toggling
+    }));
+  };
   // ✅ Add this function before calling it in handleRemoveLiquidityConfirm
   const fetchTransactionWithRetry = async (
     txnDigest: string,
@@ -261,47 +265,60 @@ export const BurnLPPositionCard = ({
 
       {/* 🔽 Burn Liquidity UI (if enabled) */}
       {removeOptions[lp.objectId] && (
-        <div className="mt-4 w-full p-3 md:p-4 text-sm md:text-base">
+        <div className="mt-4 w-full bg-[#1a1712] p-4 border border-slate-700 rounded-none text-sm md:text-base">
           <h2 className="text-lg font-semibold pb-4">
-            <span className="text-slate-400">
-              Burning LP will PERMANENTLY LOCK the Liquidity Coins in the pool.{" "}
-              <br></br>THIS CAN NOT BE REVERSED!
-            </span>
+            BURN LP - Select Burn Amount
           </h2>
+          <span className="text-slate-400">
+            Burning LP will PERMANENTLY LOCK the Liquidity Coins in the pool.{" "}
+            <br></br>THIS CAN NOT BE REVERSED!
+          </span>
 
           {/* Percentage Quick Select Buttons */}
-          <div className="flex space-x-2">
+          <div className="flex justify-between mt-2 mb-4 gap-2">
             {[25, 50, 75, 100].map((percent) => (
-              <button
+              <Button
                 key={percent}
+                variant="secondary"
+                size="full"
                 onClick={() => handlePercentageClick(lp, percent)}
-                className="button-secondary px-3 py-1 text-sm transition"
+                className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-3 py-1  ${
+                  removePercentage[lp.objectId] === percent
+                    ? "bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:opacity-75"
+                    : "text-slate-300"
+                }`}
               >
                 {percent}%
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Input for LP Amount */}
-          <input
-            type="number"
-            className="w-full p-1 md:p-2 border text-black mt-2 text-sm md:text-base"
-            placeholder="Enter LP amount"
-            value={burnAmount[lp.objectId] || ""}
-            onChange={(e) =>
-              setBurnAmount((prev: any) => ({
-                ...prev,
-                [lp.objectId]: e.target.value,
-              }))
-            }
-          />
+          <div className="space-y-1 mb-4">
+            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+            </div>
+            <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
+              <input
+                type="number"
+                className={`flex-1 p-2 outline-none bg-transparent text-sm sm:text-md overflow-hidden grow`}
+                placeholder="Enter LP amount to burn"
+                value={burnAmount[lp.objectId] || ""}
+                onChange={(e) =>
+                  setBurnAmount((prev: any) => ({
+                    ...prev,
+                    [lp.objectId]: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          </div>
 
           {/* ✅ Checkbox for Agreement */}
-          <div className="flex items-center mt-3">
+          <div className="flex items-center mt-3 bg-[#14110c] px-3 py-2">
             <input
               type="checkbox"
               id={`burn-agreement-${lp.objectId}`} // Unique ID for each LP
-              className="mr-2 cursor-pointer"
+              className="mr-2 cursor-pointer bg-transparent"
               checked={burnAgreement[lp.objectId] || false}
               onChange={(e) =>
                 setBurnAgreement((prev: any) => ({

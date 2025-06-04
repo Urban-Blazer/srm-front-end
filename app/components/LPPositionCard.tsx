@@ -5,7 +5,13 @@ import {
 } from "@mysten/dapp-kit";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
-import { ExternalLinkIcon } from "lucide-react";
+import {
+  ChevronsDown,
+  ChevronsUp,
+  ExternalLinkIcon,
+  MinusIcon,
+  PlusIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { PACKAGE_ID, DEX_MODULE_NAME, GETTER_RPC } from "../config";
 import useCoinPrice from "../hooks/useCoinPrice";
@@ -52,6 +58,8 @@ export const LPPositionCard = ({
   const [logs, setLogs] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [slippageConfig, setSlippageConfig] = useState<boolean>(false);
 
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const isRemoving = isRemovingLiquidity[lp.objectId];
@@ -488,46 +496,50 @@ export const LPPositionCard = ({
       {removeOptions[lp.objectId] && (
         <div className="mt-4 w-full bg-[#1a1712] p-4 border border-slate-700 rounded-none text-sm md:text-base">
           <h2 className="text-lg font-semibold text-slate-100 mb-3">
-            Select Withdrawal Amount
+            Remove LP - Select Withdrawal Amount
           </h2>
 
           {/* Percentage Quick Select Buttons */}
-          <div className="flex justify-between mt-2 mb-4">
+          <div className="flex justify-between mt-2 mb-4 gap-1 sm:gap-2">
             {[25, 50, 75, 100].map((percent) => (
-              <button
+              <Button
                 key={percent}
                 onClick={() => handlePercentageClick(lp, percent)}
                 disabled={isRemoving}
-                className={`flex-1 text-md mx-1 rounded-none px-3 py-1 ${
-                  isRemoving
-                    ? "bg-slate-700 text-slate-400 cursor-not-allowed"
-                    : "bg-[#14110c] hover:bg-slate-600 text-slate-300"
+                variant="primary"
+                size="full"
+                processing={isRemoving}
+                className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-3 py-1  ${
+                  removePercentage[lp.objectId] === percent
+                    ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
+                    : "text-slate-300"
                 }`}
               >
                 {percent}%
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Input for LP Amount */}
           <div className="space-y-1 mb-4">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>LP Amount to Withdraw:</span>
-            </div>
             <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
               <input
                 type="number"
-                className={`max-w-[240px] flex-1 p-2 outline-none bg-transparent text-xl sm:text-lg overflow-hidden grow ${
+                className={`flex-1 p-2 outline-none bg-transparent text-sm sm:text-md overflow-hidden grow ${
                   isRemoving ? "text-slate-400" : "text-slate-100"
                 }`}
                 placeholder="Enter LP amount"
                 value={withdrawAmount[lp.objectId] || ""}
-                onChange={(e) =>
+                onChange={(e) => {
+                  setRemovePercentage((prev) => ({
+                    ...prev,
+                    [lp.objectId]: 0,
+                  }));
                   setWithdrawAmount((prev) => ({
                     ...prev,
                     [lp.objectId]: e.target.value,
-                  }))
-                }
+                  }));
+                }}
                 disabled={isRemoving}
               />
             </div>
@@ -535,32 +547,103 @@ export const LPPositionCard = ({
 
           {/* Slippage Tolerance Input */}
           <div className="space-y-1 mb-6">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Slippage Tolerance (%):</span>
+            <div className="flex items-center justify-end text-slate-400 text-xs mt-4 gap-1 sm:gap-2">
+              <span>Slippage</span>
+              {[".5", "1", "2", "3"].map((s) => (
+                <Button
+                  key={s}
+                  variant="standard"
+                  size="sm"
+                  onClick={() =>
+                    setSlippageTolerance((prev) => ({
+                      ...prev,
+                      [lp.objectId]: s,
+                    }))
+                  }
+                  className={`bg-[#14110c] hover:bg-slate-600 rounded-none px-2 py-1 ${
+                    Number(s) === Number(slippageTolerance[lp.objectId])
+                      ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
+                      : "text-slate-300"
+                  }`}
+                >
+                  {s}
+                </Button>
+              ))}
+              <span>%</span>
+              <Button
+                variant="standard"
+                size="sm"
+                className="bg-[#14110c] hover:bg-slate-600"
+                onClick={() => setSlippageConfig(!slippageConfig)}
+              >
+                {slippageConfig ? (
+                  <ChevronsDown className="w-4 h-4 cursor-pointer text-slate-300" />
+                ) : (
+                  <ChevronsUp className="w-4 h-4 cursor-pointer text-slate-300" />
+                )}
+              </Button>
             </div>
-            <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
-              <input
-                type="number"
-                className={`max-w-[240px] flex-1 p-2 outline-none bg-transparent text-xl sm:text-lg overflow-hidden grow ${
-                  isRemoving ? "text-slate-400" : "text-slate-100"
-                }`}
-                placeholder="Enter slippage (e.g., 1.0)"
-                value={slippageTolerance[lp.objectId] || ""}
-                onChange={(e) =>
-                  setSlippageTolerance((prev) => ({
+            {slippageConfig && (
+              <div className="flex items-center gap-2 w-full justify-end pt-4">
+                <Button
+                  variant="standard"
+                  size="sm"
+                  className="bg-[#14110c] hover:bg-slate-600"
+                  onClick={() => setSlippageTolerance((prev) => ({
                     ...prev,
-                    [lp.objectId]: e.target.value,
-                  }))
-                }
-                disabled={isRemoving}
-              />
-            </div>
+                    [lp.objectId]:`${Number(prev[lp.objectId]) - 0.1}`,
+                  }))}
+                >
+                  <MinusIcon className="w-4 h-4 cursor-pointer text-slate-300" />
+                </Button>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={slippageTolerance[lp.objectId]}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "") {
+                      setSlippageTolerance((prev) => ({
+                        ...prev,
+                        [lp.objectId]: "1.0",
+                      }));
+                    } else {
+                      const parsed = parseFloat(value);
+                      if (!isNaN(parsed)) {
+                        setSlippageTolerance((prev) => ({
+                          ...prev,
+                          [lp.objectId]: `${parsed}`,
+                        }));
+                      }
+                    }
+                  }}
+                  className="bg-[#14110c] w-16 text-center text-slate-100 outline-none border border-slate-600 py-1
+                        [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span>%</span>
+                <Button
+                  variant="standard"
+                  size="sm"
+                  className="bg-[#14110c] hover:bg-slate-600"
+                  onClick={() => setSlippageTolerance((prev) => ({
+                    ...prev,
+                    [lp.objectId]:`${Number(prev[lp.objectId]) + 0.1}`,
+                  }))}
+                >
+                  <PlusIcon className="w-4 h-4 cursor-pointer text-slate-300" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Confirm Button */}
-          <button
+          <Button
             onClick={() => handleRemoveLiquidityConfirm(lp)}
             disabled={isRemoving}
+            variant="secondary"
+            size="full"
+            processing={isRemoving}
             className={`w-full px-4 py-2 rounded-none text-sm font-semibold transition mt-2 ${
               isRemoving
                 ? "bg-slate-700 text-slate-300 cursor-not-allowed"
@@ -573,9 +656,9 @@ export const LPPositionCard = ({
                 <span>Processing...</span>
               </div>
             ) : (
-              "Confirm Withdraw LP"
+              "CONFIRM WITHDRAW LP"
             )}
-          </button>
+          </Button>
         </div>
       )}
       {children}

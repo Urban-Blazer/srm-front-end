@@ -999,6 +999,7 @@ export default function SwapInterface({
         <span>Slippage</span>
         {[".5", "1", "2", "3"].map((s) => (
           <Button
+            key={s}
             variant="standard"
             size="sm"
             onClick={() => setSlippage(Number(s))}

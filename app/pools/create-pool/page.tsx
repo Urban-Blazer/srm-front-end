@@ -908,7 +908,7 @@ export default function Pools() {
 
             {/* Fee Summary */}
             <div className="p-4 shadow-md mb-4">
-              <h3 className="text-lg font-semibold">Fees</h3>
+              <h2 className="text-xl font-semibold mb-2">Fees</h2>
               <ul className="space-y-2 ">
                 <li>
                   <strong>LP Builder Fee:</strong>{" "}
@@ -930,7 +930,7 @@ export default function Pools() {
 
             {/* Deployer Wallet */}
             <div className=" p-4  shadow-md mb-4">
-              <h2 className="text-lg font-semibold">Deployer Wallet</h2>
+              <h2 className="text-lg font-semibold mb-2">Deployer Wallet</h2>
               <p className="">{state.deployerRoyaltyWallet || "Not set"}</p>
             </div>
 
@@ -945,7 +945,7 @@ export default function Pools() {
               {/* Toggle Button */}
               <div className="flex items-center justify-between p-2  border w-48 mb-2">
                 <button
-                  className={`px-3 py-1 rounded-md ${
+                  className={`px-3 py-1 w-full ${
                     state.initialPriceMode === "customPerDropdown"
                       ? "bg-gray-600"
                       : "button-primary"
@@ -960,7 +960,7 @@ export default function Pools() {
                   {state.dropdownCoinMetadata?.symbol}
                 </button>
                 <button
-                  className={`px-3 py-1 rounded-md ${
+                  className={`px-3 py-1 w-full ${
                     state.initialPriceMode === "dropdownPerCustom"
                       ? "bg-gray-600"
                       : "button-primary"
@@ -992,7 +992,7 @@ export default function Pools() {
                     })
                   }
                 />
-                <span className="absolute right-4 top-3 text-gray-500 text-lg">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg pr-4">
                   {state.initialPriceMode === "customPerDropdown"
                     ? `${state.customCoinMetadata?.symbol} per ${state.dropdownCoinMetadata?.symbol}`
                     : `${state.dropdownCoinMetadata?.symbol} per ${state.customCoinMetadata?.symbol}`}
@@ -1023,7 +1023,7 @@ export default function Pools() {
                     })
                   }
                 />
-                <span className="absolute right-4 top-3 text-gray-500 text-lg">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg pr-4">
                   {state.dropdownCoinMetadata?.symbol}
                 </span>
               </div>
@@ -1044,7 +1044,7 @@ export default function Pools() {
                     })
                   }
                 />
-                <span className="absolute right-4 top-3 text-gray-500 text-lg">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg pr-4">
                   {state.customCoinMetadata?.symbol}
                 </span>
               </div>

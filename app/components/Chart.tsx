@@ -164,7 +164,7 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
         wsRef.current.close();
       }
     };
-  }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData, refetchChartData]);
+  }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData, refetchChartData, coinA?.decimals, coinB?.decimals]);
 
   return (
     <div className="w-full min-h-[480px]">

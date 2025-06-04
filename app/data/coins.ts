@@ -28,7 +28,7 @@ export const predefinedCoins: CoinMeta[] = [
     decimals: 9,
     image:
       "https://bafybeif5r3biiwsylqsjkkwh4yrsbltbeetq5w3snuodcw56b7iaaglxoa.ipfs.w3s.link/logo_blk.png",
-    lists: ["memecoin", "all"]
+    lists: ["strict", "all"]
   },
   {
     symbol: "WAGMI",

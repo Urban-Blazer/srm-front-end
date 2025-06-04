@@ -84,7 +84,8 @@ const NAVIGATION_ITEMS = [
   {
     id: "info",
     label: "INFO",
-    path: "/info",
+    path: "https://suirewards.me/",
+    external: true,
     submenu: [
       {
         id: "about",

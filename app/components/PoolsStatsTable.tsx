@@ -1,9 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import CopyIcon from "@svg/copy-icon.svg";
-import Image from "next/image";
 import {
+  Box,
+  Chip,
+  FormControl,
+  MenuItem,
+  Paper,
+  Select,
+  SelectChangeEvent,
   Table,
   TableBody,
   TableCell,
@@ -11,19 +15,13 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
-  Paper,
-  FormControl,
-  Select,
-  MenuItem,
-  IconButton,
-  Typography,
-  Box,
-  SelectChangeEvent,
-  Tooltip,
-  Chip,
+  Typography
 } from "@mui/material";
-import Avatar from "./Avatar";
+import { ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import Avatar from "./Avatar";
+import ExplorerAccountLink from "./ExplorerLink/ExplorerAccountLink";
 
 type Pool = {
   pool_id: string;
@@ -133,12 +131,12 @@ function EnhancedTableHead(props: EnhancedTableHeadProps) {
   );
 }
 
-export default function PoolRankingTable() {
+export default function PoolsStatsTable() {
   const [data, setData] = useState<Pool[]>([]);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [range, setRange] = useState<"24h" | "7d" | "all">("24h");
-  const [order, setOrder] = useState<Order>("desc");
-  const [orderBy, setOrderBy] = useState<PoolSortKey | null>(null);
+  const [order, setOrder] = useState<Order>("asc");
+  const [orderBy, setOrderBy] = useState<PoolSortKey>("timestamp");
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -177,25 +175,45 @@ export default function PoolRankingTable() {
     if (!orderBy) return data;
 
     return [...data].sort((a, b) => {
-      const aVal =
-        orderBy === "timestamp"
-          ? Number(a[orderBy])
-          : parseFloat(a[orderBy] as any);
-      const bVal =
-        orderBy === "timestamp"
-          ? Number(b[orderBy])
-          : parseFloat(b[orderBy] as any);
-
-      return order === "asc" ? aVal - bVal : bVal - aVal;
+      switch (orderBy) {
+        case "buyVolume":
+          return order === "asc"
+            ? Number(parseInt(`${a.buyVolume}`.replace(",", ""))) -
+                Number(parseInt(`${b.buyVolume}`.replace(",", "")))
+            : Number(parseInt(`${b.buyVolume}`.replace(",", ""))) -
+                Number(parseInt(`${a.buyVolume}`.replace(",", "")));
+        case "sellVolume":
+          return order === "asc"
+            ? Number(parseInt(`${a.sellVolume}`.replace(",", ""))) -
+                Number(parseInt(`${b.sellVolume}`.replace(",", "")))
+            : Number(parseInt(`${b.sellVolume}`.replace(",", ""))) -
+                Number(parseInt(`${a.sellVolume}`.replace(",", "")));
+        case "totalVolume":
+          return order === "asc"
+            ? Number(parseInt(`${a.totalVolume}`.replace(",", ""))) -
+                Number(parseInt(`${b.totalVolume}`.replace(",", "")))
+            : Number(parseInt(`${b.totalVolume}`.replace(",", ""))) -
+                Number(parseInt(`${a.totalVolume}`.replace(",", "")));
+        case "timestamp":
+          return order === "asc"
+            ? Number(a.timestamp) - Number(b.timestamp)
+            : Number(b.timestamp) - Number(a.timestamp);
+        case "buyTxCount":
+          return order === "asc"
+            ? Number(a.buyTxCount) - Number(b.buyTxCount)
+            : Number(b.buyTxCount) - Number(a.buyTxCount);
+        case "sellTxCount":
+          return order === "asc"
+            ? Number(a.sellTxCount) - Number(b.sellTxCount)
+            : Number(b.sellTxCount) - Number(a.sellTxCount);
+        default:
+          return 0;
+      }
     });
   }, [data, order, orderBy]);
 
   return (
     <div className="flex flex-col items-center min-h-[80vh] p-4 md:p-6 pt-20 pb-20 text-slate-100 bg-[#000306]">
-      <h1 className="pt-10 text-2xl md:text-3xl font-bold mb-6 text-center">
-        POOL RANKING
-      </h1>
-
       <div className="w-full max-w-7xl px-2 md:px-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
           <Typography
@@ -329,7 +347,9 @@ export default function PoolRankingTable() {
                           alt=""
                         />
                       )}
-                      <Link href={`/swap/${pool.coinA_symbol}/${pool.coinB_symbol}`}>
+                      <Link
+                        href={`/swap/${pool.coinA_symbol}/${pool.coinB_symbol}`}
+                      >
                         <Typography variant="body2" sx={{ color: "#fff" }}>
                           {pool.coinA_symbol} / {pool.coinB_symbol}
                         </Typography>
@@ -347,7 +367,7 @@ export default function PoolRankingTable() {
                       }}
                     >
                       <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {pool.buyVolume}
+                        {Number(parseInt(`${pool.buyVolume}`))}
                       </Typography>
                       {pool.coinA_image && (
                         <Avatar
@@ -369,7 +389,7 @@ export default function PoolRankingTable() {
                       }}
                     >
                       <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {pool.sellVolume}
+                        {Number(parseInt(`${pool.sellVolume}`))}
                       </Typography>
                       {pool.coinA_image && (
                         <Avatar
@@ -390,7 +410,9 @@ export default function PoolRankingTable() {
                       }}
                     >
                       <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {pool.totalVolume}
+                        {Number(
+                          parseInt(`${pool.totalVolume}`.replace(",", ""))
+                        )}
                       </Typography>
                       {pool.coinA_image && (
                         <Avatar
@@ -426,28 +448,22 @@ export default function PoolRankingTable() {
                     {formatBpsToPercent(pool.rewards_fee)}
                   </TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                      <Typography variant="body2" sx={{ color: '#fff' }}>
-                        {pool.creator_royalty_wallet.slice(0, 6)}...{pool.creator_royalty_wallet.slice(-4)}
-                      </Typography>
-                      <Tooltip title={copiedText === pool.creator_royalty_wallet ? "Copied!" : "Copy wallet address"}>
-                        <IconButton 
-                          size="small" 
-                          onClick={() => handleCopy(pool.creator_royalty_wallet)}
-                          sx={{ 
-                            color: "#fff",
-                            backgroundColor: "transparent",
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                            }
-                          }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 9H11C9.89543 9 9 9.89543 9 11V20C9 21.1046 9.89543 22 11 22H20C21.1046 22 22 21.1046 22 20V11C22 9.89543 21.1046 9 20 9Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M5 15H4C3.46957 15 2.96086 14.7893 2.58579 14.4142C2.21071 14.0391 2 13.5304 2 13V4C2 3.46957 2.21071 2.96086 2.58579 2.58579C2.96086 2.21071 3.46957 2 4 2H13C13.5304 2 14.0391 2.21071 14.4142 2.58579C14.7893 2.96086 15 3.46957 15 4V5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </IconButton>
-                      </Tooltip>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 0.5,
+                      }}
+                    >
+                      <ExplorerAccountLink
+                        account={pool.creator_royalty_wallet}
+                        className="flex items-center gap-1 text-white"
+                      >
+                        {pool.creator_royalty_wallet.slice(0, 6)}...
+                        {pool.creator_royalty_wallet.slice(-4)}{" "}
+                        <ExternalLinkIcon size={16} />
+                      </ExplorerAccountLink>
                     </Box>
                   </TableCell>
                 </TableRow>

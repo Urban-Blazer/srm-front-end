@@ -3,7 +3,7 @@ import { useReducer, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import StepIndicator from "@components/AddLiquidityStepIndicator";
-import { predefinedCoins } from "@data/coins";
+import { predefinedCoins as predefCoins } from "@data/coins";
 import { SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
@@ -28,7 +28,7 @@ import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
 const provider = new SuiClient({ url: GETTER_RPC });
 
 const initialState = {
-  selectedCoin: predefinedCoins[0], // CoinA
+  selectedCoin: predefCoins[0], // CoinA
   customCoin: "", // CoinB (user input)
   poolData: null, // Stores Pool ID & Coin Metadata
   dropdownCoinMetadata: null, // ✅ Stores metadata for dropdown-selected coin
@@ -95,21 +95,20 @@ export default function AddLiquidity() {
   const wallet = useCurrentWallet()?.currentWallet;
   const walletAddress = account?.address;
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const { coins } = usePredefinedCoins();
-  const predefinedCoins = coins.filter((coin) => coin.lists?.includes("strict"));
+  const { coins: predefinedCoins } = usePredefinedCoins();
 
   const decimalsA = state.dropdownCoinMetadata?.decimals ?? 9;
   const decimalsB = state.customCoinMetadata?.decimals ?? 9;
 
   useEffect(() => {
-    if (coinA && coinB) {
+    if (coinA && coinB && predefinedCoins) {
       const predefinedCoin =
         predefinedCoins.find((c) => c.typeName === coinA) || predefinedCoins[0];
 
       dispatch({ type: "SET_COIN", payload: predefinedCoin });
       dispatch({ type: "SET_CUSTOM_COIN", payload: coinB });
     }
-  }, [coinA, coinB, predefinedCoins]);
+  }, [predefinedCoins]);
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
@@ -691,18 +690,18 @@ export default function AddLiquidity() {
               >
                 <div className="flex items-center space-x-2">
                   <Avatar
-                    src={state.selectedCoin.image}
-                    alt={state.selectedCoin.symbol}
+                    src={state.selectedCoin?.image}
+                    alt={state.selectedCoin?.symbol}
                     className="w-6 h-6 rounded-full"
                   />
-                  <span>{state.selectedCoin.symbol}</span>
+                  <span>{state.selectedCoin?.symbol}</span>
                 </div>
                 <span className="text-slate-400">▼</span>
               </button>
 
               {state.dropdownOpen && (
                 <div className="absolute left-0 mt-1 w-full bg-[#14110c] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
-                  {predefinedCoins.map((coin) => (
+                  {predefinedCoins.filter((coin) => coin.lists?.includes("strict")).map((coin) => (
                     <div
                       key={coin.symbol}
                       className="flex items-center px-3 py-2 hover:bg-slate-700 cursor-pointer"

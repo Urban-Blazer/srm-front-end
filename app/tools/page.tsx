@@ -96,7 +96,7 @@ export default function ToolsPage() {
       // Process each predefined coin
       for (const coin of predefinedCoins) {
         const response = await fetch('/api/coins/all', {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },

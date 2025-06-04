@@ -26,6 +26,7 @@ import TokenItem from "./TokenItem";
 import Repeat from "@components/UI/Repeat";
 import { Skeleton } from "@components/UI/Skeleton";
 import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
+import { Spinner } from "@components/Spinner";
 
 type Props = {
   className?: string;
@@ -33,6 +34,7 @@ type Props = {
   pivotTokenId: string;
   accountBalancesObj: Record<string, string> | undefined;
   isIn: boolean;
+  isLoading: boolean;
 };
 
 function SelectTokenModal({
@@ -41,6 +43,7 @@ function SelectTokenModal({
   pivotTokenId,
   accountBalancesObj,
   isIn,
+  isLoading,
 }: Props) {
   const isMobile = useAtomValue(isMobileAtom);
   const router = useRouter();
@@ -220,7 +223,11 @@ function SelectTokenModal({
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={(open) => (setOpen(open), setSearchTerm(''))}>
+        {isLoading ? (
+          <Spinner />
+        ) : ( 
         <SheetTrigger asChild>{trigger}</SheetTrigger>
+        )}
         <AnimatePresence>
           {open && (
             <SheetContent
@@ -247,7 +254,13 @@ function SelectTokenModal({
 
   return (
     <div className={className}>
-      {trigger}
+      {isLoading ? (
+        <Spinner />
+      ) : ( 
+        <>
+          {trigger}
+        </>
+      )}
       <TokenDialog open={open} onClose={() => setOpen(false)} maxWidth="md" sx={{backgroundColor: '#6A1B9A78'}}>
         <AnimatePresence>
           {open && (

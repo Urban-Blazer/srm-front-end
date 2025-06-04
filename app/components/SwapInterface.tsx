@@ -46,6 +46,7 @@ export default function SwapInterface({
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const [slippage, setSlippage] = useState<number>(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<string[]>([]);
   const [transactionProgress, setTransactionProgress] = useState<{
     image: string;
@@ -235,6 +236,9 @@ export default function SwapInterface({
       }
       if (walletAddress && coinB) {
         await fetchBalance(coinB, setCoinBBalance);
+      }
+      if (coinA && coinB) {
+        setLoading(false);
       }
     };
 
@@ -895,6 +899,7 @@ export default function SwapInterface({
             pivotTokenId={(isBuy ? coinB?.typeName : coinA?.typeName) ?? ""}
             accountBalancesObj={accountBalancesObj}
             isIn={true}
+            isLoading={loading}
           />
         </div>
       </div>
@@ -990,6 +995,7 @@ export default function SwapInterface({
             pivotTokenId={(isBuy ? coinA?.typeName : coinB?.typeName) ?? ""}
             accountBalancesObj={accountBalancesObj}
             isIn={false}
+            isLoading={loading}
           />
         </div>
       </div>

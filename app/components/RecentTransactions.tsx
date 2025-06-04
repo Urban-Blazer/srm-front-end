@@ -2,13 +2,14 @@ import { RecentSwap, RecentTransactionsProps } from '@/app/types';
 import { useEffect, useRef, useState } from 'react';
 import { usePoolStats } from '../hooks/usePoolStats';
 import useRecentSwaps from '../hooks/useRecentSwaps';
+import { Spinner } from './Spinner';
 
 
 export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB }: RecentTransactionsProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const [coinAPriceUSD, setCoinAPriceUSD] = useState<number>(1);
     const [currentTime, setCurrentTime] = useState<number>(Date.now());
-    const { data: recentSwaps, refetch: refetchRecentSwaps } = useRecentSwaps(poolId, 60 * 1000);
+    const { data: recentSwaps, refetch: refetchRecentSwaps, isLoading: isRecentSwapsLoading } = useRecentSwaps(poolId, 60 * 1000);
     const { refetch: refetchPoolStats } = usePoolStats(poolId, 60 * 1000);
 
     const handleRecentSwapWS = (event: MessageEvent<any>) => {
@@ -124,10 +125,13 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
         }
     }
 
+
     return (
         <div className="p-4 w-full">
             <div className="overflow-x-auto overflow-y-auto max-h-80 min-w-full">
-                {!recentSwaps || recentSwaps.length === 0 ? (
+                {isRecentSwapsLoading ? (
+                    <Spinner />
+                ) : !recentSwaps || recentSwaps.length === 0 ? (
                     <p className="text-slate-400 text-sm text-center">No recent transactions yet.</p>
                 ) : (
                     <table className="w-full text-slate-300 text-sm">

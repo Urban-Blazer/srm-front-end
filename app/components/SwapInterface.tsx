@@ -247,9 +247,10 @@ export default function SwapInterface({
 
   const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuickSelect(null);
+    console.log('handleAmountInChange', e.target.value);
     if (e.target.value === "" || Number(e.target.value) === 0) {
       setQueryParams(undefined);
-      setAmountIn("");
+      setAmountIn(e.target.value === "0." ? e.target.value : e.target.value === "" ? "" : "0");
       setAmountOut("");
       return;
     }

@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} bg-[#000306] text-white h-screen`}>
           <Providers>
             <Navbar />
-            <main className="mx-auto bg-[#000306]">{children}</main>
+            <main className="max-w-[100vw]mx-auto bg-[#000306]">{children}</main>
           </Providers>
       </body>
     </html>

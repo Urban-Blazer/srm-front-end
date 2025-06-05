@@ -32,6 +32,10 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
   const [burnAgreement, setBurnAgreement] = useState<{
     [key: string]: boolean;
   }>({});
+  const [transactionProgress, setTransactionProgress] = useState<{
+    image: string;
+    text: string;
+  } | null>(null);
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state
@@ -48,7 +52,7 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
     const calculatedAmount = (
       (Number(lp.balance) / 1e9) *
       (percentage / 100)
-    ).toFixed(4); // Convert from MIST
+    ).toFixed(percentage === 100 ? 9 : 4); // Convert from MIST
     setBurnAmount((prev) => ({
       ...prev,
       [lp.objectId]: calculatedAmount,
@@ -122,9 +126,19 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
     setIsModalOpen(true); // Open modal
 
     if (!wallet || !account) {
-      alert("⚠️ Please connect your wallet first.");
+      setTransactionProgress({
+        image: "/images/txn_failed.png",
+        text: "",
+      });
+      setLoading(false);
+      setIsProcessing(false);
+      console.error("❌ No accounts found. Please reconnect your wallet.");
       return;
     }
+    setTransactionProgress({
+      image: "/images/txn_loading.png",
+      text: "",
+    });
 
     try {
       const inputAmount = burnAmount[lp.objectId];
@@ -135,7 +149,10 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
         isNaN(Number(inputAmount)) ||
         Number(inputAmount) <= 0
       ) {
-        alert("⚠️ Please enter a valid LP amount.");
+        setTransactionProgress({
+          image: "/images/txn_failed.png",
+          text: "",
+        });
         return;
       }
 
@@ -147,8 +164,13 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
           : account?.address;
 
       if (!userAddress) {
-        alert("⚠️ No accounts found. Please reconnect your wallet.");
+        setTransactionProgress({
+          image: "/images/txn_failed.png",
+          text: "",
+        });
         setLoading(false);
+        setIsProcessing(false);
+        console.error("❌ No accounts found. Please reconnect your wallet.");
         return;
       }
 
@@ -197,7 +219,13 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
             onError: (error) => {
               console.error("❌ Burn transaction failed:", error);
               addLog(`❌ Transaction failed: ${error.message}`);
-              alert("⚠️ Transaction failed. See console for details.");
+              setTransactionProgress({
+                image: "/images/txn_failed.png",
+                text: "",
+              });
+              setLoading(false);
+              setIsProcessing(false);
+              console.error("❌ Transaction failed:", error);
               reject(error);
             },
           }
@@ -213,8 +241,13 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
       console.log(`🔍 Transaction Digest: ${txnDigest}`);
 
       if (!txnDigest) {
-        alert("Transaction failed. Please check the console.");
+        setTransactionProgress({
+          image: "/images/txn_failed.png",
+          text: "",
+        });
         setLoading(false);
+        setIsProcessing(false);
+        console.error("❌ No transaction digest found.");
         return;
       }
 
@@ -224,22 +257,33 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
       let txnDetails = await fetchTransactionWithRetry(txnDigest);
 
       if (!txnDetails) {
-        alert("Transaction not successful. Please retry.");
+        setTransactionProgress({
+          image: "/images/txn_failed.png",
+          text: "",
+        });
         setLoading(false);
+        setIsProcessing(false);
+        console.error("❌ No transaction details found.");
         return;
       }
 
       addLog("✅ Transaction Confirmed!");
       console.log("✅ Transaction Confirmed!");
+      setTransactionProgress({
+        image: "/images/txn_successful.png",
+        text: "",
+      });
 
-      alert(
-        `✅ Successfully deposited ${inputAmount} LP tokens into ${lp.poolData?.poolId}`
-      );
       setIsProcessing(false); // ✅ Ensure modal does not close early
     } catch (error: any) {
       addLog(`❌ Deposit LP Transaction failed: ${error}`);
       console.error("❌ Deposit LP Transaction failed:", error);
-      alert("Transaction failed. Check the console.");
+      setTransactionProgress({
+        image: "/images/txn_failed.png",
+        text: "",
+      });
+      setLoading(false);
+      setIsProcessing(false);
     } finally {
       setLoading(false);
       setIsProcessing(false); // ✅ Ensure modal does not close early
@@ -355,6 +399,7 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
             onClose={() => setIsModalOpen(false)}
             logs={logs}
             isProcessing={isProcessing}
+            transactionProgress={transactionProgress || { image: "", text: "" }}
           />
         </div>
       )}

@@ -2,6 +2,8 @@
 import { useState } from "react";
 import CopyIcon from "@svg/copy-icon.svg";
 import { Spinner } from "./Spinner";
+import ExplorerAccountLink from "./ExplorerLink/ExplorerAccountLink";
+import { ExternalLinkIcon } from "lucide-react";
 
 interface Coin {
     typeName: string;
@@ -120,22 +122,12 @@ export default function PoolInfoV2({ poolId, coinA, coinB, poolStats, loading }:
                     <div className="flex flex-col">
                         <span className="text-gray-400 text-xs">Creator Wallet</span>
                         <div className="text-white font-medium flex items-center gap-1">
-                            <span>
-                                {poolStats.creator_royalty_wallet.slice(0, 6)}…{poolStats.creator_royalty_wallet.slice(-4)}
-                            </span>
-                            <button
-                                onClick={() => handleCopy(poolStats.creator_royalty_wallet)}
-                                className="bg-slate-200 p-1 hover:bg-gray-400"
-                                title="Copy Wallet"
+                            <ExplorerAccountLink
+                                account={poolStats.creator_royalty_wallet}
+                                className="flex items-center gap-1 text-white"
                             >
-                            {copiedText === poolStats.creator_royalty_wallet ? (
-                                <div className="flex">
-                                    <span className="text-xs text-green-800 ml-1"> Copied!</span>
-                                </div>
-                            ) : (
-                                <CopyIcon className="w-4 h-4 text-white" />
-                            )}
-                            </button>
+                                {poolStats.creator_royalty_wallet.slice(0, 6)}…{poolStats.creator_royalty_wallet.slice(-4)} <ExternalLinkIcon size={16} />
+                            </ExplorerAccountLink>
                         </div>
                     </div>
                 </div>

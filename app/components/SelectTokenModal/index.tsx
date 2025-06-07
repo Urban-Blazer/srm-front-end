@@ -3,18 +3,17 @@
 import Avatar from "@/app/components/Avatar";
 import EmptyData from "@/app/components/EmptyData/EmptyData";
 import { isMobileAtom } from "@/app/data/layout.atom";
-import { Dialog, DialogContent, styled } from "@mui/material";
+import { Dialog, DialogContent, Snackbar, styled } from "@mui/material";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
 import { useRouter } from 'next/navigation';
 
 import Input from "@/app/components/UI/Input";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/app/components/UI/Sheet";
-import { predefinedCoins } from "@/app/data/coins";
 import useAgTokens from "@/app/hooks/useAgTokens";
 import { usePools } from "@/app/hooks/usePools";
-import { Token as AppToken, CoinMeta } from "@/app/types";
+import { CoinMeta } from "@/app/types";
 import { TokenAmount } from "@/app/types/token";
-import { getStaticTokenById } from "@/app/utils/token";
+import { getStaticTokenById, normalizeTokenId } from "@/app/utils/token";
 import { isBuyAtom } from "@data/store";
 import { AnimatePresence } from "framer-motion";
 import { useAtom, useAtomValue } from "jotai";
@@ -26,21 +25,8 @@ import { VList } from "virtua";
 import TokenItem from "./TokenItem";
 import Repeat from "@components/UI/Repeat";
 import { Skeleton } from "@components/UI/Skeleton";
-
-// Helper function to map AppToken to StaticToken
-const mapAppTokenToStaticToken = (appToken: AppToken): CoinMeta => {
-  const existingStaticToken = getStaticTokenById(appToken.typeName);
-  if (existingStaticToken) {
-    return existingStaticToken;
-  }
-  return {
-    typeName: appToken.typeName,
-    decimals: appToken.decimals,
-    image: appToken.image,
-    name: appToken.name,
-    symbol: appToken.symbol,
-  };
-};
+import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
+import { Spinner } from "@components/Spinner";
 
 type Props = {
   className?: string;
@@ -48,6 +34,7 @@ type Props = {
   pivotTokenId: string;
   accountBalancesObj: Record<string, string> | undefined;
   isIn: boolean;
+  isLoading: boolean;
 };
 
 function SelectTokenModal({
@@ -56,14 +43,17 @@ function SelectTokenModal({
   pivotTokenId,
   accountBalancesObj,
   isIn,
+  isLoading,
 }: Props) {
   const isMobile = useAtomValue(isMobileAtom);
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debounceSearchTerm] = useDebounce(searchTerm, 200);
-  const { set: supportedTokenSet, list: supportedTokenList, tokenList: agTokenList } = useAgTokens();
   const { data: pools, isPending: poolsPending, error: poolsError } = usePools();
+  const { coins: predefinedCoins } = usePredefinedCoins();
+
 
   const [isBuy, setIsBuy] = useAtom(isBuyAtom);
 
@@ -76,7 +66,7 @@ function SelectTokenModal({
     console.log('token', token); 
     console.log('pivotTokenId', pivotTokenId, isIn); 
     const selectedCoinA = pools?.find(pool => {
-      return pool.coinA.typeName === token.typeName;
+      return (pool.coinA.typeName === token.typeName) && (pool.coinB.typeName === pivotTokenId);
     });
     console.log('selectedCoinA', selectedCoinA);
     if(selectedCoinA){
@@ -84,7 +74,7 @@ function SelectTokenModal({
       router.push(`/swap/${selectedCoinA.coinA.symbol}/${selectedCoinA.coinB.symbol}`);
     }
     const selectedCoinB = pools?.find(pool => {
-      return pool.coinB.typeName === token.typeName;
+      return (pool.coinB.typeName === token.typeName) && (pool.coinA.typeName === pivotTokenId);
     });
     console.log('selectedCoinB', selectedCoinB);
     if(selectedCoinB){
@@ -93,22 +83,22 @@ function SelectTokenModal({
     }
     if(!selectedCoinA && !selectedCoinB){
       console.error('Token not found in pools');
+      setSnackbarOpen(true);
     }
     setOpen(false);
   }, [pools, pivotTokenId, isIn, setIsBuy, router]);
 
   const tokenBalances: TokenAmount[] = useMemo(() => {
     if (!debounceSearchTerm) {
-      // default tokens
       let tokens: CoinMeta[] = [...predefinedCoins];
-      // let tokens = [...DEFAULT_AG_TOKENS];
 
-      // tokens from account balances
       if (accountBalancesObj) {
         Object.keys(accountBalancesObj).forEach((coinType) => {
-          const staticToken = getStaticTokenById(coinType);
-          // Ensure supportedTokenSet.has checks against the correct type (StaticToken.type)
-          if (supportedTokenSet.has(coinType) && staticToken) {
+          coinType = normalizeTokenId(coinType);
+          const staticToken = getStaticTokenById(coinType, predefinedCoins);
+          console.log('staticToken', staticToken);
+          console.log('coinType', coinType);
+          if(staticToken){
             tokens.push(staticToken);
           }
         });
@@ -120,39 +110,35 @@ function SelectTokenModal({
       const balances: TokenAmount[] = tokens
         .map((t) => ({
           token: t,
-          amount: accountBalancesObj?.[t.typeName] || "0",
+          amount: accountBalancesObj?.[normalizeTokenId(t.typeName)] || "0",
         }))
         .sort((a, b) => {
           return Number(b.amount) - Number(a.amount);
         });
-      return uniqBy(uniqBy(balances, "token.typeName"), "token.symbol");
+      return uniqBy(uniqBy(balances, "token.typeName"), "token.symbol").filter((t) => (t.token.typeName !== pivotTokenId) || (t.token.typeName !== token?.typeName));
     }
-    console.log('supportedTokenList', supportedTokenList);
     console.log('pools', pools);
     console.log('debounceSearchTerm', debounceSearchTerm);
-    console.log('agTokenList', agTokenList);
     // Handle searched/filtered tokens from supportedTokenList (which are PoolSearchResult[])
-    return (agTokenList || [] as AppToken[]) // Ensure supportedTokenList is not undefined
+    return (predefinedCoins || [] as CoinMeta[]) // Ensure supportedTokenList is not undefined
       .filter(
-        (token: AppToken) =>
+        (token: CoinMeta) =>
           (token.typeName.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
           token.symbol.toLowerCase().includes(debounceSearchTerm.toLowerCase()) ||
           token.name.toLowerCase().includes(debounceSearchTerm.toLowerCase()))
       )
-      .map((token: AppToken): TokenAmount | null => {
+      .map((token: CoinMeta): TokenAmount | null => {
         console.log('token', token);
-        const staticVersionOfCoin = mapAppTokenToStaticToken(token);
-        if(token.typeName === pivotTokenId) return null;
         return {
-          token: staticVersionOfCoin,
-          amount: accountBalancesObj?.[staticVersionOfCoin.typeName] || "0",
+          token: token,
+          amount: accountBalancesObj?.[token.typeName] || "0",
         }
       })
       .filter((item: TokenAmount | null): item is TokenAmount => item !== null)
       .sort((a: TokenAmount, b: TokenAmount) => {
         return Number(b.amount) - Number(a.amount);
       });
-  }, [debounceSearchTerm, supportedTokenList, pools, agTokenList, accountBalancesObj, supportedTokenSet, token?.typeName, pivotTokenId]);
+  }, [debounceSearchTerm, pools, predefinedCoins, accountBalancesObj, token?.typeName, pivotTokenId]);
 
   const trigger = useMemo(
     () => (
@@ -237,7 +223,11 @@ function SelectTokenModal({
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={(open) => (setOpen(open), setSearchTerm(''))}>
+        {isLoading ? (
+          <Spinner />
+        ) : ( 
         <SheetTrigger asChild>{trigger}</SheetTrigger>
+        )}
         <AnimatePresence>
           {open && (
             <SheetContent
@@ -252,13 +242,25 @@ function SelectTokenModal({
             </SheetContent>
           )}
         </AnimatePresence>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={() => setSnackbarOpen(false)}
+          message={`⚠️ Pool not found`}
+        />
       </Sheet>
     );
   }
 
   return (
     <div className={className}>
-      {trigger}
+      {isLoading ? (
+        <Spinner />
+      ) : ( 
+        <>
+          {trigger}
+        </>
+      )}
       <TokenDialog open={open} onClose={() => setOpen(false)} maxWidth="md" sx={{backgroundColor: '#6A1B9A78'}}>
         <AnimatePresence>
           {open && (
@@ -268,6 +270,13 @@ function SelectTokenModal({
           )}
         </AnimatePresence>
       </TokenDialog>
+      <Snackbar
+        open={snackbarOpen}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        message={`⚠️ Pool not found`}
+      />
     </div>
   );
 }

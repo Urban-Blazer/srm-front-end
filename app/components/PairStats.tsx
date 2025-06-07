@@ -149,11 +149,12 @@ export default function PairStats({
               <Stat
                 label="Circulating Supply"
                 value={
-                  Number(coinSupply?.value) - (statsLifetime?.burnedCoins ?? 0)
+                  Number((Number(coinSupply?.value) - (statsLifetime?.burnedCoins ?? 0)).toFixed(0))
                 }
                 decimals={coinBDecimals}
                 imageUrl={coinB?.image}
                 variant={variant}
+                disableDecimals
               />
             )}
             {buy1SuiQuote?.buyAmount && statsLifetime && coinSupply && (
@@ -167,6 +168,7 @@ export default function PairStats({
                 decimals={coinBDecimals}
                 imageUrl={coinA?.image}
                 variant={variant}
+                disableDecimals
               />
             )}
             {buy1SuiQuote?.buyAmount &&
@@ -183,6 +185,7 @@ export default function PairStats({
                   }
                   decimals={coinBDecimals}
                   variant={variant}
+                  disableDecimals
                 />
               )}
           </>
@@ -199,6 +202,7 @@ const Stat = ({
   type = "decimal",
   imageUrl,
   variant = "default",
+  disableDecimals = false,
 }: {
   label: string;
   value?: number;
@@ -206,14 +210,15 @@ const Stat = ({
   type?: "tx" | "decimal";
   imageUrl?: string;
   variant?: "default" | "mcap";
+  disableDecimals?: boolean;
 }) => {
   const fractionDigits = variant === "mcap" ? 0 : 2;
   const formattedValue =
     type === "tx"
       ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })
       : (value / Math.pow(10, decimals)).toLocaleString(undefined, {
-          minimumFractionDigits: fractionDigits,
-          maximumFractionDigits: fractionDigits,
+          minimumFractionDigits: disableDecimals ? 0 : fractionDigits,
+          maximumFractionDigits: disableDecimals ? 0 : fractionDigits,
         });
 
   return (

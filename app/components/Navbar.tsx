@@ -74,17 +74,13 @@ const NAVIGATION_ITEMS = [
         label: "Add Liquidity",
         path: "/pools/add-liquidity",
       },
-      {
-        id: "burn-liquidity",
-        label: "Burn Liquidity",
-        path: "/pools/burn-liquidity",
-      },
     ],
   },
   {
     id: "info",
     label: "INFO",
-    path: "/info",
+    path: "https://suirewards.me/",
+    external: true,
     submenu: [
       {
         id: "about",
@@ -500,7 +496,7 @@ export default function NavBar() {
         <div className="flex w-full items-center justify-between">
           <Link
             href="/swap/sui/srm"
-            className="relative w-full flex items-center justify-center sm:justify-start"
+            className="relative w-full max-w-[300px] sm:max-w-full flex items-center justify-center sm:justify-start"
           >
             <Image
               src="/images/logosrm.png"

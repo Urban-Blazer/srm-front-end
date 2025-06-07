@@ -3,6 +3,7 @@ import { FC } from 'react';
 import useHolders, { Holder } from '../hooks/useHolders';
 import usePairStats from '../hooks/usePairStats';
 import { SRM_COIN_SUPPLY } from '../config';
+import { Spinner } from './Spinner';
 
 interface HoldersProps {
   coinType: string;
@@ -23,7 +24,7 @@ const Holders: FC<HoldersProps> = ({ coinType, poolId }) => {
     <div className="p-4 w-full">
       <div className="overflow-x-auto overflow-y-auto max-h-80 min-w-full">
         {isLoading ? (
-          <p className="text-slate-400 text-sm text-center">Loading holders…</p>
+          <Spinner />
         ) : error ? (
           <p className="text-red-400 text-sm text-center">Failed to load holders</p>
         ) : !holders || holders.length === 0 ? (

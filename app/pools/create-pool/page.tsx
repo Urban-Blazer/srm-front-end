@@ -24,6 +24,10 @@ import useConvertToU64 from "@/app/hooks/useConvertToU64";
 import useGetCoinInput from "@/app/hooks/useGetCoinInput";
 import { isValidSuiAddress } from "@mysten/sui/utils";
 import Button from "@components/UI/Button";
+import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
+import { ExternalLink, ExternalLinkIcon, MinusIcon, PlusIcon } from "lucide-react";
+import ExplorerAccountLink from "@components/ExplorerLink/ExplorerAccountLink";
+import InputCurrency from "@components/InputCurrency";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -98,21 +102,23 @@ function reducer(state: any, action: any) {
         depositCustomCoin: "",
       };
     case "SET_DEPOSIT_DROPDOWN":
+      console.log("SET_DEPOSIT_DROPDOWN", action.payload);
       return {
         ...state,
         depositDropdownCoin: action.payload,
         depositCustomCoin:
           state.initialPrice > 0
-            ? (parseFloat(action.payload) * state.initialPrice).toFixed(6)
+            ? (parseFloat(action.payload) / state.initialPrice).toFixed(6)
             : "",
       };
     case "SET_DEPOSIT_CUSTOM":
+      console.log("SET_DEPOSIT_CUSTOM", action.payload);
       return {
         ...state,
         depositCustomCoin: action.payload,
         depositDropdownCoin:
           state.initialPrice > 0
-            ? (parseFloat(action.payload) / state.initialPrice).toFixed(6)
+            ? (parseFloat(action.payload) * state.initialPrice).toFixed(6)
             : "",
       };
     case "SET_POOL_DATA": // 🔹 New case to store pool data
@@ -135,6 +141,10 @@ export default function Pools() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { coins } = usePredefinedCoins();
+  const predefinedCoins = coins.filter((coin) =>
+    coin.lists?.includes("strict")
+  );
 
   // Coin types for the pool (derived from state)
   const coinTypeA = useMemo(
@@ -194,8 +204,6 @@ export default function Pools() {
         provider.getCoinMetadata({ coinType: state.customCoin.trim() }),
       ]);
 
-
-
       // 🔥 Ensure typeName exists in metadata before setting state
       if (dropdownMetadata && customMetadata) {
         dispatch({
@@ -233,24 +241,38 @@ export default function Pools() {
       addLog("⚠️ Please connect your wallet first.");
       return;
     }
-    dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_loading.png", text: "Processing Transaction..." } });
+    dispatch({
+      type: "SET_TRANSACTION_PROGRESS",
+      payload: {
+        image: "/images/txn_loading.png",
+        text: "Processing Transaction...",
+      },
+    });
 
     try {
       dispatch({ type: "SET_LOADING", payload: true });
 
       const userAddress = walletAddress;
-      
+
       if (
         !state.dropdownCoinMetadata?.typeName ||
         !state.customCoinMetadata?.typeName
       ) {
-        addLog("⚠️ Coin metadata is missing! Please go back and reselect your tokens.");
+        addLog(
+          "⚠️ Coin metadata is missing! Please go back and reselect your tokens."
+        );
 
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
-      
+
       const expectedCoinA = state.dropdownCoinMetadata.typeName;
       const expectedCoinB = state.customCoinMetadata.typeName;
 
@@ -263,7 +285,13 @@ export default function Pools() {
         console.error("❌ Failed to load coin data", { coinError });
         addLog("❌ Failed to load coin data. Please try again.");
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -281,8 +309,6 @@ export default function Pools() {
       );
       const depositCustomMIST = toU64(state.depositCustomCoin, customDecimals);
 
-
-
       const coinA = coins.find((c) => c.coinType === expectedCoinA);
       const coinB = coins.find((c) => c.coinType === expectedCoinB);
 
@@ -290,7 +316,13 @@ export default function Pools() {
         addLog("⚠️ Coin objects not found.");
 
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -311,9 +343,21 @@ export default function Pools() {
         BigInt(coinBBalance.totalBalance) < depositCustomMIST
       ) {
         addLog("⚠️ Insufficient coin balance in wallet.");
+        console.error("⚠️ Insufficient coin balance in wallet.", {
+          coinABalance,
+          coinBBalance,
+          depositDropdownMIST,
+          depositCustomMIST,
+        }, BigInt(coinABalance.totalBalance) < depositDropdownMIST, BigInt(coinBBalance.totalBalance) < depositCustomMIST);
 
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -325,7 +369,7 @@ export default function Pools() {
 
       // Prepare transaction inputs
       let coinAInput, coinBInput;
-            
+
       try {
         // Use our hook for coin input preparation (handles SUI vs non-SUI automatically)
         coinAInput = await getCoinInput(
@@ -343,7 +387,7 @@ export default function Pools() {
 
         // Set gas budget
         txb.setGasBudget(GAS_BUDGET);
-        
+
         // Create the move call with all parameters
         txb.moveCall({
           target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::create_pool_with_coins_and_transfer_lp_to_sender`,
@@ -370,7 +414,13 @@ export default function Pools() {
         addLog(`❌ Error: ${error.message}`);
 
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -390,7 +440,13 @@ export default function Pools() {
             onError: (error) => {
               addLog(`⚠️ Transaction failed: ${error.message}`);
               dispatch({ type: "SET_LOADING", payload: false });
-              dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+              dispatch({
+                type: "SET_TRANSACTION_PROGRESS",
+                payload: {
+                  image: "/images/txn_failed.png",
+                  text: "Transaction Failed",
+                },
+              });
               reject(error);
             },
           }
@@ -399,15 +455,22 @@ export default function Pools() {
 
       addLog("✅ Transaction Executed!");
 
-
       // ✅ Extract the transaction digest
       const txnDigest = executeResponse?.digest;
       addLog(`🔍 Tracking transaction digest: ${txnDigest}`);
 
       if (!txnDigest) {
-        addLog("⚠️ Transaction submission failed. Transaction digest is missing.");
+        addLog(
+          "⚠️ Transaction submission failed. Transaction digest is missing."
+        );
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -418,12 +481,17 @@ export default function Pools() {
       if (!txnDetails) {
         addLog("⚠️ Transaction not successful, please retry.");
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
-          return;
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
+        return;
       }
 
       addLog("✅ Transaction Successfully Confirmed");
-
 
       // ✅ Extract PoolCreated event
       let poolCreatedEvent = txnDetails.events?.find((event) =>
@@ -431,7 +499,6 @@ export default function Pools() {
       );
 
       if (!poolCreatedEvent) {
-
         await new Promise((res) => setTimeout(res, 5000)); // Wait 5s and retry
         txnDetails = await fetchTransactionWithRetry(txnDigest);
         poolCreatedEvent = txnDetails?.events?.find((event) =>
@@ -442,7 +509,13 @@ export default function Pools() {
       if (!poolCreatedEvent) {
         addLog(`⚠️ Transaction not successful, please retry.`);
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -451,7 +524,13 @@ export default function Pools() {
       if (!poolDataFromEvent) {
         addLog(`⚠️ PoolCreated event detected, but no data available.`);
         dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_TRANSACTION_PROGRESS", payload: { image: "/images/txn_failed.png", text: "Transaction Failed" } });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -460,8 +539,8 @@ export default function Pools() {
         poolId: poolDataFromEvent.pool_id,
         coinA: poolDataFromEvent.a,
         coinB: poolDataFromEvent.b,
-        initA: parseFloat('0'),
-        initB: parseFloat('0'),
+        initA: parseFloat("0"),
+        initB: parseFloat("0"),
         lpMinted: parseFloat(poolDataFromEvent.lp_minted),
         lockedLpBalance: parseFloat(poolDataFromEvent.locked_lp_balance),
         lpBuilderFee: parseFloat(poolDataFromEvent.lp_builder_fee),
@@ -512,9 +591,7 @@ export default function Pools() {
           } else {
             addLog(`⚠️ Database attempt ${attempt} failed. Retrying...`);
           }
-        } catch (error) {
-
-        }
+        } catch (error) {}
         await new Promise((res) => setTimeout(res, 5000)); // Wait 5s before retrying
       }
 
@@ -548,7 +625,6 @@ export default function Pools() {
         addLog(userErrorMessage);
       } else {
         addLog("⚠️ Transaction failed.");
-
       }
       dispatch({ type: "SET_LOADING", payload: false });
     } finally {
@@ -576,7 +652,9 @@ export default function Pools() {
             return txnDetails; // Return only successful transactions
           } else {
             // Transaction was found but failed
-            addLog(`Transaction failed with status: ${txnDetails.effects.status.status}`);
+            addLog(
+              `Transaction failed with status: ${txnDetails.effects.status.status}`
+            );
             return null;
           }
         }
@@ -609,7 +687,7 @@ export default function Pools() {
         <StepIndicator step={state.step} setStep={setStep} />
       </div>
 
-      <div className="flex-1 p-4 sm:p-8  shadow-lg overflow-y-auto max-h-full">
+      <div className="flex-1 p-1 sm:p-4  shadow-lg overflow-y-auto max-h-full">
         <h1 className="text-2xl font-bold mb-6">Create a New Pool</h1>
 
         <div className="flex items-center justify-center gap-4 p-4 bg-royalPurple  mb-4">
@@ -651,28 +729,26 @@ export default function Pools() {
               {/* Client-side only rendering for the dropdown */}
               {state.dropdownOpen && (
                 <div className="absolute left-0 mt-1 w-full  border border-slate-600 shadow-lg z-10 bg-[#14110c]">
-                  {predefinedCoins
-                    .filter((coin) => whitelistedCoins.includes(coin.typeName))
-                    .map((coin) => (
-                      <div
-                        key={coin.symbol}
-                        className="flex items-center px-3 py-2 hover: cursor-pointer "
-                        onClick={() =>
-                          dispatch({ type: "SET_COIN", payload: coin })
-                        }
-                      >
-                        <div className="relative w-6 h-6">
-                          <Image
-                            src={coin.image || "/default-coin.png"}
-                            alt={coin.symbol}
-                            fill
-                            sizes="24px"
-                            className="rounded-full object-cover"
-                          />
-                        </div>
-                        <span className="ml-2">{coin.symbol}</span>
+                  {predefinedCoins.map((coin) => (
+                    <div
+                      key={coin.symbol}
+                      className="flex items-center px-3 py-2 hover: cursor-pointer "
+                      onClick={() =>
+                        dispatch({ type: "SET_COIN", payload: coin })
+                      }
+                    >
+                      <div className="relative w-6 h-6">
+                        <Image
+                          src={coin.image || "/default-coin.png"}
+                          alt={coin.symbol}
+                          fill
+                          sizes="24px"
+                          className="rounded-full object-cover"
+                        />
                       </div>
-                    ))}
+                      <span className="ml-2">{coin.symbol}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -694,15 +770,15 @@ export default function Pools() {
             </div>
             {/* Continue Button */}
             <Button
-                onClick={fetchMetadata}
-                disabled={state.loading}
-                processing={state.loading}
-                variant={state.loading ? "disabled" : "primary"}
-                size="full"
-                rounded={false}
-                className="mt-6 transition"
+              onClick={fetchMetadata}
+              disabled={state.loading}
+              processing={state.loading}
+              variant={state.loading ? "disabled" : "primary"}
+              size="full"
+              rounded={false}
+              className="mt-6 transition"
             >
-                {state.loading ? "Fetching..." : "Continue"}
+              {state.loading ? "Fetching..." : "Continue"}
             </Button>
           </div>
         )}
@@ -711,7 +787,7 @@ export default function Pools() {
         {state.step === 2 &&
           state.dropdownCoinMetadata &&
           state.customCoinMetadata && (
-            <div className="flex flex-col flex-1 w-full overflow-y-auto pb-32">
+            <div className="w-full flex flex-col flex-1 overflow-y-auto pb-32">
               <h2 className="text-xl font-semibold mb-4">Set Pool Fees</h2>
 
               {/* Selected Coins Display */}
@@ -755,7 +831,7 @@ export default function Pools() {
               </div>
 
               {/* Fee Inputs - Scrollable */}
-              <div className="flex-1 overflow-y-auto max-h-[calc(100vh-50px)] space-y-4 px-4 sm:max-h-[calc(100vh-150px)]">
+              <div className="flex-1 overflow-y-auto space-y-4 px-1 sm:px-4">
                 {[
                   { field: "lpBuilderFee", label: "LP Builder Fee", max: 3 },
                   {
@@ -776,26 +852,181 @@ export default function Pools() {
                         {label} (0.00% - {max.toFixed(2)}%)
                       </strong>
                     </label>
-                    <input
-                      type="number"
-                      className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
-                      min="0"
-                      max={max}
-                      step="0.01"
-                      placeholder={`Enter fee (0.00 - ${max.toFixed(2)})`}
-                      value={state[field] === 0 ? "" : state[field]} // Show empty instead of zero
-                      onBlur={(e) => {
-                        if (e.target.value.trim() === "") {
-                          dispatch({ type: "SET_FEES", field, value: 0 }); // Default to 0 if empty
+
+                    <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
+                      <InputCurrency
+                        className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
+                        placeholder={`Enter fee (0.00 - ${max.toFixed(2)})`}
+                        value={state[field] === 0 ? "" : state[field]}
+                        min={0}
+                        max={max}
+                        maxLength={4}
+                        minLength={1}
+                        step={0.01}
+                        onChange={(e) => {
+                          console.log("onChange", e.target.value);
+                          if (
+                            e.target.value === "" ||
+                            Number(e.target.value) === 0 ||
+                            isNaN(Number(e.target.value))
+                          ) {
+                            console.log("dispatch1", e.target.value);
+                            dispatch({
+                              type: "SET_FEES",
+                              field,
+                              value:
+                                e.target.value === "0."
+                                  ? e.target.value
+                                  : e.target.value === ""
+                                  ? ""
+                                  : "0",
+                            });
+                            return;
+                          }
+                          console.log("dispatch2", e.target.value);
+                          const value =
+                            Number(e.target.value.replace(/,/g, "")) > max
+                              ? max.toString()
+                              : e.target.value.replace(/,/g, "");
+                          dispatch({
+                            type: "SET_FEES",
+                            field,
+                            value,
+                          });
+                        }}
+                      />
+                      <div className="flex items-center">
+                        <span className="text-slate-500">%</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center w-full mt-2 gap-1 sm:gap-2">
+                      <Button
+                        onClick={() =>
+                          dispatch({ type: "SET_FEES", field, value: "0" })
                         }
-                      }}
-                      onChange={(e) => {
-                        let value = parseFloat(e.target.value);
-                        if (isNaN(value) || value < 0) value = 0; // Prevent negatives
-                        if (value > max) value = max; // Enforce max limit
-                        dispatch({ type: "SET_FEES", field, value });
-                      }}
-                    />
+                        variant="secondary"
+                        size="xs"
+                        rounded={false}
+                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                          state[field] === "0"
+                            ? "bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:opacity-75"
+                            : "text-slate-300"
+                        }`}
+                      >
+                        0%
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          dispatch({ type: "SET_FEES", field, value: max / 4 })
+                        }
+                        variant="primary"
+                        size="xs"
+                        rounded={false}
+                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                           state[field] === max / 4
+                            ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
+                            : "text-slate-300"
+                        }`}
+
+                      >
+                        {(max / 4).toFixed(2)}%
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          dispatch({ type: "SET_FEES", field, value: max / 2 })
+                        }
+                        variant="primary"
+                        size="xs"
+                        rounded={false}
+                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                           state[field] === max / 2
+                            ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
+                            : "text-slate-300"
+                        }`}
+                      >
+                        {(max / 2).toFixed(2)}%
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          dispatch({
+                            type: "SET_FEES",
+                            field,
+                            value: (max / 4) * 3,
+                          })
+                        }
+                        variant="primary"
+                        size="xs"
+                        rounded={false}
+                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                           state[field] === (max / 4) * 3
+                            ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
+                            : "text-slate-300"
+                        }`}
+                      >
+                        {((max / 4) * 3).toFixed(2)}%
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          dispatch({ type: "SET_FEES", field, value: max })
+                        }
+                        variant="primary"
+                        size="xs"
+                        rounded={false}
+                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                           state[field] === max
+                            ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
+                            : "text-slate-300"
+                        }`}
+                      >
+                        {max}%
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          dispatch({
+                            type: "SET_FEES",
+                            field,
+                            value: Number(
+                              state[field] === 0 || state[field] < 0.01
+                                ? "0"
+                                : state[field] - 0.01
+                            ).toFixed(2),
+                          })
+                        }
+                        variant="secondary"
+                        size="xs"
+                        rounded={false}
+                        disabled={state[field] === "0"}
+                      >
+                        <MinusIcon className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (state[field] === max) return;
+                          console.log(
+                            state[field],
+                            state[field] === 0
+                              ? 0 + 0.01
+                              : (Number(state[field]) + 0.01).toFixed(2)
+                          );
+                          dispatch({
+                            type: "SET_FEES",
+                            field,
+                            value: Number(
+                              state[field] === 0
+                                ? 0 + 0.01
+                                : (Number(state[field]) + 0.01).toFixed(2)
+                            ),
+                          });
+                        }}
+                        variant="primary"
+                        size="xs"
+                        rounded={false}
+                        disabled={state[field] === max}
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
 
@@ -806,7 +1037,7 @@ export default function Pools() {
                   </label>
                   <input
                     type="text"
-                    className={`w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500 ${
+                    className={`w-full p-2 bg-[#14110c] placeholder-slate-500 ${
                       state.deployerRoyaltyWallet &&
                       !isValidSuiAddress(state.deployerRoyaltyWallet)
                         ? "border-red-500"
@@ -906,30 +1137,33 @@ export default function Pools() {
 
             {/* Fee Summary */}
             <div className="p-4 shadow-md mb-4">
-              <h3 className="text-lg font-semibold">Fees</h3>
+              <h2 className="text-xl font-semibold mb-2">Fees</h2>
               <ul className="space-y-2 ">
                 <li>
-                  <strong>LP Builder Fee:</strong>{" "}
-                  {state.lpBuilderFee.toFixed(2)}%
+                  <strong>LP Builder Fee:</strong> {state.lpBuilderFee}
                 </li>
                 <li>
-                  <strong>Buyback and Burn Fee:</strong>{" "}
-                  {state.buybackBurnFee.toFixed(2)}%
+                  <strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee}
                 </li>
                 <li>
                   <strong>Deployer Royalty Fee:</strong>{" "}
-                  {state.deployerRoyaltyFee.toFixed(2)}%
+                  {state.deployerRoyaltyFee}
                 </li>
                 <li>
-                  <strong>Rewards Fee:</strong> {state.rewardsFee.toFixed(2)}%
+                  <strong>Rewards Fee:</strong> {state.rewardsFee}
                 </li>
               </ul>
             </div>
 
             {/* Deployer Wallet */}
             <div className=" p-4  shadow-md mb-4">
-              <h2 className="text-lg font-semibold">Deployer Wallet</h2>
-              <p className="">{state.deployerRoyaltyWallet || "Not set"}</p>
+              <h2 className="text-lg font-semibold mb-2">Deployer Wallet</h2>
+              <ExplorerAccountLink account={state.deployerRoyaltyWallet}>
+                {state.deployerRoyaltyWallet?.slice(0, 6) +
+                  "..." +
+                  state.deployerRoyaltyWallet?.slice(-4)}{" "}
+                <ExternalLink className="ml-2 inline w-4 h-4" />
+              </ExplorerAccountLink>
             </div>
 
             {/* Initial Price Input */}
@@ -943,7 +1177,7 @@ export default function Pools() {
               {/* Toggle Button */}
               <div className="flex items-center justify-between p-2  border w-48 mb-2">
                 <button
-                  className={`px-3 py-1 rounded-md ${
+                  className={`px-3 py-1 w-full ${
                     state.initialPriceMode === "customPerDropdown"
                       ? "bg-gray-600"
                       : "button-primary"
@@ -958,7 +1192,7 @@ export default function Pools() {
                   {state.dropdownCoinMetadata?.symbol}
                 </button>
                 <button
-                  className={`px-3 py-1 rounded-md ${
+                  className={`px-3 py-1 w-full ${
                     state.initialPriceMode === "dropdownPerCustom"
                       ? "bg-gray-600"
                       : "button-primary"
@@ -976,21 +1210,38 @@ export default function Pools() {
 
               {/* Input Field */}
               <div className="relative">
-                <input
-                  type="number"
+                <InputCurrency
                   className="w-full p-3 border bg-[#000306] text-lg md:text-2xl font-semibold border-slate-600 outline-none"
                   placeholder="0"
-                  min="0"
-                  step="0.0001"
+                  min={0}
+                  step={0.0001}
                   value={state.initialPrice || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    console.log("onChange", e.target.value);
+                    if (
+                      e.target.value === "" ||
+                      Number(e.target.value) === 0 ||
+                      isNaN(Number(e.target.value))
+                    ) {
+                      console.log("dispatch1", e.target.value);
+                      dispatch({
+                        type: "SET_INITIAL_PRICE",
+                        payload: e.target.value.includes("0.")
+                          ? e.target.value
+                          : e.target.value === ""
+                          ? ""
+                          : "0",
+                      }); // Default to 0 if empty
+                      return;
+                    }
+                    console.log("dispatch2", e.target.value);
                     dispatch({
                       type: "SET_INITIAL_PRICE",
-                      payload: parseFloat(e.target.value) || 0,
-                    })
-                  }
+                      payload: e.target.value,
+                    });
+                  }}
                 />
-                <span className="absolute right-4 top-3 text-gray-500 text-lg">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg pr-4">
                   {state.initialPriceMode === "customPerDropdown"
                     ? `${state.customCoinMetadata?.symbol} per ${state.dropdownCoinMetadata?.symbol}`
                     : `${state.dropdownCoinMetadata?.symbol} per ${state.customCoinMetadata?.symbol}`}
@@ -1007,42 +1258,76 @@ export default function Pools() {
 
               {/* First Token */}
               <div className="relative">
-                <input
-                  type="number"
+                <InputCurrency
                   className="w-full p-3 border bg-[#000306] text-lg md:text-2xl font-semibold border-slate-600 outline-none"
                   placeholder="0"
-                  min="0"
-                  step="0.0001"
+                  min={0}
+                  step={0.0001}
                   value={state.depositDropdownCoin}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    console.log("onChange", e.target.value);
+                    if (
+                      e.target.value === "" ||
+                      Number(e.target.value) === 0 ||
+                      isNaN(Number(e.target.value))
+                    ) {
+                      console.log("dispatch1", e.target.value);
+                      dispatch({
+                        type: "SET_DEPOSIT_DROPDOWN",
+                        payload: e.target.value.includes("0.")
+                          ? e.target.value
+                          : e.target.value === ""
+                          ? ""
+                          : e.target.value.replace(/,/g, ""),
+                      }); // Default to 0 if empty
+                      return;
+                    }
+                    console.log("dispatch2", e.target.value);
                     dispatch({
                       type: "SET_DEPOSIT_DROPDOWN",
-                      payload: e.target.value,
-                    })
-                  }
+                      payload: e.target.value.replace(/,/g, ""),
+                    });
+                  }}
                 />
-                <span className="absolute right-4 top-3 text-gray-500 text-lg">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg pr-4">
                   {state.dropdownCoinMetadata?.symbol}
                 </span>
               </div>
 
               {/* Second Token */}
               <div className="relative">
-                <input
-                  type="number"
+                <InputCurrency
                   className="w-full p-3 border bg-[#000306] text-lg md:text-2xl font-semibold border-slate-600 outline-none"
                   placeholder="0"
-                  min="0"
-                  step="0.0001"
+                  min={0}
+                  step={0.0001}
                   value={state.depositCustomCoin}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    console.log("onChange", e.target.value);
+                    if (
+                      e.target.value === "" ||
+                      Number(e.target.value) === 0 ||
+                      isNaN(Number(e.target.value))
+                    ) {
+                      console.log("dispatch1", e.target.value);
+                      dispatch({
+                        type: "SET_DEPOSIT_CUSTOM",
+                        payload: e.target.value.includes("0.")
+                          ? e.target.value
+                          : e.target.value === ""
+                          ? ""
+                          : e.target.value.replace(/,/g, ""),
+                      }); // Default to 0 if empty
+                      return;
+                    }
+                    console.log("dispatch2", e.target.value);
                     dispatch({
                       type: "SET_DEPOSIT_CUSTOM",
-                      payload: e.target.value,
-                    })
-                  }
+                      payload: e.target.value.replace(/,/g, ""),
+                    });
+                  }}
                 />
-                <span className="absolute right-4 top-3 text-gray-500 text-lg">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg pr-4">
                   {state.customCoinMetadata?.symbol}
                 </span>
               </div>
@@ -1120,19 +1405,17 @@ export default function Pools() {
               <h2 className="text-lg font-semibold">Fees</h2>
               <ul className="space-y-2 ">
                 <li>
-                  <strong>LP Builder Fee:</strong>{" "}
-                  {state.lpBuilderFee.toFixed(2)}%
+                  <strong>LP Builder Fee:</strong> {state.lpBuilderFee}%
                 </li>
                 <li>
-                  <strong>Buyback and Burn Fee:</strong>{" "}
-                  {state.buybackBurnFee.toFixed(2)}%
+                  <strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee}%
                 </li>
                 <li>
                   <strong>Deployer Royalty Fee:</strong>{" "}
-                  {state.deployerRoyaltyFee.toFixed(2)}%
+                  {state.deployerRoyaltyFee}%
                 </li>
                 <li>
-                  <strong>Rewards Fee:</strong> {state.rewardsFee.toFixed(2)}%
+                  <strong>Rewards Fee:</strong> {state.rewardsFee}%
                 </li>
               </ul>
             </div>
@@ -1140,7 +1423,11 @@ export default function Pools() {
             {/* Deployer Wallet */}
             <div className=" p-4  shadow-md mb-4">
               <h2 className="text-lg font-semibold">Deployer Wallet</h2>
-              <p className="">{state.deployerRoyaltyWallet || "Not set"}</p>
+              <ExplorerAccountLink account={state.deployerRoyaltyWallet}>
+                {state.deployerRoyaltyWallet?.slice(0, 6) +
+                  "..." +
+                  state.deployerRoyaltyWallet?.slice(-4)} <ExternalLinkIcon className="ml-2 inline w-4 h-4" />
+              </ExplorerAccountLink>
             </div>
 
             {/* Initial Price & Deposit Amounts */}
@@ -1185,7 +1472,7 @@ export default function Pools() {
                 onClose={() => setIsModalOpen(false)}
                 logs={logs}
                 isProcessing={isProcessing}
-                digest={state.liquidityData?.txnDigest} 
+                digest={state.liquidityData?.txnDigest}
                 transactionProgress={state.transactionProgress}
               />
             </div>

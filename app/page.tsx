@@ -1,4 +1,5 @@
 "use client"; // ✅ Fix: Mark as Client Component
+import { Spinner } from "@components/Spinner";
 import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 
@@ -11,5 +12,5 @@ export default function Home() {
     setTimeout(() => setLoading(false), 300); // Prevent flicker
   }, []);
 
-  return loading ? <div className="text-white text-center mt-10">Loading...</div> : <App />;
+  return loading ? <div className="bg-[#000306] w-screen h-screen flex items-center justify-center text-white"><Spinner /></div> : <App />;
 }

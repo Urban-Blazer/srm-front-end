@@ -1,19 +1,20 @@
 "use client";
 import { FC } from "react";
-import { usePools } from "../hooks/usePools";
+import { usePoolsWithStats } from "../hooks/usePoolsWithStats";
 import { useAtomValue } from "jotai";
 import { emptyPairAtom } from "@data/store";
-import usePairStats from "../hooks/usePairStats";
 import { usePoolStats } from "../hooks/usePoolStats";
 import { Spinner } from "./Spinner";
 import Link from "next/link";
 import Avatar from "./Avatar";
 
-interface PoolsBarProps { }
+interface PoolsBarProps {
+    featuredCoinBSymbol?: string;
+}
 
-const PoolsBar: FC<PoolsBarProps> = () => {
+const PoolsBar: FC<PoolsBarProps> = ({ featuredCoinBSymbol }) => {
     const selectedPair = useAtomValue(emptyPairAtom);
-    const { data, isPending, error } = usePools();
+    const { pools, isPending, error } = usePoolsWithStats({ featuredCoinBSymbol });
 
 
     if (isPending) {
@@ -22,9 +23,19 @@ const PoolsBar: FC<PoolsBarProps> = () => {
         )
     }
 
+    if (!pools || pools.length === 0) {
+        return (
+            <div className="w-full text-center text-gray-400 py-4">
+                No pools available.
+            </div>
+        );
+    }
+
+    console.log({pools});
+
     return (
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-300">
-            {data?.map(pool => (
+            {pools.map(pool => (
                 <Link key={pool.poolId} href={`/swap/${pool.coinA.symbol}/${pool.coinB.symbol}`}>
                     <div className={`flex flex-col h-full p-4 text-white border border-${((selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '3' : '1')} border-[${(selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '#61F98A' : '#5E21A1'}] items-center gap-2 opacity-${((selectedPair?.poolId && selectedPair.poolId === pool.poolId) ? '100' : '75')}`}>
                         <div className={`flex items-center gap-2`}>
@@ -51,7 +62,7 @@ const PoolsBar: FC<PoolsBarProps> = () => {
                             </span>
                         </div>
                         <div className={`flex items-center gap-2`}>
-                            <RewardsDistributed poolId={pool.poolId} />
+                            <RewardsDistributed rewardsDistributed={pool.rewardsDistributed} />
 
                             <Avatar
                                 src={pool.coinA.image}
@@ -82,13 +93,12 @@ const PoolsBar: FC<PoolsBarProps> = () => {
 
 export default PoolsBar;
 
-const RewardsDistributed = ({ poolId }: { poolId: string }) => {
-    const { pairStats, isPending: isStats24hPending } = usePairStats(poolId, "24h");
+const RewardsDistributed = ({ rewardsDistributed }: { rewardsDistributed: number }) => {
     return (
         <>
             <span className="text-white text-sm"><b>Distributed 24h: </b></span>
             <span className="text-white text-sm">
-                {(Number(pairStats?.rewardsDistributed ?? 0) / 10 ** 9).toLocaleString(undefined, {
+                {(Number(rewardsDistributed) / 10 ** 9).toLocaleString(undefined, {
                     maximumFractionDigits: 2,
                     minimumFractionDigits: 2
                 })}

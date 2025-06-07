@@ -1,18 +1,18 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { SuiClient } from "@mysten/sui.js/client";
-import { GETTER_RPC, PACKAGE_ID, DEX_MODULE_NAME } from "../../config";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import Avatar from "@components/Avatar";
+import ExplorerObjectLink from "@components/ExplorerLink/ExplorerObjectLink";
 import TransactionModal from "@components/TransactionModal";
-import Image from "next/image";
+import Button from "@components/UI/Button";
 import {
   useCurrentAccount,
   useCurrentWallet,
   useSignAndExecuteTransaction,
 } from "@mysten/dapp-kit";
-import Avatar from "@components/Avatar";
-import Button from "@components/UI/Button";
-import ExplorerObjectLink from "@components/ExplorerLink/ExplorerObjectLink";
+import { SuiClient } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { useCallback, useEffect, useState } from "react";
+import { DEX_MODULE_NAME, GETTER_RPC, PACKAGE_ID } from "../../config";
+import useCoinPrice from "@/app/hooks/useCoinPrice";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -423,7 +423,6 @@ export default function MyPositions() {
       fetchLPTokens();
     }
   }, [account, fetchLPTokens]);
-
   return (
     <div className="flex flex-col items-center min-h-screen p-4 md:p-6 pt-20 pb-20 bg-[#000306]">
       <h1 className="pt-10 text-2xl md:text-3xl font-bold mb-4 text-center">
@@ -448,165 +447,23 @@ export default function MyPositions() {
           <div className="w-full max-w-3xl mt-6 px-2 md:px-0">
             {lpTokens.length > 0 ? (
               lpTokens.map((lp, index) => (
-                <div
+                <BurnLPPositionCard
                   key={index}
-                  className="bg-[#14110c] p-5  border border-slate-700 rounded-none shadow-md mb-4 flex flex-col items-center text-center space-y-3"
-                >
-                  {/* Coin Images & Symbols */}
-                  <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">
-                    <Avatar
-                      src={lp.poolData?.coinA_metadata?.image}
-                      alt="Coin A"
-                      className="w-8 md:w-10 h-8 md:h-10 rounded-full"
-                    />
-                    <span className="text-lg md:text-xl font-semibold">
-                      {lp.poolData?.coinA_metadata?.symbol}
-                    </span>
-                    <span className="text-lg">/</span>
-                    <Avatar
-                      src={lp.poolData?.coinB_metadata?.image}
-                      alt="Coin B"
-                      className="w-8 md:w-10 h-8 md:h-10 rounded-full"
-                    />
-                    <span className="text-lg md:text-xl font-semibold">
-                      {lp.poolData?.coinB_metadata?.symbol}
-                    </span>
-                  </div>
-
-                  {/* Pool Information */}
-                  <div className="w-full">
-                    <p className="text-sm">
-                      <span className="text-slate-400">Pool ID:</span>
-                      <ExplorerObjectLink
-                        objectId={lp.poolData?.poolId}
-                        className="text-slate-300 break-all ml-1"
-                      >
-                        {lp.poolData?.poolId.slice(0, 6) +
-                          "..." +
-                          lp.poolData?.poolId.slice(-6) || "N/A"}
-                      </ExplorerObjectLink>
-                    </p>
-                    <p className="text-sm text-slate-300 mb-1">
-                      <span className="text-slate-400">LP Object ID:</span>
-                      <ExplorerObjectLink
-                        objectId={lp.objectId}
-                        className="text-slate-300 break-all ml-1"
-                      >
-                        {lp.objectId.slice(0, 6) +
-                          "..." +
-                          lp.objectId.slice(-6) || "N/A"}
-                      </ExplorerObjectLink>
-                    </p>
-                    <p className="text-sm">
-                      <span className="text-slate-400">Balance:</span>{" "}
-                      {(Number(lp.balance) / 1e9).toFixed(4)} LP
-                    </p>
-                    <p className="text-sm">
-                      <span className="text-slate-400">Your Share:</span>{" "}
-                      {lp.poolData?.coinA_metadata?.symbol} /{" "}
-                      {lp.userCoinB.toFixed(4)}{" "}
-                      {lp.poolData?.coinB_metadata?.symbol}
-                    </p>
-                  </div>
-
-                  {/* 🚀 Action Buttons */}
-                  <div className="flex space-x-4 mt-3 w-full">
-                    {/* Burn Liquidity Button */}
-                    <Button
-                      variant="secondary"
-                      size="full"
-                      rounded={false}
-                      className="mt-6 transition"
-                      onClick={() => handleRemoveLiquidity(lp)}
-                    >
-                      🔥 BURN LP
-                    </Button>
-                  </div>
-
-                  {/* 🔽 Burn Liquidity UI (if enabled) */}
-                  {removeOptions[lp.objectId] && (
-                    <div className="mt-4 w-full p-3 md:p-4 text-sm md:text-base">
-                      <h2 className="text-lg font-semibold pb-4">
-                        <span className="text-slate-400">
-                          Burning LP will PERMANENTLY LOCK the Liquidity Coins
-                          in the pool. <br></br>THIS CAN NOT BE REVERSED!
-                        </span>
-                      </h2>
-
-                      {/* Percentage Quick Select Buttons */}
-                      <div className="flex space-x-2">
-                        {[25, 50, 75, 100].map((percent) => (
-                          <button
-                            key={percent}
-                            onClick={() => handlePercentageClick(lp, percent)}
-                            className="button-secondary px-3 py-1 text-sm transition"
-                          >
-                            {percent}%
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Input for LP Amount */}
-                      <input
-                        type="number"
-                        className="w-full p-1 md:p-2 border text-black mt-2 text-sm md:text-base"
-                        placeholder="Enter LP amount"
-                        value={burnAmount[lp.objectId] || ""}
-                        onChange={(e) =>
-                          setBurnAmount((prev) => ({
-                            ...prev,
-                            [lp.objectId]: e.target.value,
-                          }))
-                        }
-                      />
-
-                      {/* ✅ Checkbox for Agreement */}
-                      <div className="flex items-center mt-3">
-                        <input
-                          type="checkbox"
-                          id={`burn-agreement-${lp.objectId}`} // Unique ID for each LP
-                          className="mr-2 cursor-pointer"
-                          checked={burnAgreement[lp.objectId] || false}
-                          onChange={(e) =>
-                            setBurnAgreement((prev) => ({
-                              ...prev,
-                              [lp.objectId]: e.target.checked,
-                            }))
-                          }
-                        />
-                        <label
-                          htmlFor={`burn-agreement-${lp.objectId}`}
-                          className="text-base"
-                        >
-                          <span className="text-slate-400">
-                            I confirm that I understand that this action is
-                            irreversible and wish to proceed with permanently
-                            locking my Liquidity Coins.
-                          </span>
-                        </label>
-                      </div>
-
-                      {/* Confirm Button (Disabled Until Checkbox is Checked) */}
-                      <div className="flex space-x-4 mt-3 w-full">
-                        <Button
-                          variant="secondary"
-                          size="full"
-                          rounded={false}
-                          onClick={() => handleBurnLiquidityConfirm(lp)}
-                          disabled={!burnAgreement[lp.objectId]} // ✅ Disable when unchecked
-                        >
-                          🔥 CONFIRM BURN LP
-                        </Button>
-                      </div>
-                      <TransactionModal
-                        open={isModalOpen}
-                        onClose={() => setIsModalOpen(false)}
-                        logs={logs}
-                        isProcessing={isProcessing}
-                      />
-                    </div>
-                  )}
-                </div>
+                  lp={lp}
+                  handleRemoveLiquidity={handleRemoveLiquidity}
+                  removeOptions={removeOptions}
+                  handlePercentageClick={handlePercentageClick}
+                  burnAmount={burnAmount}
+                  setBurnAmount={setBurnAmount}
+                  burnAgreement={burnAgreement}
+                  setBurnAgreement={setBurnAgreement}
+                  isProcessing={isProcessing}
+                  setIsProcessing={setIsProcessing}
+                  logs={logs}
+                  handleBurnLiquidityConfirm={handleBurnLiquidityConfirm}
+                  isModalOpen={isModalOpen}
+                  setIsModalOpen={setIsModalOpen}
+                />
               ))
             ) : (
               <p className="text-center mt-4">
@@ -622,3 +479,200 @@ export default function MyPositions() {
     </div>
   );
 }
+
+const BurnLPPositionCard = ({
+  lp,
+  handleRemoveLiquidity,
+  removeOptions,
+  handlePercentageClick,
+  burnAmount,
+  setBurnAmount,
+  burnAgreement,
+  setBurnAgreement,
+  isProcessing,
+  logs,
+  handleBurnLiquidityConfirm,
+  isModalOpen,
+  setIsModalOpen,
+}: {
+  lp: any;
+  handleRemoveLiquidity: (lp: any) => void;
+  removeOptions: any;
+  handlePercentageClick: (lp: any, percent: number) => void;
+  burnAmount: any;
+  setBurnAmount: any;
+  burnAgreement: any;
+  setBurnAgreement: any;
+  isProcessing: boolean;
+  setIsProcessing: (isProcessing: boolean) => void;
+  logs: string[];
+  handleBurnLiquidityConfirm: (lp: any) => void;
+  isModalOpen: boolean;
+  setIsModalOpen: (isModalOpen: boolean) => void;
+}) => {
+  const { data: coinAPriceUSD } = useCoinPrice(
+    lp.poolData?.coinA_metadata?.symbol
+  );
+  const estimatedValue = coinAPriceUSD ? coinAPriceUSD * lp.userCoinA : 0;
+
+  return (
+    <div className="bg-[#14110c] p-5  border border-slate-700 rounded-none shadow-md mb-4 flex flex-col items-center text-center space-y-3">
+      {/* Coin Images & Symbols */}
+      <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">
+        <Avatar
+          src={lp.poolData?.coinA_metadata?.image}
+          alt="Coin A"
+          className="w-8 md:w-10 h-8 md:h-10 rounded-full"
+        />
+        <span className="text-lg md:text-xl font-semibold">
+          {lp.poolData?.coinA_metadata?.symbol}
+        </span>
+        <span className="text-lg">/</span>
+        <Avatar
+          src={lp.poolData?.coinB_metadata?.image}
+          alt="Coin B"
+          className="w-8 md:w-10 h-8 md:h-10 rounded-full"
+        />
+        <span className="text-lg md:text-xl font-semibold">
+          {lp.poolData?.coinB_metadata?.symbol}
+        </span>
+      </div>
+
+      {/* Pool Information */}
+      <div className="w-full">
+        <p className="text-sm">
+          <span className="text-slate-400">Pool ID:</span>
+          <ExplorerObjectLink
+            objectId={lp.poolData?.poolId}
+            className="text-slate-300 break-all ml-1"
+          >
+            {lp.poolData?.poolId.slice(0, 6) +
+              "..." +
+              lp.poolData?.poolId.slice(-6) || "N/A"}
+          </ExplorerObjectLink>
+        </p>
+        <p className="text-sm text-slate-300 mb-1">
+          <span className="text-slate-400">LP Object ID:</span>
+          <ExplorerObjectLink
+            objectId={lp.objectId}
+            className="text-slate-300 break-all ml-1"
+          >
+            {lp.objectId.slice(0, 6) + "..." + lp.objectId.slice(-6) || "N/A"}
+          </ExplorerObjectLink>
+        </p>
+        <p className="text-sm">
+          <span className="text-slate-400">Balance:</span>{" "}
+          {(Number(lp.balance) / 1e9).toFixed(4)} LP
+        </p>
+        <p className="text-sm text-slate-300 mb-1">
+          <span className="text-slate-400">Estimated Value:</span>
+          <span className="text-slate-300 ml-1">
+            {(estimatedValue * 2).toFixed(4)} USD
+          </span>
+        </p>
+        <p className="text-sm">
+          <span className="text-slate-400">Your Share:</span>{" "}
+          {lp.userCoinA.toFixed(4)} {lp.poolData?.coinA_metadata?.symbol} /{" "}
+          {lp.userCoinB.toFixed(4)} {lp.poolData?.coinB_metadata?.symbol}
+        </p>
+      </div>
+
+      {/* 🚀 Action Buttons */}
+      <div className="flex space-x-4 mt-3 w-full">
+        {/* Burn Liquidity Button */}
+        <Button
+          variant="secondary"
+          size="full"
+          rounded={false}
+          className="mt-6 transition"
+          onClick={() => handleRemoveLiquidity(lp)}
+        >
+          🔥 BURN LP
+        </Button>
+      </div>
+
+      {/* 🔽 Burn Liquidity UI (if enabled) */}
+      {removeOptions[lp.objectId] && (
+        <div className="mt-4 w-full p-3 md:p-4 text-sm md:text-base">
+          <h2 className="text-lg font-semibold pb-4">
+            <span className="text-slate-400">
+              Burning LP will PERMANENTLY LOCK the Liquidity Coins in the pool.{" "}
+              <br></br>THIS CAN NOT BE REVERSED!
+            </span>
+          </h2>
+
+          {/* Percentage Quick Select Buttons */}
+          <div className="flex space-x-2">
+            {[25, 50, 75, 100].map((percent) => (
+              <button
+                key={percent}
+                onClick={() => handlePercentageClick(lp, percent)}
+                className="button-secondary px-3 py-1 text-sm transition"
+              >
+                {percent}%
+              </button>
+            ))}
+          </div>
+
+          {/* Input for LP Amount */}
+          <input
+            type="number"
+            className="w-full p-1 md:p-2 border text-black mt-2 text-sm md:text-base"
+            placeholder="Enter LP amount"
+            value={burnAmount[lp.objectId] || ""}
+            onChange={(e) =>
+              setBurnAmount((prev: any) => ({
+                ...prev,
+                [lp.objectId]: e.target.value,
+              }))
+            }
+          />
+
+          {/* ✅ Checkbox for Agreement */}
+          <div className="flex items-center mt-3">
+            <input
+              type="checkbox"
+              id={`burn-agreement-${lp.objectId}`} // Unique ID for each LP
+              className="mr-2 cursor-pointer"
+              checked={burnAgreement[lp.objectId] || false}
+              onChange={(e) =>
+                setBurnAgreement((prev: any) => ({
+                  ...prev,
+                  [lp.objectId]: e.target.checked,
+                }))
+              }
+            />
+            <label
+              htmlFor={`burn-agreement-${lp.objectId}`}
+              className="text-base"
+            >
+              <span className="text-slate-400">
+                I confirm that I understand that this action is irreversible and
+                wish to proceed with permanently locking my Liquidity Coins.
+              </span>
+            </label>
+          </div>
+
+          {/* Confirm Button (Disabled Until Checkbox is Checked) */}
+          <div className="flex space-x-4 mt-3 w-full">
+            <Button
+              variant="secondary"
+              size="full"
+              rounded={false}
+              onClick={() => handleBurnLiquidityConfirm(lp)}
+              disabled={!burnAgreement[lp.objectId]} // ✅ Disable when unchecked
+            >
+              🔥 CONFIRM BURN LP
+            </Button>
+          </div>
+          <TransactionModal
+            open={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            logs={logs}
+            isProcessing={isProcessing}
+          />
+        </div>
+      )}
+    </div>
+  );
+};

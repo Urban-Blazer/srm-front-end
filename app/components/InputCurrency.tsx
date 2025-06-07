@@ -19,9 +19,15 @@ type InputCurrencyProps = Omit<
 > & {
   decimals?: number;
   onNumberChange?: (val: number) => void;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  value?: string;
 };
 function InputCurrency(
-  { onChange, decimals: _d, onNumberChange, ...rest }: InputCurrencyProps,
+  { onChange, decimals: _d, onNumberChange, minLength, maxLength, min, max, step, value, ...rest }: InputCurrencyProps,
   ref: ForwardedRef<HTMLInputElement>,
 ) {
   const _ref = useRef<HTMLInputElement>(null);
@@ -47,10 +53,10 @@ function InputCurrency(
 
       const raw = e.target.value.replace(/,/g, "").replace(/^0+/, "0");
       const formatted = formatWithCommas(raw);
-
+      console.log('_onChange',{formatted, raw, previousVal});
       selectionRef.current = {
-        start: (el.selectionStart ?? 0)+1,
-        end: (el.selectionEnd ?? 0)+1,
+        start: (el.selectionStart ?? 0),
+        end: (el.selectionEnd ?? 0),
       };
 
       if (raw === "" || inputRegex.test(escapeRegExp(raw))) {
@@ -73,11 +79,12 @@ function InputCurrency(
         onChange(e);
       }
     },
-    [onChange, previousVal, decimals],
+    [targetRef, onChange, decimals, previousVal],
   );
 
   const num = useMemo(() => {
     const _num = +val;
+    console.log('num', {_num, val}, Number.isNaN(_num));
     return Number.isNaN(_num) ? 0 : _num;
   }, [val]);
 
@@ -86,10 +93,11 @@ function InputCurrency(
   }, [num, onNumberChange]);
 
   useEffect(() => {
-    if (typeof rest.value !== "string") return;
-    const raw = rest.value.replace(/,/g, "") || "";
+    console.log('useEffect', value, typeof value);
+    if (typeof value !== "string") return;
+    const raw = value.replace(/,/g, "") || "";
     setPreviousVal(raw);
-  }, [rest.value]);
+  }, [value]);
 
   useLayoutEffect(() => {
     const el = targetRef.current;
@@ -97,11 +105,12 @@ function InputCurrency(
 
     const { start, end } = selectionRef.current;
     el.setSelectionRange(start, end);
-  }, [rest.value]);
+  }, [value, targetRef]);
 
   return (
     <input
       {...rest}
+      value={value}
       ref={targetRef}
       // universal input options
       inputMode="decimal"
@@ -110,8 +119,11 @@ function InputCurrency(
       // text-specific options
       type="text"
       pattern="^[0-9]*[.,]?[0-9]*$"
-      minLength={1}
-      maxLength={79}
+      minLength={minLength}
+      maxLength={maxLength}
+      min={min}
+      max={max}
+      step={step}
       spellCheck="false"
       onChange={_onChange}
     />

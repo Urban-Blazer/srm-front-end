@@ -103,9 +103,8 @@ function reducer(state: any, action: any) {
         depositCustomCoin: "",
       };
     case "SET_DEPOSIT_DROPDOWN":
-      console.log("SET_DEPOSIT_DROPDOWN", action.payload, state.initialPrice);
       const depositCustomCoin = state.initialPrice > 0 ? 
-        (state.initialPriceMode === "customPerDropdown" ? (parseFloat(action.payload) * state.initialPrice).toFixed(6) : (parseFloat(action.payload) / state.initialPrice).toFixed(6)) : 
+        (state.initialPriceMode === "dropdownPerCustom" ? (parseFloat(action.payload) / parseFloat(state.initialPrice)).toFixed(6) : (parseFloat(action.payload) * parseFloat(state.initialPrice)).toFixed(6)) : 
         "";
       return {
         ...state,
@@ -113,9 +112,8 @@ function reducer(state: any, action: any) {
         depositCustomCoin: depositCustomCoin,
       };
     case "SET_DEPOSIT_CUSTOM":
-      console.log("SET_DEPOSIT_CUSTOM", action.payload);
       const depositDropdownCoin = state.initialPrice > 0 ? 
-        (state.initialPriceMode === "customPerDropdown" ? (parseFloat(action.payload) * state.initialPrice).toFixed(6) : (parseFloat(action.payload) / state.initialPrice).toFixed(6)) : 
+        (state.initialPriceMode === "customPerDropdown" ? (parseFloat(action.payload) / parseFloat(state.initialPrice)).toFixed(6) : (parseFloat(action.payload) * parseFloat(state.initialPrice)).toFixed(6)) : 
         "";
       return {
         ...state,

@@ -193,7 +193,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
                         </Chart>
                     </div>
                     <div className="flex flex-col gap-6 col-span-12">
-                        <PoolsBar featuredCoinBSymbol="WAGMI" />
+                        <PoolsBar featuredCoinBSymbol={'TKI'} />
                     </div>
                     <div className="flex flex-col gap-6 col-span-12 text-white">
                         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

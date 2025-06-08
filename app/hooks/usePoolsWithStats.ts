@@ -88,10 +88,13 @@ export function usePoolsWithStats({
 
     // Find SRM and featured pools
     poolsWithStats.forEach(pool => {
+      console.log({pool, featuredCoinBSymbol});
       if (pool.coinB.symbol === "SRM") {
         srmPool = pool;
       } else if (featuredCoinBSymbol && pool.coinB.symbol === featuredCoinBSymbol) {
         featuredPool = pool;
+      } else if (pool.poolId === "0xf6f85ac36b35edac1016beb9c67ec7051126fc24677b55c2892cea1585726a76") {
+        // do nothing    
       } else {
         otherPools.push(pool);
       }

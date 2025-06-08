@@ -1,28 +1,32 @@
 "use client";
+import { useReducer, useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import StepIndicator from "@components/AddLiquidityStepIndicator";
+import { predefinedCoins as predefCoins } from "@data/coins";
+import { SuiClient } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import {
+  GETTER_RPC,
+  PACKAGE_ID,
+  DEX_MODULE_NAME,
+} from "../../config";
+import TransactionModal from "@components/TransactionModal";
+import { useSearchParams } from "next/navigation";
+import useGetPoolCoins from "@/app/hooks/useGetPoolCoins";
 import useConvertToU64 from "@/app/hooks/useConvertToU64";
 import useGetCoinInput from "@/app/hooks/useGetCoinInput";
-import useGetPoolCoins from "@/app/hooks/useGetPoolCoins";
-import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
-import StepIndicator from "@components/AddLiquidityStepIndicator";
-import Avatar from "@components/Avatar";
-import TransactionModal from "@components/TransactionModal";
-import Button from "@components/UI/Button";
-import { predefinedCoins as predefCoins } from "@data/coins";
 import {
   useCurrentAccount,
   useCurrentWallet,
   useSignAndExecuteTransaction,
 } from "@mysten/dapp-kit";
-import { SuiClient } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useReducer, useState } from "react";
-import {
-  DEX_MODULE_NAME,
-  GETTER_RPC,
-  PACKAGE_ID,
-} from "../../config";
+import Button from "@components/UI/Button";
+import Avatar from "@components/Avatar";
+import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
+import SearchBarAddLP from "@components/SearchBarAddLP";
+import { PoolSearchResult } from "@/app/types";
+import InputCurrency from "@components/InputCurrency";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -412,6 +416,13 @@ export default function AddLiquidity() {
         console.error("❌ Failed to load coin data", { coinError });
         addLog("❌ Failed to load coin data. Please try again.");
         dispatch({ type: "SET_LOADING", payload: false });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -440,6 +451,13 @@ export default function AddLiquidity() {
       ) {
         addLog("⚠️ Insufficient coin balance in wallet.");
         dispatch({ type: "SET_LOADING", payload: false });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -504,6 +522,13 @@ export default function AddLiquidity() {
         });
       } catch (error: any) {
         addLog(`❌ Error: ${error.message}`);
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
 
         dispatch({ type: "SET_LOADING", payload: false });
         return;
@@ -522,8 +547,8 @@ export default function AddLiquidity() {
               executeResponse = result;
               resolve();
             },
-            onError: (error) => {
-              addLog(`⚠️ Transaction failed: ${error.message}`);
+            onError: (error: any) => {
+              console.error("Transaction execution failed:", error);
               dispatch({ type: "SET_LOADING", payload: false });
               dispatch({
                 type: "SET_TRANSACTION_PROGRESS",
@@ -547,6 +572,13 @@ export default function AddLiquidity() {
       if (!txnDigest) {
         addLog("⚠️ Transaction failed.");
         dispatch({ type: "SET_LOADING", payload: false });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -557,6 +589,13 @@ export default function AddLiquidity() {
       if (!txnDetails) {
         addLog("⚠️ Transaction not successful. Please retry.");
         dispatch({ type: "SET_LOADING", payload: false });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -578,6 +617,13 @@ export default function AddLiquidity() {
       if (!liquidityEvent) {
         addLog("⚠️ Liquidity addition event missing. Please verify manually.");
         dispatch({ type: "SET_LOADING", payload: false });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -586,6 +632,13 @@ export default function AddLiquidity() {
       if (!liquidityData) {
         addLog("⚠️ Event detected but no data available.");
         dispatch({ type: "SET_LOADING", payload: false });
+        dispatch({
+          type: "SET_TRANSACTION_PROGRESS",
+          payload: {
+            image: "/images/txn_failed.png",
+            text: "Transaction Failed",
+          },
+        });
         return;
       }
 
@@ -608,12 +661,16 @@ export default function AddLiquidity() {
       addLog("✅ Liquidity Successfully Added!");
       setIsProcessing(false); // ✅ Ensure modal does not close early
       dispatch({ type: "SET_STEP", payload: 3 });
-    } catch (error) {
-      addLog(
-        `⚠️ Transaction failed: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+    } catch (error: any) {
+      console.error("Transaction execution failed:", error);
+      addLog(`⚠️ Transaction failed..: ${error}`);
+      dispatch({
+        type: "SET_TRANSACTION_PROGRESS",
+        payload: {
+          image: "/images/txn_failed.png",
+          text: "Transaction Failed",
+        },
+      });
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
       setIsProcessing(false); // ✅ Ensure modal does not close early
@@ -661,6 +718,26 @@ export default function AddLiquidity() {
     return null;
   };
 
+  const handleSelectPair = async (pair: PoolSearchResult) => {
+    dispatch({ type: "SET_POOL_DATA", payload: pair });
+    dispatch({
+      type: "SET_METADATA",
+      payload: {
+        dropdown: pair.coinA,
+        custom: {
+          ...pair.coinB,
+          typeName: pair.coinB.typeName,
+        },
+      },
+    });
+    await fetchPoolStats(pair.poolId);
+
+    if (!state.poolStats) {
+      await fetchPoolStats(pair.poolId); // Retry once
+    }
+    dispatch({ type: "SET_STEP", payload: 2 });
+  };
+
   return (
     <div className="min-h-screen overflow-y-auto flex flex-col md:flex-row bg-[#000306] p-4 md:p-6 pb-20">
       <div className="hidden md:block">
@@ -671,160 +748,13 @@ export default function AddLiquidity() {
       </div>
 
       <div className="flex-1 p-4 md:p-8">
-        <h1 className="text-2xl font-bold mb-6">Create Liquidity</h1>
+        <h1 className="text-2xl font-bold mb-6">Add Liquidity</h1>
 
         {/* Step 1: Select Coins */}
         {state.step === 1 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Select Coin Pair</h2>
-
-            {/* Dropdown for Predefined Coins */}
-            <div className="mb-4 relative">
-              <label className="block text-slate-300 mb-2">
-                <strong>Select First Coin:</strong>
-              </label>
-              <button
-                className="rounded-none w-full flex items-center justify-between p-2 border border-slate-600 bg-[#14110c]"
-                onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
-              >
-                <div className="flex items-center space-x-2">
-                  <Avatar
-                    src={state.selectedCoin?.image}
-                    alt={state.selectedCoin?.symbol}
-                    className="w-6 h-6 rounded-full"
-                  />
-                  <span>{state.selectedCoin?.symbol}</span>
-                </div>
-                <span className="text-slate-400">▼</span>
-              </button>
-
-              {state.dropdownOpen && (
-                <div className="absolute left-0 mt-1 w-full bg-[#14110c] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
-                  {predefinedCoins.filter((coin) => coin.lists?.includes("strict")).map((coin) => (
-                    <div
-                      key={coin.symbol}
-                      className="flex items-center px-3 py-2 hover:bg-slate-700 cursor-pointer"
-                      onClick={() =>
-                        dispatch({ type: "SET_COIN", payload: coin })
-                      }
-                    >
-                      <div className="flex items-center space-x-2">
-                        <Avatar
-                          src={coin.image || "/default-coin.png"}
-                          alt={coin.symbol}
-                          className="w-6 h-6 rounded-full"
-                        />
-                        <span className="ml-2">{coin.symbol}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Input field for custom coin */}
-            <div className="mb-4">
-              <label className="block text-slate-300">
-                <strong>Enter Second Coin TypeName:</strong>
-              </label>
-              <input
-                type="text"
-                className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
-                placeholder="Enter coin type (e.g., 0x2::sui::SUI)"
-                value={state.customCoin}
-                onChange={(e) =>
-                  dispatch({ type: "SET_CUSTOM_COIN", payload: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Display Pool Info */}
-            <div className="mt-6 p-4 border border-slate-600 bg-[#000306] overflow-hidden">
-              {!state.poolChecked ? (
-                <p className="text-[#61F98A]">
-                  <strong>Set your coin pair and click Get Pool Info</strong>
-                </p>
-              ) : state.poolData ? (
-                <div>
-                  <p className="text-slate-300 text-m font-semibold break-all">
-                    Pool ID:{" "}
-                    <span className="text-[#61F98A] text-m">
-                      {state.poolData.poolId}
-                    </span>
-                  </p>
-                  <div className="flex items-center space-x-4 mt-2">
-                    {/* CoinA */}
-                    <div className="flex items-center space-x-2">
-                      <Avatar
-                        src={state.selectedCoin.image || "/default-coin.png"}
-                        alt={state.selectedCoin.symbol}
-                        className="w-6 h-6 rounded-full"
-                      />
-                      <span className="text-slate-300 text-m font-medium">
-                        <strong>{state.selectedCoin.symbol}</strong>
-                      </span>
-                    </div>
-                    <span className="text-slate-300 text-m font-medium">
-                      <strong>/</strong>
-                    </span>
-                    {/* CoinB */}
-                    <div className="flex items-center space-x-2">
-                      <Avatar
-                        src={
-                          state.customCoinMetadata?.image || "/default-coin.png"
-                        }
-                        alt={state.customCoinMetadata?.symbol || "Token"}
-                        className="w-6 h-6 rounded-full"
-                      />
-                      <span className="text-slate-300 text-m font-medium">
-                        <strong>
-                          {state.customCoinMetadata?.symbol
-                            ? state.customCoinMetadata.symbol
-                            : "Unknown"}
-                        </strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-[#61F98A]">
-                  Pool not found. Create a new one.
-                </p>
-              )}
-            </div>
-            <div className="sticky bottom-0 pt-4 shadow-lg w-full flex flex-col sm:flex-row gap-2">
-              <Button
-                variant="primary"
-                size="full"
-                onClick={fetchPoolData}
-                disabled={state.loading}
-              >
-                {state.loading ? "Fetching..." : "Get Pool Info"}
-              </Button>
-
-              {/* Navigation Button */}
-              <Button
-                variant="secondary"
-                size="full"
-                onClick={async () => {
-                  if (state.poolData) {
-                    await fetchPoolStats(state.poolData.poolId);
-
-                    if (!state.poolStats) {
-                      await fetchPoolStats(state.poolData.poolId); // Retry once
-                    }
-
-                    dispatch({ type: "SET_STEP", payload: 2 });
-                  } else {
-                    // ✅ Correctly placed else statement
-                    router.push("/pools/create-pool");
-                  }
-                }}
-                disabled={!state.poolChecked}
-              >
-                {state.poolData ? "Next" : "Create Pool"}
-              </Button>
-            </div>
+            <SearchBarAddLP onSelectPair={handleSelectPair} />
           </div>
         )}
 
@@ -909,18 +839,39 @@ export default function AddLiquidity() {
                 <h2 className="text-lg font-semibold text-slate-300">
                   Slippage Tolerance
                 </h2>
-                <div className="flex items-center space-x-2 mt-2">
-                  <input
-                    type="number"
-                    className="bg-[#14110c] text-lg md:text-2xl font-semibold p-2 w-full md:w-20 border border-slate-600 outline-none"
+                <div className="flex items-center p-3 bg-[#14110c] border border-slate-600 mb-2">
+                  <InputCurrency
+                    className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
                     placeholder="0.5"
                     value={state.slippageTolerance}
                     onChange={(e) => {
-                      let newSlippage = parseFloat(e.target.value);
-                      if (isNaN(newSlippage) || newSlippage < 0)
-                        newSlippage = 0;
-                      if (newSlippage > 5) newSlippage = 5; // Limit slippage between 0% and 5%
-                      dispatch({ type: "SET_SLIPPAGE", payload: newSlippage });
+                      console.log("onChange", e.target.value);
+                      if (
+                        e.target.value === "" ||
+                        Number(e.target.value) === 0 ||
+                        isNaN(Number(e.target.value))
+                      ) {
+                        console.log("dispatch1", e.target.value);
+                        dispatch({
+                          type: "SET_SLIPPAGE",
+                          payload:
+                            e.target.value === "0."
+                              ? e.target.value
+                              : e.target.value === ""
+                              ? ""
+                              : "0",
+                        });
+
+                      }
+                      console.log("dispatch2", e.target.value);
+                      const value =
+                        Number(e.target.value.replace(/,/g, "")) > 5
+                          ? "5"
+                          : e.target.value.replace(/,/g, "");
+                      dispatch({
+                        type: "SET_SLIPPAGE",
+                        payload: value,
+                      });
                     }}
                   />
                   <span className="text-lg font-medium">%</span>
@@ -937,13 +888,11 @@ export default function AddLiquidity() {
                 </h2>
 
                 <div className="flex items-center p-3 bg-[#14110c] border border-slate-600 mb-2">
-                  <Image
+                  <Avatar
                     src={
                       state.dropdownCoinMetadata?.image || "/default-coin.png"
                     }
                     alt={state.dropdownCoinMetadata?.symbol || "Coin A"}
-                    width={32}
-                    height={32}
                     className="w-8 h-8 rounded-full mr-2"
                   />
                   <span className="text-slate-300 font-medium mr-2">
@@ -951,21 +900,36 @@ export default function AddLiquidity() {
                       {state.dropdownCoinMetadata?.symbol || "Coin A"}
                     </strong>
                   </span>
-                  <input
-                    type="number"
-                    className="bg-transparent text-2xl font-semibold w-full outline-none"
+                  <InputCurrency
+                    className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
                     placeholder="0"
                     value={state.depositDropdownCoin}
-                    onChange={(e) => handleCoinAChange(e.target.value)}
+                    onChange={(e) => {
+                      console.log("onChange", e.target.value);
+                      if (
+                        e.target.value === "" ||
+                        Number(e.target.value) === 0 ||
+                        isNaN(Number(e.target.value))
+                      ) {
+                        handleCoinAChange(
+                          e.target.value === "0."
+                                  ? e.target.value
+                                  : e.target.value === ""
+                                  ? ""
+                                  : e.target.value.replace(/,/g, ""),
+                        )
+                        return;
+                      }
+                      const value = e.target.value.replace(/,/g, "");
+                      handleCoinAChange(value)
+                    }}
                   />
                 </div>
 
                 <div className="flex items-center p-3 bg-[#14110c] border border-slate-600 mb-2">
-                  <Image
+                  <Avatar
                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                     alt={state.customCoinMetadata?.symbol || "Coin B"}
-                    width={32}
-                    height={32}
                     className="w-8 h-8 rounded-full mr-2"
                   />
                   <span className="text-slate-300 font-medium mr-2">
@@ -973,12 +937,29 @@ export default function AddLiquidity() {
                       {state.customCoinMetadata?.symbol || "Coin B"}
                     </strong>
                   </span>
-                  <input
-                    type="number"
-                    className="bg-transparent text-2xl font-semibold w-full outline-none"
+                  <InputCurrency
+                    className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
                     placeholder="0"
                     value={state.depositCustomCoin}
-                    onChange={(e) => handleCoinBChange(e.target.value)}
+                    onChange={(e) => {
+                      console.log("onChange", e.target.value);
+                      if (
+                        e.target.value === "" ||
+                        Number(e.target.value) === 0 ||
+                        isNaN(Number(e.target.value))
+                      ) {
+                        handleCoinBChange(
+                          e.target.value === "0."
+                                  ? e.target.value
+                                  : e.target.value === ""
+                                  ? ""
+                                  : e.target.value.replace(/,/g, ""),
+                        )
+                        return;
+                      }
+                      const value = e.target.value.replace(/,/g, "");
+                      handleCoinBChange(value)
+                    }}
                   />
                 </div>
               </div>

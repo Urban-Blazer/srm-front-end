@@ -556,6 +556,7 @@ export default function NavBar() {
               {activeDropdown === menu.id && (
                 <Dropdown
                   menu={menu}
+                  onLinkClick={closeDropdown}
                   onMouseEnter={() => {
                     if (hoverTimeout) clearTimeout(hoverTimeout);
                   }}

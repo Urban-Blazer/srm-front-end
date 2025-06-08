@@ -1,9 +1,12 @@
+/* eslint-disable @next/next/no-img-element */
 import tw from "@/app/utils/twmerge";
 
 import { memo, useEffect, useMemo, useState } from "react";
 type Props = JSX.IntrinsicElements["span"] &
-  Partial<Pick<HTMLImageElement, "src" | "alt">>;
-function Avatar({ src, alt, ...props }: Props) {
+  Partial<Pick<HTMLImageElement, "src" | "alt">> & {
+    imageClassName?: string;
+  };
+function Avatar({ src, alt, imageClassName, ...props }: Props) {
   const [error, setError] = useState(false);
   const className = useMemo(() => {
     return tw(
@@ -20,6 +23,7 @@ function Avatar({ src, alt, ...props }: Props) {
         <img
           src={src}
           alt={alt || ""}
+          className={tw("w-full h-full", className)}
           style={{ objectFit: "cover" }}
           onError={() => setError(true)}
         />

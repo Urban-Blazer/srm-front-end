@@ -28,6 +28,8 @@ import {
   LOCK_ID,
   PACKAGE_ID,
 } from "../../config";
+import { CoinMeta } from "@/app/types";
+import { CoinMetadata } from "@mysten/sui/client";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -197,13 +199,22 @@ export default function Pools() {
     dispatch({ type: "SET_LOADING", payload: true });
 
     try {
-      // 🔍 Fetch metadata for dropdown coin and custom coin
-      const [dropdownMetadata, customMetadata] = await Promise.all([
-        provider.getCoinMetadata({ coinType: state.selectedCoin?.typeName }),
-        provider.getCoinMetadata({ coinType: state.customCoin.trim() }),
-      ]);
 
-      // 🔥 Ensure typeName exists in metadata before setting state
+      const coinA = predefinedCoins.find((coin) => coin.typeName === state.selectedCoin?.typeName);
+      let dropdownMetadata: CoinMeta | CoinMetadata | undefined | null = coinA;
+      const coinB = predefinedCoins.find((coin) => coin.typeName === state.customCoin.trim());
+      let customMetadata: CoinMeta | CoinMetadata | undefined | null = coinB;
+      if(!dropdownMetadata) {
+        dropdownMetadata = await provider.getCoinMetadata({ coinType: state.selectedCoin?.typeName });
+        (dropdownMetadata as any)["image"] = dropdownMetadata?.iconUrl;
+        (dropdownMetadata as any)["iconUrl"] = dropdownMetadata?.iconUrl;
+      }
+      if(!customMetadata) {
+        customMetadata = await provider.getCoinMetadata({ coinType: state.customCoin.trim() });
+        (customMetadata as any)["image"] = customMetadata?.iconUrl;
+        (customMetadata as any)["iconUrl"] = customMetadata?.iconUrl;
+      }
+
       if (dropdownMetadata && customMetadata) {
         dispatch({
           type: "SET_METADATA",
@@ -213,7 +224,7 @@ export default function Pools() {
               typeName: state.selectedCoin?.typeName,
               iconUrl: state.selectedCoin?.image,
             },
-            custom: { ...customMetadata, typeName: state.customCoin.trim() },
+            custom: { ...customMetadata, iconUrl: (customMetadata as any).image, typeName: state.customCoin.trim() },
           },
         });
 

@@ -1,33 +1,33 @@
 "use client";
-import { useReducer, useEffect, useState, useMemo } from "react";
-import StepIndicator from "@components/CreatePoolStepIndicator";
-import { SuiClient } from "@mysten/sui.js/client";
-import { predefinedCoins, whitelistedCoins } from "@data/coins";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import {
-  GETTER_RPC,
-  PACKAGE_ID,
-  DEX_MODULE_NAME,
-  FACTORY_ID,
-  LOCK_ID,
-} from "../../config";
-import {
-  useCurrentWallet,
-  useCurrentAccount,
-  useSignAndExecuteTransaction,
-} from "@mysten/dapp-kit";
-import TransactionModal from "@components/TransactionModal";
-import Image from "next/image";
-import CopyIcon from "@svg/copy-icon.svg";
-import useGetPoolCoins from "@/app/hooks/useGetPoolCoins";
 import useConvertToU64 from "@/app/hooks/useConvertToU64";
 import useGetCoinInput from "@/app/hooks/useGetCoinInput";
-import { isValidSuiAddress } from "@mysten/sui/utils";
-import Button from "@components/UI/Button";
+import useGetPoolCoins from "@/app/hooks/useGetPoolCoins";
 import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
-import { ExternalLink, ExternalLinkIcon, MinusIcon, PlusIcon } from "lucide-react";
+import Avatar from "@components/Avatar";
+import StepIndicator from "@components/CreatePoolStepIndicator";
 import ExplorerAccountLink from "@components/ExplorerLink/ExplorerAccountLink";
 import InputCurrency from "@components/InputCurrency";
+import TransactionModal from "@components/TransactionModal";
+import Button from "@components/UI/Button";
+import { predefinedCoins } from "@data/coins";
+import {
+  useCurrentAccount,
+  useCurrentWallet,
+  useSignAndExecuteTransaction,
+} from "@mysten/dapp-kit";
+import { SuiClient } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { isValidSuiAddress } from "@mysten/sui/utils";
+import CopyIcon from "@svg/copy-icon.svg";
+import { ExternalLink, ExternalLinkIcon, MinusIcon, PlusIcon } from "lucide-react";
+import { useEffect, useMemo, useReducer, useState } from "react";
+import {
+  DEX_MODULE_NAME,
+  FACTORY_ID,
+  GETTER_RPC,
+  LOCK_ID,
+  PACKAGE_ID,
+} from "../../config";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -712,12 +712,10 @@ export default function Pools() {
               >
                 <div className="flex items-center space-x-2">
                   <div className="relative w-6 h-6 sm:w-8 sm:h-8">
-                    <Image
+                    <Avatar
                       src={state.selectedCoin.image}
                       alt={state.selectedCoin.symbol}
-                      fill
-                      sizes="(max-width: 768px) 24px, 32px"
-                      className="rounded-full object-cover"
+                      className="rounded-full"
                     />
                   </div>
                   <span>{state.selectedCoin.symbol}</span>
@@ -737,12 +735,10 @@ export default function Pools() {
                       }
                     >
                       <div className="relative w-6 h-6">
-                        <Image
+                        <Avatar
                           src={coin.image || "/default-coin.png"}
                           alt={coin.symbol}
-                          fill
-                          sizes="24px"
-                          className="rounded-full object-cover"
+                          className="w-5 h-5 aspect-square rounded-full token-icon"
                         />
                       </div>
                       <span className="ml-2">{coin.symbol}</span>
@@ -793,14 +789,12 @@ export default function Pools() {
               <div className="flex items-center justify-center gap-4 p-4 mb-4">
                 <div className="flex items-center space-x-2">
                   <div className="relative w-10 h-10">
-                    <Image
+                    <Avatar
                       src={
                         state.dropdownCoinMetadata.iconUrl ||
                         "/default-coin.png"
                       }
                       alt={state.dropdownCoinMetadata.symbol}
-                      fill
-                      sizes="40px"
                       className="rounded-full object-cover"
                     />
                   </div>
@@ -813,13 +807,11 @@ export default function Pools() {
 
                 <div className="flex items-center space-x-2">
                   <div className="relative w-10 h-10">
-                    <Image
+                    <Avatar
                       src={
                         state.customCoinMetadata.iconUrl || "/default-coin.png"
                       }
                       alt={state.customCoinMetadata.symbol}
-                      fill
-                      sizes="40px"
                       className="rounded-full object-cover"
                     />
                   </div>
@@ -1099,13 +1091,11 @@ export default function Pools() {
             <div className="flex items-center justify-center gap-4 p-4 mb-4">
               <div className="flex items-center space-x-2">
                 <div className="relative w-10 h-10">
-                  <Image
+                  <Avatar
                     src={
                       state.dropdownCoinMetadata?.iconUrl || "/default-coin.png"
                     }
                     alt={state.dropdownCoinMetadata?.symbol || "Token"}
-                    fill
-                    sizes="40px"
                     className="rounded-full object-cover"
                   />
                 </div>
@@ -1118,13 +1108,11 @@ export default function Pools() {
 
               <div className="flex items-center space-x-2">
                 <div className="relative w-10 h-10">
-                  <Image
+                  <Avatar
                     src={
                       state.customCoinMetadata?.iconUrl || "/default-coin.png"
                     }
                     alt={state.customCoinMetadata?.symbol || "Token"}
-                    fill
-                    sizes="40px"
                     className="rounded-full object-cover"
                   />
                 </div>
@@ -1139,17 +1127,17 @@ export default function Pools() {
               <h2 className="text-xl font-semibold mb-2">Fees</h2>
               <ul className="space-y-2 ">
                 <li>
-                  <strong>LP Builder Fee:</strong> {state.lpBuilderFee}
+                  <strong>LP Builder Fee:</strong> {state.lpBuilderFee}%
                 </li>
                 <li>
-                  <strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee}
+                  <strong>Buyback and Burn Fee:</strong> {state.buybackBurnFee}%
                 </li>
                 <li>
                   <strong>Deployer Royalty Fee:</strong>{" "}
-                  {state.deployerRoyaltyFee}
+                  {state.deployerRoyaltyFee}%
                 </li>
                 <li>
-                  <strong>Rewards Fee:</strong> {state.rewardsFee}
+                  <strong>Rewards Fee:</strong> {state.rewardsFee}%
                 </li>
               </ul>
             </div>
@@ -1364,14 +1352,12 @@ export default function Pools() {
               <div className="flex items-center justify-center gap-4 p-4  ">
                 <div className="flex items-center space-x-2">
                   <div className="relative w-10 h-10">
-                    <Image
+                    <Avatar
                       src={
                         state.dropdownCoinMetadata?.iconUrl ||
                         "/default-coin.png"
                       }
                       alt={state.dropdownCoinMetadata?.symbol || "Token"}
-                      fill
-                      sizes="40px"
                       className="rounded-full object-cover"
                     />
                   </div>
@@ -1382,13 +1368,11 @@ export default function Pools() {
                 <span className="text-2xl font-bold">/</span>
                 <div className="flex items-center space-x-2">
                   <div className="relative w-10 h-10">
-                    <Image
+                    <Avatar
                       src={
                         state.customCoinMetadata?.iconUrl || "/default-coin.png"
                       }
                       alt={state.customCoinMetadata?.symbol || "Token"}
-                      fill
-                      sizes="40px"
                       className="rounded-full object-cover"
                     />
                   </div>

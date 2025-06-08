@@ -95,6 +95,7 @@ function reducer(state: any, action: any) {
         depositCustomCoin: "",
       };
     case "SET_INITIAL_PRICE_MODE":
+      console.log("SET_INITIAL_PRICE_MODE", action.payload);
       return {
         ...state,
         initialPriceMode: action.payload,
@@ -102,24 +103,22 @@ function reducer(state: any, action: any) {
         depositCustomCoin: "",
       };
     case "SET_DEPOSIT_DROPDOWN":
-      console.log("SET_DEPOSIT_DROPDOWN", action.payload);
+      const depositCustomCoin = state.initialPrice > 0 ? 
+        (state.initialPriceMode === "dropdownPerCustom" ? (parseFloat(action.payload) / parseFloat(state.initialPrice)).toFixed(6) : (parseFloat(action.payload) * parseFloat(state.initialPrice)).toFixed(6)) : 
+        "";
       return {
         ...state,
         depositDropdownCoin: action.payload,
-        depositCustomCoin:
-          state.initialPrice > 0
-            ? (parseFloat(action.payload) / state.initialPrice).toFixed(6)
-            : "",
+        depositCustomCoin: depositCustomCoin,
       };
     case "SET_DEPOSIT_CUSTOM":
-      console.log("SET_DEPOSIT_CUSTOM", action.payload);
+      const depositDropdownCoin = state.initialPrice > 0 ? 
+        (state.initialPriceMode === "customPerDropdown" ? (parseFloat(action.payload) / parseFloat(state.initialPrice)).toFixed(6) : (parseFloat(action.payload) * parseFloat(state.initialPrice)).toFixed(6)) : 
+        "";
       return {
         ...state,
         depositCustomCoin: action.payload,
-        depositDropdownCoin:
-          state.initialPrice > 0
-            ? (parseFloat(action.payload) * state.initialPrice).toFixed(6)
-            : "",
+        depositDropdownCoin: depositDropdownCoin,
       };
     case "SET_POOL_DATA": // 🔹 New case to store pool data
       return { ...state, poolData: action.payload };
@@ -1603,12 +1602,12 @@ export default function Pools() {
                     <strong>Fees:</strong>
                   </li>
                   <ul className="ml-4">
-                    <li>LP Builder Fee: {state.poolData.lpBuilderFee}%</li>
-                    <li>Burn Fee: {state.poolData.burnFee}%</li>
+                    <li>LP Builder Fee: {state.lpBuilderFee}%</li>
+                    <li>Burn Fee: {state.burnFee}%</li>
                     <li>
-                      Creator Royalty Fee: {state.poolData.creatorRoyaltyFee}%
+                      Creator Royalty Fee: {state.creatorRoyaltyFee}%
                     </li>
-                    <li>Rewards Fee: {state.poolData.rewardsFee}%</li>
+                    <li>Rewards Fee: {state.rewardsFee}%</li>
                   </ul>
 
                   {/* ✅ Creator Wallet with Copy Button */}

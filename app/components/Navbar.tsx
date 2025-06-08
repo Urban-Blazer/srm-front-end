@@ -72,7 +72,7 @@ const NAVIGATION_ITEMS = [
       {
         id: "add-liquidity",
         label: "Add Liquidity",
-        path: "/pools/add-liquidity-v2",
+        path: "/pools/add-liquidity",
       },
     ],
   },

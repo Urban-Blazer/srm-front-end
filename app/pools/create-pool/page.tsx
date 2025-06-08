@@ -28,6 +28,8 @@ import {
   LOCK_ID,
   PACKAGE_ID,
 } from "../../config";
+import { CoinMeta } from "@/app/types";
+import { CoinMetadata } from "@mysten/sui/client";
 
 const provider = new SuiClient({ url: GETTER_RPC });
 
@@ -197,13 +199,22 @@ export default function Pools() {
     dispatch({ type: "SET_LOADING", payload: true });
 
     try {
-      // 🔍 Fetch metadata for dropdown coin and custom coin
-      const [dropdownMetadata, customMetadata] = await Promise.all([
-        provider.getCoinMetadata({ coinType: state.selectedCoin?.typeName }),
-        provider.getCoinMetadata({ coinType: state.customCoin.trim() }),
-      ]);
 
-      // 🔥 Ensure typeName exists in metadata before setting state
+      const coinA = predefinedCoins.find((coin) => coin.typeName === state.selectedCoin?.typeName);
+      let dropdownMetadata: CoinMeta | CoinMetadata | undefined | null = coinA;
+      const coinB = predefinedCoins.find((coin) => coin.typeName === state.customCoin.trim());
+      let customMetadata: CoinMeta | CoinMetadata | undefined | null = coinB;
+      if(!dropdownMetadata) {
+        dropdownMetadata = await provider.getCoinMetadata({ coinType: state.selectedCoin?.typeName });
+        (dropdownMetadata as any)["image"] = dropdownMetadata?.iconUrl;
+        (dropdownMetadata as any)["iconUrl"] = dropdownMetadata?.iconUrl;
+      }
+      if(!customMetadata) {
+        customMetadata = await provider.getCoinMetadata({ coinType: state.customCoin.trim() });
+        (customMetadata as any)["image"] = customMetadata?.iconUrl;
+        (customMetadata as any)["iconUrl"] = customMetadata?.iconUrl;
+      }
+
       if (dropdownMetadata && customMetadata) {
         dispatch({
           type: "SET_METADATA",
@@ -213,7 +224,7 @@ export default function Pools() {
               typeName: state.selectedCoin?.typeName,
               iconUrl: state.selectedCoin?.image,
             },
-            custom: { ...customMetadata, typeName: state.customCoin.trim() },
+            custom: { ...customMetadata, iconUrl: (customMetadata as any).image, typeName: state.customCoin.trim() },
           },
         });
 
@@ -584,7 +595,7 @@ export default function Pools() {
             setIsProcessing(false); // ✅ Ensure modal does not close early
 
             // ✅ Move to Step 5 after success
-            dispatch({ type: "SET_POOL_DATA", payload: poolData });
+            dispatch({ type: "SET_POOL_DATA", payload: {...poolData, initA: poolDataFromEvent.balance_a, initB: poolDataFromEvent.balance_b} });
             dispatch({ type: "SET_STEP", payload: 5 });
             break; // Exit retry loop if successful
           } else {
@@ -691,8 +702,7 @@ export default function Pools() {
 
         <div className="flex items-center justify-center gap-4 p-4 bg-royalPurple  mb-4">
           <p className="text-highlight text-m mt-1">
-            Pool Creation Locked: Contact admin to claim your project{"'"}s pool
-            and start trading.
+            POOL CREATION NOW LIVE: Follow the steps below to create your liquidity pool on Sui Rewards Me.
           </p>
         </div>
 
@@ -1494,8 +1504,8 @@ export default function Pools() {
                   <li className="flex items-center justify-between  overflow-x-auto">
                     <p className=" truncate">
                       <strong>LP Pair:</strong>{" "}
-                      {state.poolData.coinA?.name || "Unknown"} /{" "}
-                      {state.poolData.coinB?.name || "Unknown"}
+                      0x{state.poolData.coinA?.name.slice(0, 4) + "..." + state.poolData.coinA?.name.slice(-6) || "Unknown"} /{" "}
+                      0x{state.poolData.coinB?.name.slice(0, 4) + "..." + state.poolData.coinB?.name.slice(-6) || "Unknown"}
                     </p>
                     <div className="flex items-center space-x-2">
                       {copiedText ===
@@ -1522,7 +1532,7 @@ export default function Pools() {
                   <li className="flex items-center justify-between  overflow-x-auto">
                     <p className=" truncate">
                       <strong>Coin A:</strong>{" "}
-                      {state.poolData.coinA?.name || "Unknown"}
+                      0x{state.poolData.coinA?.name.slice(0, 4) + "..." + state.poolData.coinA?.name.slice(-6) || "Unknown"}
                     </p>
                     <div className="flex items-center space-x-2">
                       {copiedText === state.poolData.coinA?.name && (
@@ -1551,7 +1561,7 @@ export default function Pools() {
                   <li className="flex items-center justify-between  overflow-x-auto">
                     <p className=" truncate">
                       <strong>Coin B:</strong>{" "}
-                      {state.poolData.coinB?.name || "Unknown"}
+                      0x{state.poolData.coinB?.name.slice(0, 4) + "..." + state.poolData.coinB?.name.slice(-6) || "Unknown"}
                     </p>
                     <div className="flex items-center space-x-2">
                       {copiedText === state.poolData.coinB?.name && (
@@ -1587,9 +1597,9 @@ export default function Pools() {
                   </li>
                   <ul className="ml-4">
                     <li>LP Builder Fee: {state.lpBuilderFee}%</li>
-                    <li>Burn Fee: {state.burnFee}%</li>
+                    <li>Burn Fee: {state.buybackBurnFee}%</li>
                     <li>
-                      Creator Royalty Fee: {state.creatorRoyaltyFee}%
+                      Creator Royalty Fee: {state.deployerRoyaltyFee}%
                     </li>
                     <li>Rewards Fee: {state.rewardsFee}%</li>
                   </ul>
@@ -1598,7 +1608,7 @@ export default function Pools() {
                   <li className="flex items-center justify-between  overflow-x-auto">
                     <p className=" truncate">
                       <strong>Creator Wallet:</strong>{" "}
-                      {state.poolData.creatorWallet}
+                      {state.poolData.creatorWallet.slice(0, 6) + "..." + state.poolData.creatorWallet.slice(-6) || "Unknown"}
                     </p>
                     <div className="flex items-center space-x-2">
                       {copiedText === state.poolData.creatorWallet && (

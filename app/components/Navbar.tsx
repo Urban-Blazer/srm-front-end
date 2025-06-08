@@ -112,12 +112,6 @@ const NAVIGATION_ITEMS = [
 
 const EXTERNAL_LINKS = [
   {
-    id: "launchpad",
-    label: "APPLY TO LAUNCH",
-    path: "https://form.typeform.com/to/wbCfCQeb",
-    external: true,
-  },
-  {
     id: "bridge-link",
     label: "BRIDGE",
     path: "https://bridge.sui.io/",

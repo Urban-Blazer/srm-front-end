@@ -270,6 +270,7 @@ export default function SwapInterface({
     }
   };
   const handleAmountOutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlippage(2);
     setIsAtoB(false);
     setQuickSelect(null);
     console.log('handleAmountOutChange', e.target.value);

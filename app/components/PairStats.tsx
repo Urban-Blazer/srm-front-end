@@ -39,8 +39,7 @@ export default function PairStats({
       burnFee: poolStats?.burn_fee.toString(),
       creatorRoyaltyFee: poolStats?.creator_royalty_fee.toString(),
       rewardsFee: poolStats?.rewards_fee.toString(),
-    }),
-    (1 * Number(MIST_PER_SUI)).toString()
+    })
   );
 
   const { pairStats: stats, isLoading } = usePairStats(
@@ -56,7 +55,6 @@ export default function PairStats({
   const { coinSupply, isLoading: isCoinSupplyLoading } = useCoinSupply(
     coinB?.typeName
   );
-  console.log("coinSupply", coinSupply);
   const coinADecimals = coinA?.decimals ?? 0;
   const coinBDecimals = coinB?.decimals ?? 0;
 

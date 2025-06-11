@@ -88,7 +88,6 @@ export function usePoolsWithStats({
 
     // Find SRM and featured pools
     poolsWithStats.forEach(pool => {
-      console.log({pool, featuredCoinBSymbol});
       if (pool.coinB.symbol === "SRM") {
         srmPool = pool;
       } else if (featuredCoinBSymbol && pool.coinB.symbol === featuredCoinBSymbol) {
@@ -170,7 +169,5 @@ const fetchPairStatsWithRewards = async (poolId?: string, range?: string, since?
         rewardsDistributed: rewardsData.rewardsDistributed ?? 0
     };
 
-    console.log({finalStats, rewardsData, statsData, range, since});
-    
     return finalStats;
 };

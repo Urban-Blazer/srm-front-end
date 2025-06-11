@@ -11,7 +11,6 @@ const getQuote = async (queryParams: URLSearchParams) => {
 
 const useQuote = (
   queryParams?: URLSearchParams,
-  amountIn?: string,
   refetchInterval?: number
 ) => {
   const poolId = queryParams?.get("poolId");
@@ -24,7 +23,6 @@ const useQuote = (
   const rewardsFee = queryParams?.get("rewardsFee");
   const conditions = [
     queryParams,
-    amountIn,
     amount,
     poolId,
     balanceA,
@@ -41,7 +39,7 @@ const useQuote = (
     !conditions.includes(undefined);
 
   return useQuery({
-    queryKey: ["get-quote", poolId, amountIn, amount],
+    queryKey: ["get-quote", poolId, amount],
     queryFn: () => getQuote(queryParams!),
     enabled: isEnabled,
     refetchInterval,

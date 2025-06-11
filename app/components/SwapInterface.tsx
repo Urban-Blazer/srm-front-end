@@ -47,6 +47,7 @@ export default function SwapInterface({
   const [slippage, setSlippage] = useState<number>(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAtoB, setIsAtoB] = useState(true);
   const [logs, setLogs] = useState<string[]>([]);
   const [transactionProgress, setTransactionProgress] = useState<{
     image: string;
@@ -75,7 +76,7 @@ export default function SwapInterface({
     refetch,
     isPending,
     isRefetching,
-  } = useQuote(queryParams, amountIn, 10000);
+  } = useQuote(queryParams, 10000);
 
   const isAnyLoading = isLoading || isRefetching;
   const { obj: accountBalancesObj } = useAccountBalances();
@@ -202,10 +203,10 @@ export default function SwapInterface({
         setPriceImpact(impact);
         let _amount;
 
-        if (isSell && data.buyAmount) {
+        if (isAtoB && data.buyAmount) {
           _amount = formatWithCommas(Number(data.buyAmount).toFixed(4));
           setAmountOut(_amount);
-        } else if (!isSell && data.sellAmount) {
+        } else if (!isAtoB && data.sellAmount) {
           _amount = formatWithCommas(Number(data.sellAmount).toFixed(4));
           setAmountIn(_amount);
         }
@@ -216,17 +217,23 @@ export default function SwapInterface({
       console.log("Missing required information for quote", quote, isPending);
       return;
     }
-    handleGetQuote(amountIn, true);
+    if (isBuy) {
+      handleGetQuote(amountIn, true);
+    } else {
+      handleGetQuote(amountOut, false);
+    }
   }, [
     quote,
     isPending,
     queryParams,
     amountIn,
+    amountOut,
     poolId,
     coinA,
     coinB,
     poolStats,
     isBuy,
+    isAtoB,
   ]);
 
   useEffect(() => {
@@ -246,6 +253,7 @@ export default function SwapInterface({
   }, [coinA, coinB, fetchBalance, walletAddress]);
 
   const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsAtoB(true);
     setQuickSelect(null);
     console.log('handleAmountInChange', e.target.value);
     if (e.target.value === "" || Number(e.target.value) === 0) {
@@ -259,6 +267,24 @@ export default function SwapInterface({
     setAmountIn(value);
     if (value && !isNaN(Number(value.replace(/,/g, "")))) {
       debouncedGetQuote(value.replace(/,/g, ""), true);
+    }
+  };
+  const handleAmountOutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlippage(2);
+    setIsAtoB(false);
+    setQuickSelect(null);
+    console.log('handleAmountOutChange', e.target.value);
+    if (e.target.value === "" || Number(e.target.value) === 0) {
+      setQueryParams(undefined);
+      setAmountOut(e.target.value === "0." ? e.target.value : e.target.value === "" ? "" : "0");
+      setAmountIn("");
+      return;
+    }
+    setQueryParams(undefined);
+    const value = e.target.value;
+    setAmountOut(value);
+    if (value && !isNaN(Number(value.replace(/,/g, "")))) {
+      debouncedGetQuote(value.replace(/,/g, ""), false);
     }
   };
 
@@ -324,7 +350,7 @@ export default function SwapInterface({
         getQueryParams(amount, isSell);
       }, 300);
     },
-    [coinA, coinB, isBuy, poolId, poolStats, refetch]
+    [coinA, coinB, isBuy, poolId, poolStats, refetch, isAtoB]
   );
 
   const handleQuickSelect = (percent: number) => {
@@ -988,7 +1014,7 @@ export default function SwapInterface({
             className="max-w-[240px] sm:max-w-[200px] xl:max-w-[240px] flex-1 p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden grow disabled:text-[#868098]"
             placeholder="0"
             value={amountOut}
-            disabled
+            onChange={handleAmountOutChange}
           />
           <SelectTokenModal
             className="flex-1 text-end flex justify-end"

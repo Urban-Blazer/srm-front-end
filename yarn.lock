@@ -2594,6 +2594,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mysten/bcs@npm:^1.6.2":
+  version: 1.6.2
+  resolution: "@mysten/bcs@npm:1.6.2"
+  dependencies:
+    "@mysten/utils": "npm:0.0.1"
+    "@scure/base": "npm:^1.2.6"
+  checksum: 10c0/8ae38ec7369e06c9850572ed42586cfad927d50563a1f039136b640cce0db9731bfbdb980ed6ae2ac8690874794ae59a6d28309d67e795f9de17ab400d62c973
+  languageName: node
+  linkType: hard
+
 "@mysten/dapp-kit@npm:^0.16.1":
   version: 0.16.1
   resolution: "@mysten/dapp-kit@npm:0.16.1"
@@ -2614,6 +2624,13 @@ __metadata:
     "@tanstack/react-query": ^5.0.0
     react: "*"
   checksum: 10c0/c2bda1d636fcd27cb206f82035ec0f7cb6165704f7b6797dd48fca223e9efcd55d1b903784b82ac698f2392bcfd5ae5cb0335e74d7a870f957c5b514c1852c84
+  languageName: node
+  linkType: hard
+
+"@mysten/move-bytecode-template@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@mysten/move-bytecode-template@npm:0.1.0"
+  checksum: 10c0/62ab1459b8caf5444cc9048dba1573f9d6b4c4aeec520bbf61c3a485cdc93bee0b3690eeb46fbc45805d7d1078212fb62abfad5871e83266e85c1837570a75da
   languageName: node
   linkType: hard
 
@@ -2711,6 +2728,15 @@ __metadata:
   dependencies:
     "@scure/base": "npm:^1.2.4"
   checksum: 10c0/d67b38fd35f771d28ac530f1214f4bcb39f8b5b4e7c6a6d972cc68d73e8f8a1c35611167d61252b2d7f5a170f5779aee017e5f83f125d06e4ac2136d4e3afac0
+  languageName: node
+  linkType: hard
+
+"@mysten/utils@npm:0.0.1":
+  version: 0.0.1
+  resolution: "@mysten/utils@npm:0.0.1"
+  dependencies:
+    "@scure/base": "npm:^1.2.6"
+  checksum: 10c0/3a6ed578bb0c1abd7f5611d61dbc3b01bb3a6d972c98e4ff589eaa5b1c858949f12d789484dc19584ebad4e63aed7137c37ce36230b54d2b448c210c951e43b6
   languageName: node
   linkType: hard
 
@@ -4163,6 +4189,13 @@ __metadata:
   version: 1.2.5
   resolution: "@scure/base@npm:1.2.5"
   checksum: 10c0/078928dbcdd21a037b273b81b8b0bd93af8a325e2ffd535b7ccaadd48ee3c15bab600ec2920a209fca0910abc792cca9b01d3336b472405c407440e6c0aa8bd6
+  languageName: node
+  linkType: hard
+
+"@scure/base@npm:^1.2.6":
+  version: 1.2.6
+  resolution: "@scure/base@npm:1.2.6"
+  checksum: 10c0/49bd5293371c4e062cb6ba689c8fe3ea3981b7bb9c000400dc4eafa29f56814cdcdd27c04311c2fec34de26bc373c593a1d6ca6d754398a488d587943b7c128a
   languageName: node
   linkType: hard
 
@@ -9265,6 +9298,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"property-expr@npm:^2.0.5":
+  version: 2.0.6
+  resolution: "property-expr@npm:2.0.6"
+  checksum: 10c0/69b7da15038a1146d6447c69c445306f66a33c425271235bb20507f1846dbf9577a8f9dfafe8acbfcb66f924b270157f155248308f026a68758f35fc72265b3c
+  languageName: node
+  linkType: hard
+
 "proxy-from-env@npm:^1.1.0":
   version: 1.1.0
   resolution: "proxy-from-env@npm:1.1.0"
@@ -10242,7 +10282,9 @@ __metadata:
     "@emotion/styled": "npm:^11.14.0"
     "@hookform/resolvers": "npm:^4.1.3"
     "@mui/material": "npm:^6.4.5"
+    "@mysten/bcs": "npm:^1.6.2"
     "@mysten/dapp-kit": "npm:^0.16.1"
+    "@mysten/move-bytecode-template": "npm:^0.1.0"
     "@mysten/sui": "npm:^1.29.0"
     "@mysten/sui.js": "npm:^0.48.1"
     "@mysten/wallet-standard": "npm:^0.9.0"
@@ -10297,6 +10339,7 @@ __metadata:
     utf-8-validate: "npm:^6.0.5"
     virtua: "npm:^0.41.2"
     wouter: "npm:2.7.4"
+    yup: "npm:^1.6.1"
     zod: "npm:^3.24.2"
   languageName: unknown
   linkType: soft
@@ -10503,6 +10546,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tiny-case@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "tiny-case@npm:1.0.3"
+  checksum: 10c0/c0cbed35884a322265e2cd61ff435168d1ea523f88bf3864ce14a238ae9169e732649776964283a66e4eb882e655992081d4daf8c865042e2233425866111b35
+  languageName: node
+  linkType: hard
+
 "tiny-inflate@npm:^1.0.3":
   version: 1.0.3
   resolution: "tiny-inflate@npm:1.0.3"
@@ -10533,6 +10583,13 @@ __metadata:
   version: 1.0.6
   resolution: "toggle-selection@npm:1.0.6"
   checksum: 10c0/f2cf1f2c70f374fd87b0cdc8007453ba9e981c4305a8bf4eac10a30e62ecdfd28bca7d18f8f15b15a506bf8a7bfb20dbe3539f0fcf2a2c8396c1a78d53e1f179
+  languageName: node
+  linkType: hard
+
+"toposort@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "toposort@npm:2.0.2"
+  checksum: 10c0/ab9ca91fce4b972ccae9e2f539d755bf799a0c7eb60da07fd985fce0f14c159ed1e92305ff55697693b5bc13e300f5417db90e2593b127d421c9f6c440950222
   languageName: node
   linkType: hard
 
@@ -10624,6 +10681,13 @@ __metadata:
   version: 0.20.2
   resolution: "type-fest@npm:0.20.2"
   checksum: 10c0/dea9df45ea1f0aaa4e2d3bed3f9a0bfe9e5b2592bddb92eb1bf06e50bcf98dbb78189668cd8bc31a0511d3fc25539b4cd5c704497e53e93e2d40ca764b10bfc3
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^2.19.0":
+  version: 2.19.0
+  resolution: "type-fest@npm:2.19.0"
+  checksum: 10c0/a5a7ecf2e654251613218c215c7493574594951c08e52ab9881c9df6a6da0aeca7528c213c622bc374b4e0cb5c443aa3ab758da4e3c959783ce884c3194e12cb
   languageName: node
   linkType: hard
 
@@ -11158,6 +11222,18 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 10c0/dceb44c28578b31641e13695d200d34ec4ab3966a5729814d5445b194933c096b7ced71494ce53a0e8820685d1d010df8b2422e5bf2cdea7e469d97ffbea306f
+  languageName: node
+  linkType: hard
+
+"yup@npm:^1.6.1":
+  version: 1.6.1
+  resolution: "yup@npm:1.6.1"
+  dependencies:
+    property-expr: "npm:^2.0.5"
+    tiny-case: "npm:^1.0.3"
+    toposort: "npm:^2.0.2"
+    type-fest: "npm:^2.19.0"
+  checksum: 10c0/84c2b53996e8001041239cf2719851719f67063ec7cd843067df73562353216f5ad4f8a222319696882d5a6058e528fade1e463c59d70cbffb41b99cd0d7571b
   languageName: node
   linkType: hard
 

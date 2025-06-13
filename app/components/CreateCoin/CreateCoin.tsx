@@ -326,7 +326,6 @@ export default function CreateCoin() {
               typeArguments: [treasuryCapObjectType],
             });
             txMint.setGasPrice(await suiClient.getReferenceGasPrice());
-            reset();
             signAndExecute(
               { transaction: txMint as any },
               {

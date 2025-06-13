@@ -233,7 +233,7 @@ export default function MyPositions() {
       </h1>
 
       {!walletConnected ? (
-        <div className="text-center max-w-md mx-auto bg-[#14110c] p-6 border border-slate-700 rounded-none">
+        <div className="text-center max-w-md mx-auto bg-[#130e18] p-6 border border-slate-700 rounded-none">
           <p className="text-slate-300 mb-4">
             <strong>Connect your wallet to view your LP positions.</strong>
           </p>
@@ -256,7 +256,7 @@ export default function MyPositions() {
           {/* Display LP Positions */}
           <div className="w-full max-w-3xl mt-8 px-2 md:px-0">
             {loading ? (
-              <div className="flex flex-col items-center justify-center p-8 bg-[#14110c] border border-slate-700 rounded-none">
+              <div className="flex flex-col items-center justify-center p-8 bg-[#130e18] border border-slate-700 rounded-none">
                 <LoadingSpinner />
                 <p className="text-slate-300 mt-4">
                   Loading your liquidity positions...
@@ -279,7 +279,7 @@ export default function MyPositions() {
                 </div>
               ))
             ) : (
-              <div className="text-center p-8 bg-[#14110c] border border-slate-700 rounded-none">
+              <div className="text-center p-8 bg-[#130e18] border border-slate-700 rounded-none">
                 <p className="text-slate-300 mb-3">
                   <strong>No LP positions found</strong>
                 </p>

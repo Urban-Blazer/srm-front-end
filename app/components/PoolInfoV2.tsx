@@ -45,7 +45,7 @@ export default function PoolInfoV2({ poolId, coinA, coinB, poolStats, loading }:
     if (!poolId) return <p className="text-gray-400 text-sm">No pool selected</p>;
 
     return (
-        <div className="w-full border border-gray-800 shadow-md p-4">
+        <div className="w-full shadow-md p-4">
             <div className="flex justify-between items-center mb-4">
                 {loading && <Spinner />}            
             </div>

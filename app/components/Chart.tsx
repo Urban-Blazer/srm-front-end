@@ -56,7 +56,7 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
         visible: true,
       },
       width: chartContainerRef.current.clientWidth,
-      height: 400,
+      height: 500,
     });
 
     const series = chart.addSeries(CandlestickSeries, {
@@ -151,7 +151,7 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
       chartContainerRef.current &&
         chart.applyOptions({
           width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight,
+          height: 500,
         });
     });
 
@@ -167,13 +167,13 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
   }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData, refetchChartData, coinA?.decimals, coinB?.decimals]);
 
   return (
-    <div className="w-full min-h-[480px]">
+    <div className="w-full min-h-[500px]">
       <div className="flex flex-col lg:flex-row justify-between gap-2 mb-2 overflow-hidden">
         {children}
         <select
           value={interval}
           onChange={(e) => setInterval(e.target.value as IntervalType)}
-          className="bg-[#14110c] text-slate-100 border border-[#221d14] px-2 py-1 text-sm"
+          className="bg-[#130e18] text-slate-100 border border-[#221d14] px-2 py-1 text-sm"
         >
           {intervals.map((int) => (
             <option key={int} value={int}>
@@ -184,10 +184,10 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
       </div>
 
       {isAnyLoading && (
-        <div className="w-full h-[400px] animate-pulse flex bg-gray-900 border border-gray-800 shadow-md p-4" />
+        <div className="w-full h-[500px] animate-pulse flex bg-gray-900 border border-gray-800 shadow-md p-4" />
       )}
 
-      <div ref={chartContainerRef} className={`w-full h-[400px] ${isAnyLoading ? 'hidden' : ''}`} />
+      <div ref={chartContainerRef} className={`w-full h-full ${isAnyLoading ? 'hidden' : ''}`} />
     </div>
   );
 }

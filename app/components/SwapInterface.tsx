@@ -65,7 +65,7 @@ export default function SwapInterface({
       ? "text-red-500"
       : impact >= 5
       ? "text-yellow-400"
-      : "text-slate-300";
+      : "";
 
   const [queryParams, setQueryParams] = useState<URLSearchParams | undefined>(
     undefined
@@ -839,35 +839,31 @@ export default function SwapInterface({
   }
 
   return (
-    <div className="py-6 w-full max-w-md mx-auto space-y-6 h-full">
+    <div className="w-full max-w-md mx-auto space-y-6 h-full">
       {/* Toggle Buy / Sell */}
       <div className="flex justify-center space-x-4 mb-4">
-        <button
+        <Button
           onClick={() => setIsBuy(true)}
-          className={`px-4 py-2 rounded-none text-sm font-semibold ${
-            isBuy
-              ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
-              : "bg-[#14110c] hover:bg-slate-600 text-slate-100"
-          }`}
+          variant={isBuy ? "primarySoftDisable" : "buyDefault"}
+          size="lg"
+          disabled={isProcessing || isBuy}
         >
-          Buy
-        </button>
-        <button
+          BUY
+        </Button>
+        <Button
           onClick={() => setIsBuy(false)}
-          className={`px-4 py-2 rounded-none text-sm font-semibold ${
-            !isBuy
-              ? "bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:text-[#61F98A] hover:opacity-75"
-              : "bg-[#14110c] hover:bg-slate-600 text-slate-100"
-          }`}
+          variant={!isBuy ? "secondarySoftDisable" : "sellDefault"}
+          size="lg"
+          disabled={isProcessing || !isBuy}
         >
-          Sell
-        </button>
+          SELL
+        </Button>
       </div>
 
       {/* FROM Section */}
       <div className="space-y-1">
         {/* Label + Coin info */}
-        <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+        <div className="flex items-center justify-between text-xs mb-1">
           <div className="flex items-center gap-2">
             <span>From:</span>
             {isBuy ? (
@@ -879,7 +875,7 @@ export default function SwapInterface({
                     className="w-6 h-6 rounded-full"
                   />
                 )}
-                <span className="text-slate-300 text-xs">{coinA?.symbol}</span>
+                <span className="text-xs">{coinA?.symbol}</span>
               </>
             ) : (
               <>
@@ -890,7 +886,7 @@ export default function SwapInterface({
                     className="w-6 h-6 rounded-full"
                   />
                 )}
-                <span className="text-slate-300 text-xs">{coinB?.symbol}</span>
+                <span className="text-xs">{coinB?.symbol}</span>
               </>
             )}
           </div>
@@ -913,7 +909,7 @@ export default function SwapInterface({
         </div>
 
         {/* Input box */}
-        <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
+        <div className="flex justify-between items-center bg-[#130e18] px-3 py-2">
           <InputCurrency
             className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
             placeholder="0"
@@ -932,20 +928,22 @@ export default function SwapInterface({
       </div>
 
       {/* Quick % Buttons */}
-      <div className="flex justify-between mt-2 mb-4">
+      <div className="flex gap-1 mt-2 mb-4">
         {["25", "50", "75", "100"].map((percent) => (
-          <button
+          <Button
             key={percent}
             onClick={() => handleQuickSelect(parseInt(percent))}
             // if quickSelect is equal to percent, add active class
-            className={`flex-1 text-md mx-1 bg-[#14110c] hover:bg-slate-600 rounded-none px-3 py-1  ${
-              quickSelect === parseInt(percent)
-                ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
-                : "text-slate-300"
-            }`}
+            // className={`flex-1 text-md mx-1 bg-[#130e18] hover:bg-slate-600 rounded-none px-3 py-1  ${
+            //   quickSelect === parseInt(percent)
+            //     ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
+            //     : "text-slate-300"
+            // }`}
+            variant={quickSelect === parseInt(percent) ? "primarySoftDisable" : "default"}
+            size="xl"
           >
             {percent}%
-          </button>
+          </Button>
         ))}
       </div>
       <div className="flex justify-center">
@@ -963,7 +961,7 @@ export default function SwapInterface({
       {/* TO Section */}
       <div className="space-y-1">
         {/* Label + Coin info */}
-        <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+        <div className="flex items-center justify-between text-xs mb-1">
           <div className="flex items-center gap-2">
             <span>To:</span>
             {isBuy ? (
@@ -975,7 +973,7 @@ export default function SwapInterface({
                     className="w-6 h-6 rounded-full"
                   />
                 )}
-                <span className="text-slate-300 text-xs">{coinB?.symbol}</span>
+                <span className="text-xs">{coinB?.symbol}</span>
               </>
             ) : (
               <>
@@ -986,7 +984,7 @@ export default function SwapInterface({
                     className="w-6 h-6 rounded-full"
                   />
                 )}
-                <span className="text-slate-300 text-xs">{coinA?.symbol}</span>
+                <span className="text-xs">{coinA?.symbol}</span>
               </>
             )}
           </div>
@@ -1009,7 +1007,7 @@ export default function SwapInterface({
         </div>
 
         {/* Input box */}
-        <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
+        <div className="flex justify-between items-center bg-[#130e18] px-3 py-2">
           <InputCurrency
             className="max-w-[240px] sm:max-w-[200px] xl:max-w-[240px] flex-1 p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden grow disabled:text-[#868098]"
             placeholder="0"
@@ -1028,19 +1026,14 @@ export default function SwapInterface({
       </div>
 
       {/* Slippage Setting */}
-      <div className="flex items-center justify-end text-slate-400 text-xs mt-4 gap-4">
+      <div className="flex items-center justify-end text-xs mt-4 gap-4">
         <span>Slippage</span>
         {[".5", "1", "2", "3"].map((s) => (
           <Button
             key={s}
-            variant="standard"
-            size="sm"
+            variant={Number(s) === slippage ? "primarySoftDisable" : "default"}
+            size="md"
             onClick={() => setSlippage(Number(s))}
-            className={`bg-[#14110c] hover:bg-slate-600 rounded-none px-2 py-1 ${
-              Number(s) === slippage
-                ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
-                : "text-slate-300"
-            }`}
           >
             {s}
           </Button>
@@ -1049,13 +1042,13 @@ export default function SwapInterface({
         <Button
           variant="standard"
           size="sm"
-          className="bg-[#14110c] hover:bg-slate-600"
+          className="bg-[#130e18] hover:bg-slate-600"
           onClick={() => setSlippageConfig(!slippageConfig)}
         >
           {slippageConfig ? (
-            <ChevronsDown className="w-4 h-4 cursor-pointer text-slate-300" />
+            <ChevronsDown className="w-4 h-4 cursor-pointer" />
           ) : (
-            <ChevronsUp className="w-4 h-4 cursor-pointer text-slate-300" />
+            <ChevronsUp className="w-4 h-4 cursor-pointer" />
           )}
         </Button>
       </div>
@@ -1064,10 +1057,10 @@ export default function SwapInterface({
           <Button
             variant="standard"
             size="sm"
-            className="bg-[#14110c] hover:bg-slate-600"
+            className="bg-[#130e18] hover:bg-slate-600"
             onClick={() => setSlippage(slippage - 0.1)}
           >
-            <MinusIcon className="w-4 h-4 cursor-pointer text-slate-300" />
+            <MinusIcon className="w-4 h-4 cursor-pointer" />
           </Button>
           <input
             type="number"
@@ -1085,17 +1078,17 @@ export default function SwapInterface({
                 }
               }
             }}
-            className="bg-transparent w-12 text-center text-slate-100 outline-none border border-slate-600 py-1
+            className="bg-transparent w-12 text-center outline-none border border-slate-600 py-1
                         [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           <span>%</span>
           <Button
             variant="standard"
             size="sm"
-            className="bg-[#14110c] hover:bg-slate-600"
+            className="bg-[#130e18] hover:bg-slate-600"
             onClick={() => setSlippage(slippage + 0.1)}
           >
-            <PlusIcon className="w-4 h-4 cursor-pointer text-slate-300" />
+            <PlusIcon className="w-4 h-4 cursor-pointer" />
           </Button>
         </div>
       )}
@@ -1103,7 +1096,7 @@ export default function SwapInterface({
         <div
           className={`${getImpactColor(
             priceImpact
-          )} text-sm text-center mb-2 font-semibold`}
+          )} text-xs text-center mb-2`}
         >
           Price Impact Low ({priceImpact.toFixed(2)}%)
         </div>
@@ -1112,7 +1105,7 @@ export default function SwapInterface({
         <div
           className={`${getImpactColor(
             priceImpact
-          )} text-sm text-center mb-2 font-semibold`}
+          )} text-xs text-center mb-2`}
         >
           {priceImpact >= 15
             ? `❌ Swap blocked: Price impact exceeds 15% (${priceImpact.toFixed(

@@ -105,27 +105,31 @@ function EnhancedTableHead(props: EnhancedTableHeadProps) {
   return (
     <TableHead>
       <TableRow>
-        <TableCell>Pool</TableCell>
+        <TableCell align="left">Pool</TableCell>
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align="center"
+            align="left"
             sortDirection={orderBy === headCell.id ? order : false}
           >
             <TableSortLabel
               active={orderBy === headCell.id}
               direction={orderBy === headCell.id ? order : "asc"}
               onClick={createSortHandler(headCell.id)}
+              sx={{
+                padding: "0px !important",
+                textAlign: "left",
+              }}
             >
               {headCell.label}
             </TableSortLabel>
           </TableCell>
         ))}
-        <TableCell align="center">LP Fee</TableCell>
-        <TableCell align="center">Burn Fee</TableCell>
-        <TableCell align="center">Creator Fee</TableCell>
-        <TableCell align="center">Rewards Fee</TableCell>
-        <TableCell align="center">Royalty Wallet</TableCell>
+        <TableCell align="left">LP Fee</TableCell>
+        <TableCell align="left">Burn Fee</TableCell>
+        <TableCell align="left">Creator Fee</TableCell>
+        <TableCell align="left">Rewards Fee</TableCell>
+        <TableCell align="left">Royalty Wallet</TableCell>
       </TableRow>
     </TableHead>
   );
@@ -298,15 +302,24 @@ export default function PoolsStatsTable() {
           sx={{
             overflow: "auto",
             boxShadow: 3,
-            bgcolor: "#14110c",
+            bgcolor: "transparent",
             borderRadius: 0,
             border: "1px solid #444",
             "& .MuiTableCell-root": {
+              padding: "8px 8px",
               borderColor: "#333",
               color: "#fff",
             },
+            "& .MuiButtonBase-root:hover": {
+              padding: "0px !important",
+              border: "none !important",
+            },
+            "& .MuiButtonBase-root": {
+              padding: "0px !important",
+              border: "none !important",
+            },
             "& .MuiTableRow-hover:hover": {
-              backgroundColor: "#1a1712 !important",
+              backgroundColor: "#130e18 !important",
             },
             "& .MuiTableSortLabel-root": {
               color: "#fff",
@@ -318,7 +331,7 @@ export default function PoolsStatsTable() {
               },
             },
             "& .MuiTableHead-root": {
-              backgroundColor: "#0a0a0a",
+              backgroundColor: "#130e18",
             },
           }}
         >
@@ -331,8 +344,8 @@ export default function PoolsStatsTable() {
             <TableBody>
               {sortedData.map((pool) => (
                 <TableRow key={pool.pool_id} hover>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <TableCell align="left" padding="normal">
+                    <Box sx={{ minWidth: "160px", display: "flex", alignItems: "left", gap: 1 }}>
                       {pool.coinA_image && (
                         <Avatar
                           src={pool.coinA_image}
@@ -356,19 +369,16 @@ export default function PoolsStatsTable() {
                       </Link>
                     </Box>
                   </TableCell>
-                  <TableCell align="center">{pool.buyTxCount}</TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">{pool.buyTxCount}</TableCell>
+                  <TableCell align="left">
                     <Box
                       sx={{
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        alignItems: "left",
+                        justifyContent: "left",
                         gap: 0.5,
                       }}
                     >
-                      <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {Number(parseInt(`${pool.buyVolume}`))}
-                      </Typography>
                       {pool.coinA_image && (
                         <Avatar
                           src={pool.coinA_image}
@@ -376,21 +386,21 @@ export default function PoolsStatsTable() {
                           alt="coinA"
                         />
                       )}
+                      <Typography variant="body2" sx={{ color: "#fff" }}>
+                        {Number(parseInt(`${pool.buyVolume}`))}
+                      </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell align="center">{pool.sellTxCount}</TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">{pool.sellTxCount}</TableCell>
+                  <TableCell align="left">
                     <Box
                       sx={{
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        alignItems: "left",
+                        justifyContent: "left",
                         gap: 0.5,
                       }}
                     >
-                      <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {Number(parseInt(`${pool.sellVolume}`))}
-                      </Typography>
                       {pool.coinA_image && (
                         <Avatar
                           src={pool.coinA_image}
@@ -398,32 +408,35 @@ export default function PoolsStatsTable() {
                           alt="coinB"
                         />
                       )}
+                      <Typography variant="body2" sx={{ color: "#fff" }}>
+                        {Number(parseInt(`${pool.sellVolume}`))}
+                      </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">
                     <Box
                       sx={{
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        alignItems: "left",
+                        justifyContent: "left",
                         gap: 0.5,
                       }}
                     >
+                      {pool.coinA_image && (
+                        <Avatar
+                          src={pool.coinA_image}
+                          className="w-5 h-5 aspect-square rounded-full token-icon"
+                          alt="coinB"
+                        />
+                      )}
                       <Typography variant="body2" sx={{ color: "#fff" }}>
                         {Number(
                           parseInt(`${pool.totalVolume}`.replace(",", ""))
                         )}
                       </Typography>
-                      {pool.coinA_image && (
-                        <Avatar
-                          src={pool.coinA_image}
-                          className="w-5 h-5 aspect-square rounded-full token-icon"
-                          alt="coinB"
-                        />
-                      )}
                     </Box>
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">
                     <Chip
                       label={timeAgoFromTimestamp(pool.timestamp)}
                       size="small"
@@ -435,24 +448,24 @@ export default function PoolsStatsTable() {
                       }}
                     />
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">
                     {formatBpsToPercent(pool.lp_builder_fee)}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">
                     {formatBpsToPercent(pool.burn_fee)}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">
                     {formatBpsToPercent(pool.creator_royalty_fee)}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">
                     {formatBpsToPercent(pool.rewards_fee)}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left">
                     <Box
                       sx={{
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        alignItems: "left",
+                        justifyContent: "left",
                         gap: 0.5,
                       }}
                     >
@@ -470,7 +483,7 @@ export default function PoolsStatsTable() {
               ))}
               {sortedData.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={12} align="center">
+                  <TableCell colSpan={12} align="left">
                     <Typography variant="body1" sx={{ py: 2 }}>
                       No pools found
                     </Typography>

@@ -7,6 +7,7 @@ import { useAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import { FC, useState } from "react";
 import Avatar from "./Avatar";
+import { X } from "lucide-react";
 
 const SearchBar: FC = () => {
   const router = useRouter();
@@ -32,7 +33,7 @@ const SearchBar: FC = () => {
     <div className="relative w-full max-w-lg">
       {isLoading ?? <>Loading...</>}
       {selectedPair?.coinA && selectedPair.coinB && query === null ? (
-        <div className="w-full px-4 py-2 text-white border border-[#61F98A] flex items-center space-x-2 justify-between">
+        <div className="w-full px-4 py-2 text-white bg-[#130e18] flex items-center space-x-2 justify-between">
           <div className="flex items-center space-x-2">
             <Avatar
               src={selectedPair.coinA.image}
@@ -52,13 +53,13 @@ const SearchBar: FC = () => {
             onClick={handleClear}
             className="bg-[#000306] ml-auto rounded-none text-white border border-[#5E21A1] hover:text-red-400 text-xs px-2 py-1"
           >
-            Clear
+            <X className="w-4 h-4" />
           </button>
         </div>
       ) : (
         <input
           type="text"
-          className="w-full px-4 py-2 bg-gray-900 text-white border border-gray-700 focus:outline-none"
+          className="w-full px-4 py-2 bg-[#130e18] text-white focus:outline-none"
           placeholder="Search by CA or Symbol (e.g., 0x2::coin::SUI or SUI)"
           value={query ?? ""}
           onChange={(e) => setQuery(e.target.value)}
@@ -66,12 +67,12 @@ const SearchBar: FC = () => {
       )}
 
       {showDropdown && (
-        <ul className="absolute z-10 w-full mt-2 bg-gray-800 shadow-lg max-h-60 overflow-auto border border-gray-700">
+        <ul className="absolute z-10 w-full mt-2 bg-[#130e18] shadow-lg max-h-60 overflow-auto">
           {results.map((result, idx) => (
             <li
               key={idx}
               onClick={() => handleSelect(result)}
-              className="px-4 py-2 cursor-pointer hover:bg-gray-700 flex items-center space-x-2"
+              className="px-4 py-2 cursor-pointer hover:opacity-75 flex items-center space-x-2"
             >
               <div className="flex items-center space-x-1">
                 <Avatar

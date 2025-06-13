@@ -839,7 +839,7 @@ export default function AddLiquidity() {
                 <h2 className="text-lg font-semibold text-slate-300">
                   Slippage Tolerance
                 </h2>
-                <div className="flex items-center p-3 bg-[#14110c] border border-slate-600 mb-2">
+                <div className="flex items-center p-3 bg-[#130e18] border border-slate-600 mb-2">
                   <InputCurrency
                     className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
                     placeholder="0.5"
@@ -887,7 +887,7 @@ export default function AddLiquidity() {
                   Deposit Tokens
                 </h2>
 
-                <div className="flex items-center p-3 bg-[#14110c] border border-slate-600 mb-2">
+                <div className="flex items-center p-3 bg-[#130e18] border border-slate-600 mb-2">
                   <Avatar
                     src={
                       state.dropdownCoinMetadata?.image || "/default-coin.png"
@@ -926,7 +926,7 @@ export default function AddLiquidity() {
                   />
                 </div>
 
-                <div className="flex items-center p-3 bg-[#14110c] border border-slate-600 mb-2">
+                <div className="flex items-center p-3 bg-[#130e18] border border-slate-600 mb-2">
                   <Avatar
                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                     alt={state.customCoinMetadata?.symbol || "Coin B"}
@@ -1006,7 +1006,7 @@ export default function AddLiquidity() {
               Liquidity Successfully Added! 🎉
             </h2>
 
-            <div className="bg-[#14110c] border border-[#61F98A] p-4 shadow-md mb-4">
+            <div className="bg-[#130e18] border border-[#61F98A] p-4 shadow-md mb-4">
               <h3 className="text-lg font-semibold text-[#61F98A]">
                 Transaction Summary
               </h3>

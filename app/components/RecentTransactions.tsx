@@ -127,23 +127,23 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
 
 
     return (
-        <div className="p-4 w-full">
-            <div className="overflow-x-auto overflow-y-auto max-h-80 min-w-full">
+        <div className="w-full">
+            <div className="overflow-x-auto overflow-y-auto max-h-96 min-w-full">
                 {isRecentSwapsLoading ? (
                     <Spinner />
                 ) : !recentSwaps || recentSwaps.length === 0 ? (
-                    <p className="text-slate-400 text-sm text-center">No recent transactions yet.</p>
+                    <p className="text-sm text-left">No recent transactions yet.</p>
                 ) : (
-                    <table className="w-full text-slate-300 text-sm">
+                    <table className="w-full text-sm">
                             <thead>
-                                <tr className="text-slate-400 text-xs uppercase">
-                                    <th className="py-3 px-4 text-center">Time</th>
-                                    <th className="py-3 px-4 text-center">Side</th>
-                                    <th className="py-3 px-4 text-center">Actual CPC (USD)</th>
-                                    <th className="py-3 px-4 text-center">Total Value</th>
-                                    <th className="py-3 px-4 text-center">Amount ({coinA.symbol || 'CoinA'})</th>
-                                    <th className="py-3 px-4 text-center">Amount ({coinB.symbol || 'CoinB'})</th>
-                                    <th className="py-3 px-4 text-center">Maker</th>
+                                <tr className="text-xs uppercase">
+                                    <th className="py-1 px-4 text-left">Time</th>
+                                    <th className="py-1 px-4 text-left">Side</th>
+                                    <th className="py-1 px-4 text-left">Actual CPC (USD)</th>
+                                    <th className="py-1 px-4 text-left">Total Value</th>
+                                    <th className="py-1 px-4 text-left">Amount ({coinA.symbol || 'CoinA'})</th>
+                                    <th className="py-1 px-4 text-left">Amount ({coinB.symbol || 'CoinB'})</th>
+                                    <th className="py-1 px-4 text-left">Maker</th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -167,20 +167,20 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
                                         : amountCoinB * actualCPC;
 
                                     return (
-                                        <tr key={idx} className="border-t border-slate-700">
-                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>{formatAgo(swap.timestamp)}</td>
-                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
+                                        <tr key={idx} className="">
+                                            <td className={`py-1 px-4 text-left ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>{formatAgo(swap.timestamp)}</td>
+                                            <td className={`py-1 px-4 text-left ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
                                                 {swap.is_buy ? 'Buy' : 'Sell'}
                                             </td>
-                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${actualCPC.toFixed(7)}</td>
-                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${totalValueUSD.toFixed(2)}</td>
-                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
+                                            <td className={`py-1 px-4 text-left ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${actualCPC.toFixed(7)}</td>
+                                            <td className={`py-1 px-4 text-left ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>${totalValueUSD.toFixed(2)}</td>
+                                            <td className={`py-1 px-4 text-left ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
                                                 {amountCoinA.toFixed(4)}
                                             </td>
-                                            <td className={`py-3 px-4 text-center ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
+                                            <td className={`py-1 px-4 text-left ${swap.is_buy ? 'text-green-400' : 'text-red-400'}`}>
                                                 {amountCoinB.toFixed(4)}
                                             </td>
-                                            <td className="py-3 px-4 text-center">
+                                            <td className="py-1 px-4 text-left">
                                                 <a
                                                     href={`https://suiscan.xyz/mainnet/account/${swap.wallet}`}
                                                     target="_blank"

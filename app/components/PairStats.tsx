@@ -66,16 +66,17 @@ export default function PairStats({
 
   return (
     <div
-      className={`w-full border border-gray-800 shadow-md overflow-hidden ${
-        variant === "mcap" ? "" : "p-4"
+      className={`w-full px-4 py-2 text-white ${isAnyLoading ? "animate-pulse p-4" : ""}  overflow-hidden ${
+        variant === "mcap" ? "bg-[#130e18]" : "p-4"
       }`}
     >
+    {/* w-full px-4 py-2 text-white bg-[#130e18] flex items-center space-x-2 justify-between" */}
+    {/* <div className="w-full h-[20px] animate-pulse flex bg-[#21182a] shadow-md p-4" /> */}
       {variant === "default" && (
         <>
           <div className="flex justify-between items-center mb-4">
-            <div className="flex">{isAnyLoading && <Spinner />}</div>
             <select
-              className="bg-[#14110c] border border-[#221d14] text-white text-sm px-3 py-1 focus:outline-none"
+              className="bg-[#130e18] border border-[#221d14] text-white text-sm px-3 py-1 focus:outline-none"
               value={selectedRange}
               onChange={(e) => setSelectedRange(e.target.value)}
             >
@@ -85,6 +86,7 @@ export default function PairStats({
                 </option>
               ))}
             </select>
+            <div className="flex">{isAnyLoading && <Spinner />}</div>
           </div>
         </>
       )}
@@ -92,8 +94,8 @@ export default function PairStats({
       <div
         className={
           variant === "mcap"
-            ? "flex flex-col lg:flex-row lg:gap-2 text-sm text-gray-300"
-            : "grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-300"
+            ? "flex flex-col lg:flex-row lg:gap-2 text-sm"
+            : "grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm"
         }
       >
         {variant === "default" && (
@@ -138,10 +140,7 @@ export default function PairStats({
             />
           </>
         )}
-
-        {isAnyLoading ? (
-          <div className="w-full h-[20px] animate-pulse flex bg-gray-900 border border-gray-800 shadow-md p-4" />
-        ) : (
+        {!isAnyLoading && (
           <>
             {statsLifetime && coinSupply && (
               <Stat
@@ -227,7 +226,7 @@ const Stat = ({
           : "flex-col"
       }`}
     >
-      <span className="text-gray-400 text-xs">{label}</span>
+      <span className=" text-xs">{label}</span>
       <span className="text-white font-medium flex items-center gap-1">
         {formattedValue}
         {imageUrl && (

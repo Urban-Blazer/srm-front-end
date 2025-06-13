@@ -372,8 +372,8 @@ export default function CreateCoin() {
     <div style={{ maxWidth: "600px", minWidth: "300px", margin: "auto" }}>
       {!coinAdress ? (
         <div className="flex flex-col">
-          <h1 className="text-2xl font-semibold mb-4">Create Token</h1>
-          <div className="text-gray-400">
+          <h1 className="text-lg font-semibold mb-4">CREATE COIN</h1>
+          <div className="text-white">
             Create a new token on the Sui blockchain.
             <br />
             Deployment Fee{" "}
@@ -389,7 +389,7 @@ export default function CreateCoin() {
                   <input
                     id="coinName"
                     type="text"
-                    className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
+                    className="w-full p-2 bg-[#130e18] placeholder-slate-500"
                     placeholder="Enter token name"
                     {...register("coinName")}
                   />
@@ -403,7 +403,7 @@ export default function CreateCoin() {
                   <input
                     id="symbol"
                     type="text"
-                    className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
+                    className="w-full p-2 bg-[#130e18] placeholder-slate-500"
                     placeholder="Enter token symbol"
                     {...register("symbol")}
                   />
@@ -421,7 +421,7 @@ export default function CreateCoin() {
                   <input
                     id="description"
                     type="text"
-                    className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
+                    className="w-full p-2 bg-[#130e18] placeholder-slate-500"
                     placeholder="Enter description"
                     {...register("description")}
                   />
@@ -437,7 +437,7 @@ export default function CreateCoin() {
                   <input
                     id="totalSupply"
                     type="text"
-                    className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
+                    className="w-full p-2 bg-[#130e18] placeholder-slate-500"
                     placeholder="Enter total supply"
                     {...register("totalSupply")}
                   />
@@ -451,7 +451,7 @@ export default function CreateCoin() {
                 <div className="flex items-center justify-between p-2  border w-48 mb-2">
                   <button
                     className={`px-3 py-1 w-full ${
-                      isUploadImage ? "bg-gray-600" : "button-primary"
+                      isUploadImage ? "bg-[#130e18]" : "button-primary"
                     }`}
                     onClick={() => setIsUploadImage(!isUploadImage)}
                   >
@@ -459,7 +459,7 @@ export default function CreateCoin() {
                   </button>
                   <button
                     className={`px-3 py-1 w-full ${
-                      !isUploadImage ? "bg-gray-600" : "button-primary"
+                      !isUploadImage ? "bg-[#130e18]" : "button-primary"
                     }`}
                     onClick={() => setIsUploadImage(!isUploadImage)}
                   >
@@ -472,7 +472,7 @@ export default function CreateCoin() {
                     <input
                       id="image"
                       type="text"
-                      className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
+                      className="w-full p-2 bg-[#130e18] placeholder-slate-500"
                       placeholder="Enter Image URL"
                       onChange={(e) => handleChangeURL(e)}
                     />
@@ -580,7 +580,7 @@ export default function CreateCoin() {
           </div>
         </div>
       ) : (
-        <div className="text-center max-w-md mx-auto bg-[#14110c] p-6 border border-slate-700 rounded-none">
+        <div className="text-center max-w-md mx-auto bg-[#130e18] p-6 border border-slate-700 rounded-none">
           {/* token created successfully title */}
           <h2 className="text-2xl font-bold mb-4">Token Created Successfully</h2>
           <div className="flex items-center gap-2 justify-start mb-4">

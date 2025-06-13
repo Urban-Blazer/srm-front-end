@@ -1379,7 +1379,7 @@ export default function CreateOrAddLiquidityPool() {
                 <strong>Select First Coin:</strong>
               </label>
               <button
-                className="rounded-none w-full flex items-center justify-between p-2 border border-slate-600 bg-[#14110c]"
+                className="rounded-none w-full flex items-center justify-between p-2 border border-slate-600 bg-[#130e18]"
                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
               >
                 <div className="flex items-center space-x-2">
@@ -1396,7 +1396,7 @@ export default function CreateOrAddLiquidityPool() {
               </button>
 
               {state.dropdownOpen && (
-                <div className="absolute left-0 mt-1 w-full bg-[#14110c] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
+                <div className="absolute left-0 mt-1 w-full bg-[#130e18] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
                   {predefinedCoins
                     .filter((coin) => coin.symbol !== state.selectedCoin.symbol && 
                     coin.symbol !== state.selectedCustomCoin.symbol && whitelistedCoins.includes(coin.typeName))
@@ -1432,7 +1432,7 @@ export default function CreateOrAddLiquidityPool() {
                 </label>
                 <input
                   type="text"
-                  className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
+                  className="w-full p-2 border border-slate-600 bg-[#130e18] placeholder-slate-500"
                   placeholder="Enter coin type (e.g., 0x2::sui::SUI)"
                   value={state.customCoin}
                   onChange={handleCustomCoinChange}
@@ -1447,7 +1447,7 @@ export default function CreateOrAddLiquidityPool() {
                   <strong>Select Second Coin:</strong>
                 </label>
                 <button
-                  className="rounded-none w-full flex items-center justify-between p-2 border border-slate-600 bg-[#14110c]"
+                  className="rounded-none w-full flex items-center justify-between p-2 border border-slate-600 bg-[#130e18]"
                   onClick={() => dispatch({ type: "TOGGLE_CUSTOM_DROPDOWN" })}
                 >
                   <div className="flex items-center space-x-2">
@@ -1463,7 +1463,7 @@ export default function CreateOrAddLiquidityPool() {
                   <span className="text-slate-400">▼</span>
                 </button>
                 {state.customDropdownOpen && (
-                  <div className="absolute left-0 mt-1 w-full bg-[#14110c] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
+                  <div className="absolute left-0 mt-1 w-full bg-[#130e18] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
                     {predefinedCoins
                       .filter(
                         (coin) =>
@@ -1580,7 +1580,7 @@ export default function CreateOrAddLiquidityPool() {
                 variant="standard"
                 theme="none"
                 rounded={false}
-                className="border border-slate-600 bg-[#14110c] text-slate-300 hover:bg-slate-700"
+                className="border border-slate-600 bg-[#130e18] text-slate-300 hover:bg-slate-700"
                 size="md"
               >
                 Back
@@ -1621,7 +1621,7 @@ export default function CreateOrAddLiquidityPool() {
                       </label>
                       <input
                         type="number"
-                        className="w-full p-2 border border-slate-600 bg-[#14110c]"
+                        className="w-full p-2 border border-slate-600 bg-[#130e18]"
                         placeholder="0"
                         min="0"
                         max="3"
@@ -1646,7 +1646,7 @@ export default function CreateOrAddLiquidityPool() {
                       </label>
                       <input
                         type="number"
-                        className="w-full p-2 border border-slate-600 bg-[#14110c]"
+                        className="w-full p-2 border border-slate-600 bg-[#130e18]"
                         placeholder="0"
                         min="0"
                         max="5"
@@ -1671,7 +1671,7 @@ export default function CreateOrAddLiquidityPool() {
                       </label>
                       <input
                         type="number"
-                        className="w-full p-2 border border-slate-600 bg-[#14110c]"
+                        className="w-full p-2 border border-slate-600 bg-[#130e18]"
                         placeholder="0"
                         min="0"
                         max="1"
@@ -1696,7 +1696,7 @@ export default function CreateOrAddLiquidityPool() {
                       </label>
                       <input
                         type="number"
-                        className="w-full p-2 border border-slate-600 bg-[#14110c]"
+                        className="w-full p-2 border border-slate-600 bg-[#130e18]"
                         placeholder="0"
                         min="0"
                         max="5"
@@ -1716,7 +1716,7 @@ export default function CreateOrAddLiquidityPool() {
                   </div>
 
                   {/* Total Fees Display */}
-                  <div className="mt-4 p-3 bg-[#14110c] border border-slate-600">
+                  <div className="mt-4 p-3 bg-[#130e18] border border-slate-600">
                     <p className="font-medium text-slate-300">
                       Total Fees:{" "}
                       {(
@@ -1733,13 +1733,13 @@ export default function CreateOrAddLiquidityPool() {
 
                 {/* Deployer Royalty Wallet */}
                 {state.deployerRoyaltyFee > 0 && (
-                  <div className="bg-[#14110c] border border-slate-600 p-4 mb-4">
+                  <div className="bg-[#130e18] border border-slate-600 p-4 mb-4">
                     <label className="block text-slate-300 mb-1">
                       <strong>Deployer Royalty Wallet Address</strong>
                     </label>
                     <input
                       type="text"
-                      className="w-full p-2 border border-slate-600 bg-[#14110c]"
+                      className="w-full p-2 border border-slate-600 bg-[#130e18]"
                       placeholder="Enter a valid SUI address (0x...)"
                       value={state.deployerRoyaltyWallet}
                       onChange={(e) =>
@@ -1764,7 +1764,7 @@ export default function CreateOrAddLiquidityPool() {
                       <strong>Initial Price Mode</strong>
                     </label>
                     <select
-                      className="w-full p-2 border border-slate-600 bg-[#14110c]"
+                      className="w-full p-2 border border-slate-600 bg-[#130e18]"
                       value={state.initialPriceMode}
                       onChange={(e) =>
                         dispatch({
@@ -1790,7 +1790,7 @@ export default function CreateOrAddLiquidityPool() {
                     </label>
                     <input
                       type="number"
-                      className="w-full p-2 border border-slate-600 bg-[#14110c]"
+                      className="w-full p-2 border border-slate-600 bg-[#130e18]"
                       placeholder="0"
                       min="0"
                       step="0.000001"
@@ -1846,7 +1846,7 @@ export default function CreateOrAddLiquidityPool() {
                       </div>
                       <input
                         type="number"
-                        className="p-2 border border-slate-600 bg-[#14110c] text-slate-300 text-2xl font-semibold outline-none"
+                        className="p-2 border border-slate-600 bg-[#130e18] text-slate-300 text-2xl font-semibold outline-none"
                         placeholder="0"
                         min="0"
                         value={state.depositDropdownCoin}
@@ -1877,7 +1877,7 @@ export default function CreateOrAddLiquidityPool() {
                       </div>
                       <input
                         type="number"
-                        className="p-2 border border-slate-600 bg-[#14110c] text-slate-300 text-2xl font-semibold outline-none"
+                        className="p-2 border border-slate-600 bg-[#130e18] text-slate-300 text-2xl font-semibold outline-none"
                         placeholder="0"
                         min="0"
                         value={state.depositCustomCoin}
@@ -1904,7 +1904,7 @@ export default function CreateOrAddLiquidityPool() {
                 </h2>
 
                 {/* Pool Stats */}
-                <div className="bg-[#14110c] border border-slate-600 p-3 md:p-4 shadow-md mb-4 text-sm md:text-base">
+                <div className="bg-[#130e18] border border-slate-600 p-3 md:p-4 shadow-md mb-4 text-sm md:text-base">
                   <h2 className="text-lg font-semibold text-slate-300">
                     Pool Stats
                   </h2>
@@ -1983,7 +1983,7 @@ export default function CreateOrAddLiquidityPool() {
                 </div>
 
                 {/* Slippage Tolerance Input */}
-                <div className="bg-[#14110c] border border-slate-600 p-4 shadow-md mb-4">
+                <div className="bg-[#130e18] border border-slate-600 p-4 shadow-md mb-4">
                   <h2 className="text-lg font-semibold text-slate-300">
                     Slippage Tolerance
                   </h2>
@@ -2012,7 +2012,7 @@ export default function CreateOrAddLiquidityPool() {
                 </div>
 
                 {/* Deposit Inputs */}
-                <div className="bg-[#14110c] border border-slate-600 p-4 shadow-md mb-4">
+                <div className="bg-[#130e18] border border-slate-600 p-4 shadow-md mb-4">
                   <h2 className="text-lg font-semibold text-slate-300">
                     Deposit Tokens
                   </h2>
@@ -2073,7 +2073,7 @@ export default function CreateOrAddLiquidityPool() {
                   variant="standard"
                   theme="none"
                   rounded={false}
-                  className="border border-slate-600 bg-[#14110c] text-slate-300 hover:bg-slate-700"
+                  className="border border-slate-600 bg-[#130e18] text-slate-300 hover:bg-slate-700"
                   size="md"
                 >
                   Back
@@ -2096,7 +2096,7 @@ export default function CreateOrAddLiquidityPool() {
 
         {/* Step 3: Transaction Result */}
         {state.step === 3 && state.liquidityData && (
-          <div className="bg-[#14110c] border border-slate-600 p-6 shadow-lg">
+          <div className="bg-[#130e18] border border-slate-600 p-6 shadow-lg">
             <h2 className="text-xl font-bold text-[#61F98A] mb-4">
               {state.isCreatingNewPool
                 ? "Pool Successfully Created!"

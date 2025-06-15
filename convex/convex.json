@@ -1,0 +1,15 @@
+{
+  "project": "srm-front-end",
+  "team": "srm-team",
+  "prodUrl": "https://excited-fox-463.convex.cloud",
+  "functions": {
+    "scheduler": {
+      "maxSchedulerConcurrency": 5
+    }
+  },
+  "deployment": {
+    "main": {
+      "deployer": "cezary@srm.com"
+    }
+  }
+}

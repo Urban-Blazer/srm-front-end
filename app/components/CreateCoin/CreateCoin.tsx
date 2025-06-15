@@ -11,9 +11,11 @@ import init, {
   update_constants,
   update_identifiers,
 } from "@mysten/move-bytecode-template";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, ChangeEvent, useEffect, useRef, useState } from "react";
 import "./autofill-styles.css";
 import coinTemplateBytes from "./coin-template-bytes";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 import { SRM_COIN_CREATOR_FEE, SRM_COIN_CREATOR_WALLET } from "@/app/config";
 import Avatar from "@components/Avatar";
@@ -55,7 +57,6 @@ export default function CreateCoin() {
   const [publishedTX, setPublishedTX] = useState<any>({});
   const [mintTX, setMintTX] = useState<any>({});
   const [error, setError] = useState<string | null>(null);
-  const IMG_BASE_URL = "https://blob.suiget.xyz/";
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -78,41 +79,70 @@ export default function CreateCoin() {
   const [uploading, setUploading] = useState(false);
   const [isUploadImage, setIsUploadImage] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+  
+  // Convex mutations for image upload
+  const generateUploadUrl = useMutation(api.storage.generateUploadUrl);
+  const saveImage = useMutation(api.storage.saveImage);
 
   const handleSelectImage = async () => {
     inputRef.current?.click();
   };
+  
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    const formData = new FormData();
-    formData.append("image", file);
-
+    
+    setSelectedImage(file);
+    await handleUploadImage(file);
+  };
+  
+  const handleUploadImage = async (file: File) => {
     try {
       setUploading(true);
       setResponseMessage(null);
-
-      const response = await fetch(`${IMG_BASE_URL}/upload.php`, {
+      
+      // Step 1: Get a short-lived upload URL from Convex
+      const postUrl = await generateUploadUrl();
+      
+      // Step 2: Upload the file directly to storage
+      const result = await fetch(postUrl, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": file.type },
+        body: file,
       });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        setResponseMessage(`✅ ${result.message}`);
-        setValue("image", file ? IMG_BASE_URL + result.file_path : "");
-      } else {
-        setResponseMessage(`❌ Error: ${result.message}`);
+      
+      const json = await result.json();
+      
+      if (!result.ok) {
+        throw new Error(`Upload failed: ${JSON.stringify(json)}`);
       }
-    } catch (error) {
+      
+      const { storageId } = json;
+      
+      // Step 3: Save the storage reference in the database
+      const savedImage = await saveImage({ 
+        storageId, 
+        fileName: file.name,
+        type: file.type 
+      });
+      
+      // Update the form with the new image URL
+      if (savedImage && savedImage.url) {
+        setResponseMessage(`✅ Image uploaded successfully`);
+        setValue("image", savedImage.url);
+      } else {
+        setResponseMessage(`❌ Error: Could not get image URL`);
+      }
+    } catch (error: any) {
       console.error("Error uploading the image:", error);
-      setResponseMessage("❌ Error uploading the image.");
+      setResponseMessage(`❌ Error: ${error.message || "Failed to upload image"}`);
     } finally {
       setUploading(false);
+      setSelectedImage(null);
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
@@ -121,9 +151,12 @@ export default function CreateCoin() {
     setValue("image", e.target.value);
     setResponseMessage("✅ URL updated");
   };
+  
   const handleRemoveImage = () => {
     setValue("image", "");
+    setSelectedImage(null);
     setResponseMessage(null);
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   useEffect(() => {

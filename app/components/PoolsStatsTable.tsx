@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  Alert,
   Box,
   Chip,
+  CircularProgress,
   FormControl,
   MenuItem,
   Paper,
@@ -19,7 +21,8 @@ import {
 } from "@mui/material";
 import { ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import usePoolRanking from "../hooks/usePoolRanking";
 import Avatar from "./Avatar";
 import ExplorerAccountLink from "./ExplorerLink/ExplorerAccountLink";
 
@@ -136,31 +139,12 @@ function EnhancedTableHead(props: EnhancedTableHeadProps) {
 }
 
 export default function PoolsStatsTable() {
-  const [data, setData] = useState<Pool[]>([]);
-  const [copiedText, setCopiedText] = useState<string | null>(null);
   const [range, setRange] = useState<"24h" | "7d" | "all">("24h");
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<PoolSortKey>("timestamp");
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(text);
-    setTimeout(() => setCopiedText(null), 2000);
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`/api/pool-ranking?range=${range}`);
-        const json = await res.json();
-        setData(json);
-      } catch (err) {
-        console.error("[DEBUG] Fetch failed:", err);
-      }
-    };
-
-    fetchData();
-  }, [range]);
+  
+  // Use the new hook to fetch pool ranking data
+  const { poolRankingData, isLoading, error } = usePoolRanking(range);
 
   const handleRequestSort = (
     _event: React.MouseEvent<unknown>,
@@ -176,9 +160,9 @@ export default function PoolsStatsTable() {
   };
 
   const sortedData = React.useMemo(() => {
-    if (!orderBy) return data;
+    if (!orderBy || !poolRankingData) return [];
 
-    return [...data].sort((a, b) => {
+    return [...poolRankingData].sort((a, b) => {
       switch (orderBy) {
         case "buyVolume":
           return order === "asc"
@@ -214,7 +198,7 @@ export default function PoolsStatsTable() {
           return 0;
       }
     });
-  }, [data, order, orderBy]);
+  }, [poolRankingData, order, orderBy]);
 
   return (
     <div className="flex flex-col items-center min-h-[80vh] p-4 md:p-6 pt-20 pb-20 text-slate-100 bg-[#000306]">
@@ -296,7 +280,26 @@ export default function PoolsStatsTable() {
             </Select>
           </FormControl>
         </div>
+        
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, bgcolor: 'rgba(211, 47, 47, 0.1)', color: '#ff6b6b' }}>
+            Error loading pool data: {error instanceof Error ? error.message : 'Unknown error'}
+          </Alert>
+        )}
+        
+        {isLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress sx={{ color: '#61F98A' }} />
+          </Box>
+        )}
 
+        {!isLoading && !error && sortedData.length === 0 && (
+          <Alert severity="info" sx={{ mb: 2, bgcolor: 'rgba(3, 169, 244, 0.1)', color: '#29b6f6' }}>
+            No pool data available for the selected time range.
+          </Alert>
+        )}
+
+        {!isLoading && !error && sortedData.length > 0 && (
         <TableContainer
           component={Paper}
           sx={{
@@ -493,6 +496,7 @@ export default function PoolsStatsTable() {
             </TableBody>
           </Table>
         </TableContainer>
+        )}
       </div>
     </div>
   );

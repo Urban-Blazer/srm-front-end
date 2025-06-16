@@ -20,9 +20,6 @@ export async function GET(req: Request) {
 
         const sender = searchParams.get("sender") || DEFAULT_SENDER;
 
-        console.log("Requested TypeA:", typeA);
-        console.log("Requested TypeB:", typeB);
-
         if (!typeA || !typeB) {
             return NextResponse.json(
                 { error: "Missing typeA or typeB" },
@@ -43,8 +40,6 @@ export async function GET(req: Request) {
             sender,
             transactionBlock: txb,
         });
-
-        console.log("🧪 Simulation Response:", JSON.stringify(response, null, 2));
 
         const result = response.results?.[0];
 

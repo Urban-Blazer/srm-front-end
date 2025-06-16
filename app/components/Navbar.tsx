@@ -45,7 +45,7 @@ const globalStyles = `
 const NAVIGATION_ITEMS = [
   {
     id: "dashboard",
-    label: "Dashboard",
+    label: "DASHBOARD",
     path: "/dashboard/my-royalties",
     submenu: [
       {
@@ -75,6 +75,12 @@ const NAVIGATION_ITEMS = [
         path: "/pools/add-liquidity",
       },
     ],
+  },
+  {
+    id: "launch",
+    label: "LAUNCH",
+    path: "/launchpad/create-coin",
+    external: false,
   },
   {
     id: "info",
@@ -265,15 +271,15 @@ const Dropdown: React.FC<DropdownProps> = ({
   // Classes based on mobile or desktop view
   const dropdownClasses = isMobile
     ? "bg-white text-black p-2 rounded w-full"
-    : "absolute left-0 mt-2 p-2 bg-slate-900 text-white rounded shadow-md w-40 z-50";
+    : "absolute left-0 mt-2 p-2 bg-[#130e18] text-white rounded shadow-md w-40 z-50";
 
   const linkClasses = isMobile
     ? "block px-4 py-2 hover:bg-softMint"
-    : "block px-4 py-2 text-white hover:bg-slate-200 hover:text-black";
+    : "block px-4 py-2 text-white hover:opacity-75 hover:text-white transition-opacity duration-300 ease-in-out hover:font-bold";
 
   return (
     <div
-      className={`${dropdownClasses} animate-slideIn`}
+      className={`${dropdownClasses} animate-slideIn text-xs`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
@@ -295,7 +301,7 @@ const Dropdown: React.FC<DropdownProps> = ({
               animation: `slideIn 0.3s ease-out forwards ${index * 50}ms`,
             }}
           >
-            {item.label}
+            {item?.label?.toUpperCase()}
           </a>
         ) : (
           <a
@@ -311,7 +317,7 @@ const Dropdown: React.FC<DropdownProps> = ({
               animation: `slideIn 0.3s ease-out forwards ${index * 50}ms`,
             }}
           >
-            {item.label}
+            {item?.label?.toUpperCase()}
           </a>
         );
       })}
@@ -368,7 +374,7 @@ const MobileMenuItem = ({
     >
       <ListItemButton onClick={handleClick}>
         <ListItemText 
-          primary={label} 
+          primary={label.toUpperCase()} 
           primaryTypographyProps={{ 
             sx: { 
               color: 'white',
@@ -508,10 +514,10 @@ export default function NavBar() {
         </div>
       </div>
 
-      <div className="flex w-full border-b p-0 m-0 mt-8 border-[#5E21A1]" />
+      <div className="flex w-full p-0 m-0 mt-2" />
 
       {/* Desktop Menu */}
-      <div ref={menuRef} className="hidden md:flex space-x-4 ml-8">
+      <div ref={menuRef} className="hidden md:flex space-x-4">
         {NAVIGATION_ITEMS.map((menu) => {
           // Comprobar si la ruta actual coincide con este menú
           const isActive = pathname?.startsWith(menu.path);
@@ -521,7 +527,7 @@ export default function NavBar() {
               <div key={menu.id} className="relative group">
                 <NavLink href={menu.path} external={false} className="">
                   <button className="menu-button px-4 py-2 hover:scale-105 transition-transform duration-300">
-                    {menu.label}
+                    {menu?.label?.toUpperCase()}
                   </button>
                 </NavLink>
               </div>
@@ -532,7 +538,7 @@ export default function NavBar() {
             <div
               key={menu.id}
               className={`relative group ${
-                isActive ? "border-b-2 border-[#5E21A1]" : ""
+                isActive ? " " : ""
               }`}
               onMouseEnter={() => openDropdown(menu.id)}
               onMouseLeave={closeDropdown}
@@ -543,7 +549,7 @@ export default function NavBar() {
                     isActive ? "text-[#5E21A1]" : "text-white"
                   }`}
                 >
-                  {menu.label}
+                  {menu?.label?.toUpperCase()}
                 </button>
               </Link>
 
@@ -566,7 +572,7 @@ export default function NavBar() {
           <div key={link.id} className="relative group">
             <NavLink href={link.path} external={link.external} className="">
               <button className="menu-button px-4 py-2 hover:scale-105 transition-transform duration-300">
-                {link.label}
+                {link?.label?.toUpperCase()}
               </button>
             </NavLink>
           </div>
@@ -706,7 +712,7 @@ export default function NavBar() {
           ))}
         </List>
         
-        <Box sx={{ mt: 'auto', p: 2, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ p: 2, marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
           <ConnectButton />
         </Box>
       </Drawer>

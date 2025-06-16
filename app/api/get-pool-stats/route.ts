@@ -29,8 +29,6 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Missing wallet address" }, { status: 400 });
         }
 
-        console.log(`🔍 Searching pools for creatorWallet: ${walletAddress}`);
-
         // ✅ Query DynamoDB using the GSI on `creatorWallet`
         const queryParams = {
             TableName: TABLE_NAME,
@@ -44,11 +42,9 @@ export async function GET(req: NextRequest) {
         const result = await dynamoDB.send(new QueryCommand(queryParams));
 
         if (!result.Items || result.Items.length === 0) {
-            console.log(`⚠️ No pools found for creatorWallet: ${walletAddress}`);
+            console.error(`⚠️ No pools found for creatorWallet: ${walletAddress}`);
             return NextResponse.json({ message: "No pools found" }, { status: 404 });
         }
-
-        console.log(`✅ Found ${result.Items.length} pools for ${walletAddress}`);
 
         // ✅ Transform data into a clean format
         const pools = result.Items.map((item) => ({

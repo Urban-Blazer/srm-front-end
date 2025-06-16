@@ -383,7 +383,7 @@ export const LPPositionCard = ({
 
   return (
     <div
-      className="p-5 border border-slate-700 bg-[#14110c] mb-6 flex flex-col items-center text-center space-y-4 rounded-none"
+      className="p-5 border border-slate-700 bg-[#130e18] mb-6 flex flex-col items-center text-center space-y-4 rounded-none"
       key={lp.objectId}
     >
       {/* Transaction Modal - Moved outside conditional rendering to avoid issues */}
@@ -509,7 +509,7 @@ export const LPPositionCard = ({
                 variant="primary"
                 size="full"
                 processing={isRemoving}
-                className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-3 py-1  ${
+                className={`flex-1 text-xs sm:text-md bg-[#130e18] hover:bg-slate-600 rounded-none px-3 py-1  ${
                   removePercentage[lp.objectId] === percent
                     ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
                     : "text-slate-300"
@@ -522,7 +522,7 @@ export const LPPositionCard = ({
 
           {/* Input for LP Amount */}
           <div className="space-y-1 mb-4">
-            <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
+            <div className="flex justify-between items-center bg-[#130e18] px-3 py-2">
               <input
                 type="number"
                 className={`flex-1 p-2 outline-none bg-transparent text-sm sm:text-md overflow-hidden grow ${
@@ -560,7 +560,7 @@ export const LPPositionCard = ({
                       [lp.objectId]: s,
                     }))
                   }
-                  className={`bg-[#14110c] hover:bg-slate-600 rounded-none px-2 py-1 ${
+                  className={`bg-[#130e18] hover:bg-slate-600 rounded-none px-2 py-1 ${
                     Number(s) === Number(slippageTolerance[lp.objectId])
                       ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
                       : "text-slate-300"
@@ -573,7 +573,7 @@ export const LPPositionCard = ({
               <Button
                 variant="standard"
                 size="sm"
-                className="bg-[#14110c] hover:bg-slate-600"
+                className="bg-[#130e18] hover:bg-slate-600"
                 onClick={() => setSlippageConfig(!slippageConfig)}
               >
                 {slippageConfig ? (
@@ -588,7 +588,7 @@ export const LPPositionCard = ({
                 <Button
                   variant="standard"
                   size="sm"
-                  className="bg-[#14110c] hover:bg-slate-600"
+                  className="bg-[#130e18] hover:bg-slate-600"
                   onClick={() => setSlippageTolerance((prev) => ({
                     ...prev,
                     [lp.objectId]:`${Number(prev[lp.objectId]) - 0.1}`,
@@ -618,14 +618,14 @@ export const LPPositionCard = ({
                       }
                     }
                   }}
-                  className="bg-[#14110c] w-16 text-center text-slate-100 outline-none border border-slate-600 py-1
+                  className="bg-[#130e18] w-16 text-center text-slate-100 outline-none border border-slate-600 py-1
                         [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <span>%</span>
                 <Button
                   variant="standard"
                   size="sm"
-                  className="bg-[#14110c] hover:bg-slate-600"
+                  className="bg-[#130e18] hover:bg-slate-600"
                   onClick={() => setSlippageTolerance((prev) => ({
                     ...prev,
                     [lp.objectId]:`${Number(prev[lp.objectId]) + 0.1}`,

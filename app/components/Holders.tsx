@@ -21,29 +21,29 @@ const Holders: FC<HoldersProps> = ({ coinType, poolId }) => {
   const { holders, isLoading, error } = useHolders(coinType);
 
   return (
-    <div className="p-4 w-full">
+    <div className="w-full">
       <div className="overflow-x-auto overflow-y-auto max-h-80 min-w-full">
         {isLoading ? (
           <Spinner />
         ) : error ? (
-          <p className="text-red-400 text-sm text-center">Failed to load holders</p>
+          <p className="text-red-400 text-sm text-left">Failed to load holders</p>
         ) : !holders || holders.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center">No holders found.</p>
+          <p className="text-sm text-left">No holders found.</p>
         ) : (
-          <table className="w-full text-slate-300 text-sm">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-slate-400 text-xs uppercase">
-                <th className="py-3 px-4 text-center">#</th>
-                <th className="py-3 px-4 text-center">Address</th>
-                <th className="py-3 px-4 text-center">Quantity</th>
-                <th className="py-3 px-4 text-center">% of Supply</th>
+              <tr className="text-xs uppercase">
+                <th className="py-1 px-4 text-left">#</th>
+                <th className="py-1 px-4 text-left">Address</th>
+                <th className="py-1 px-4 text-left">Quantity</th>
+                <th className="py-1 px-4 text-left">% of Supply</th>
               </tr>
             </thead>
             <tbody>
               {holders.map((holder: Holder, idx: number) => (
-                <tr key={holder.account} className="border-t border-slate-700">
-                  <td className="py-3 px-4 text-center">{idx + 1}</td>
-                  <td className="py-3 px-4 text-center">
+                <tr key={holder.account} className="">
+                  <td className="py-1 px-4 text-left">{idx + 1}</td>
+                  <td className="py-1 px-4 text-left">
                     <a
                       href={`https://suiscan.xyz/mainnet/account/${holder.account}`}
                       target="_blank"
@@ -53,10 +53,10 @@ const Holders: FC<HoldersProps> = ({ coinType, poolId }) => {
                       {shortenAddress(holder.account)}
                     </a>
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-1 px-4 text-left">
                     {formatNumber(Number(holder.balance))}
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-1 px-4 text-left">
                     {Number(holder.percentage) > 0 ? (holder.percentage * 100).toFixed(2) : ((Number(holder.balance) / ((SRM_COIN_SUPPLY - (statsLifetime?.burnedCoins ?? 5)) / 10**9))*100).toFixed(2)}%
                   </td>
                 </tr>

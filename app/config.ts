@@ -10,10 +10,12 @@ export const LOCK_ID = "0xcfb67cb1146042db63e8ceab8d3d65e7b4574d4dd64f8bcbcc8fb8
 export const DEFAULT_NETWORK = "mainnet";
 export const SRM_COINTYPE = "0xbd2301d12b96dd64b41134168931dd54742c0336bcf1752ed346a177ac00d1ed::SuiRewardsMe::SUIREWARDSME";
 export const SRM_COIN_SUPPLY = 1_000_000_000_000_000_000; // 1B
-
+export const SRM_COIN_CREATOR_FEE = 5;
+export const SRM_COIN_CREATOR_WALLET = "0xb139316ab0ab0b2309010335ca60586e5b4f21d86328638829759aad62ecc616";
 export const EXPLORER = {
   ADDRESS: `https://suiscan.xyz`,
 };
+export const IMG_BASE_URL = "https://suirewards.me/coinphp/";
 
 
 export const SUI_SHORT_ID = "0x2::sui::SUI";

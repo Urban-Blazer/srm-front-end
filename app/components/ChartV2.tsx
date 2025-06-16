@@ -166,7 +166,7 @@ export default function ChartV2({ poolId, coinASymbol, children }: ChartProps) {
         <select
           value={interval}
           onChange={(e) => setInterval(e.target.value as IntervalType)}
-          className="bg-[#14110c] text-slate-100 border border-[#221d14] px-2 py-1 text-sm"
+          className="bg-[#130e18] text-slate-100 border border-[#221d14] px-2 py-1 text-sm"
         >
           {intervals.map((int) => (
             <option key={int} value={int}>

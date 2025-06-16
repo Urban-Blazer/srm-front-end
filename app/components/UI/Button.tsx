@@ -13,26 +13,34 @@ const baseInnerClassName =
   "transition-[background] duration-300 ease-in-out w-full h-full px-1.5 flex items-center justify-center truncate";
 
 const sizeClasses = {
-  lg: "h-13 font-bold text-lg hover:shadow-soft-2",
-  md: "h-10 font-bold text-base rounded-[10px] hover:shadow-soft-2",
+  xl: "w-full h-10 px-2 font-semibold hover:shadow-soft-2",
+  lg: "h-12 px-2 font-bold hover:shadow-soft-2",
+  md: "h-8 px-1 font-bold text-base hover:shadow-soft-2",
   sm: "h-8 font-bold text-xs/normal hover:shadow-soft-2",
   xs: "h-5 font-bold text-xs/normal rounded-[4px] hover:shadow-soft",
   full: "w-full py-3 font-semibold text-lg",
 };
 
+// className="bg-[#000306] ml-auto rounded-none text-white border border-[#5E21A1] hover:text-red-400 text-xs px-2 py-1"
 // Predefined variant styles
 const variantClasses = {
   // Primary variant (buy - green gradient)
-  primary: "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] text-[#5E21A1] hover:opacity-75",
+  primary: "bg-[#61F98A] text-gray-900 hover:border hover:border-[#61F98A] hover:text-[#61F98A] hover:bg-transparent disabled:bg-[#61F98A] disabled:text-gray-900",
+  primarySoftDisable: "bg-[#61F98A] text-gray-900 hover:border hover:border-[#5E21A1] hover:text-[#5E21A1] hover:bg-transparent disabled:opacity-100 disabled:bg-[#61F98A] disabled:text-gray-900",
   
   // Secondary variant (sell - purple gradient)
-  secondary: "bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:opacity-75",
+  secondary: "bg-[#5E21A1] text-white hover:border hover:border-[#5E21A1] hover:text-[#5E21A1] hover:bg-transparent disabled:bg-[#5E21A1] disabled:text-white",
+  secondarySoftDisable: "bg-[#5E21A1] text-white hover:border hover:border-[#5E21A1] hover:text-[#5E21A1] hover:bg-transparent disabled:opacity-100 disabled:bg-[#5E21A1] disabled:text-white",
   
   // Disabled variant
   disabled: "bg-gray-500 cursor-not-allowed text-white",
   
   // Standard variants from original component
   standard: "",
+
+  default: "bg-[--tw-btn-theme] text-white hover:bg-[--tw-btn-theme]/80  hover:border hover:border-[#5E21A1] hover:text-[#5E21A1] hover:bg-transparent",
+  buyDefault: "hover:border hover:border-[#61f98a] hover:text-[#61f98a] hover:bg-transparent disabled:opacity-100 disabled:bg-[#61F98A] disabled:text-[#61f98a]",
+  sellDefault: "hover:border hover:border-[#5E21A1] hover:text-[#5E21A1] hover:bg-transparent disabled:opacity-100 disabled:bg-[#5E21A1] disabled:text-[#5E21A1]",
 };
 
 type Props = JSX.IntrinsicElements["button"] & {
@@ -88,8 +96,8 @@ const Button = React.forwardRef<HTMLButtonElement, Props>(function Button(
   const buttonContent = processing 
     ? "Processing..." 
     : loading
-      ? <><span className="shink-0 mr-[1ch] inline-block w-[2ch] h-[2ch] border-[0.35ch] border-t-transparent border-current animate-spin"></span>{children}</>
-      : children;
+      ? <><span className="shink-0 mr-[1ch] inline-block w-[2ch] h-[2ch] border-[0.35ch] border-t-transparent border-current animate-spin"></span>{typeof children === "string" ? children.toUpperCase() : children}</>
+      : typeof children === "string" ? children.toUpperCase() : children;
 
   return (
     <button type="button" {...rest} className={btn} ref={ref}>

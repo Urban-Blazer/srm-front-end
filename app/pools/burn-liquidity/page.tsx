@@ -516,7 +516,7 @@ const BurnLPPositionCard = ({
   const estimatedValue = coinAPriceUSD ? coinAPriceUSD * lp.userCoinA : 0;
 
   return (
-    <div className="bg-[#14110c] p-5  border border-slate-700 rounded-none shadow-md mb-4 flex flex-col items-center text-center space-y-3">
+    <div className="bg-[#130e18] p-5  border border-slate-700 rounded-none shadow-md mb-4 flex flex-col items-center text-center space-y-3">
       {/* Coin Images & Symbols */}
       <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">
         <Avatar

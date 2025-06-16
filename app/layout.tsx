@@ -6,6 +6,7 @@ import '@mysten/dapp-kit/dist/index.css';
 import './globals.css';
 
 import Providers from './components/Providers';
+import { ConvexClientProvider } from './providers/convex-client-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -59,10 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${inter.className} bg-[#000306] text-white h-screen`}>
-          <Providers>
-            <Navbar />
-            <main className="max-w-[100vw]mx-auto bg-[#000306]">{children}</main>
-          </Providers>
+          <ConvexClientProvider>
+            <Providers>
+              <Navbar />
+              <main className="max-w-[100vw]mx-auto bg-[#000306]">{children}</main>
+            </Providers>
+          </ConvexClientProvider>
       </body>
     </html>
   );

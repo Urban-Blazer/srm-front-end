@@ -42,7 +42,6 @@ async function ensureTableExists() {
       TableName: TABLE_NAME,
       Limit: 1
     }));
-    console.log(`Table ${TABLE_NAME} already exists`);
     return true;
   } catch (error: any) {
     if (error.name === 'ResourceNotFoundException') {
@@ -63,10 +62,8 @@ async function ensureTableExists() {
 
       try {
         await dynamoDBClient.send(new CreateTableCommand(createTableParams));
-        console.log(`Table ${TABLE_NAME} created successfully`);
         
         // Wait for the table to be active
-        console.log("Waiting for table to become active...");
         let tableActive = false;
         while (!tableActive) {
           await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
@@ -77,7 +74,7 @@ async function ensureTableExists() {
             }));
             tableActive = true;
           } catch (error) {
-            console.log("Table not active yet, waiting...");
+            console.info("Table not active yet, waiting...");
           }
         }
         
@@ -107,7 +104,6 @@ async function seedInitialData() {
         TableName: TABLE_NAME,
         Item: coin
       }));
-      console.log(`Added coin ${coin.symbol} to database`);
     } catch (error) {
       console.error(`Failed to add coin ${coin.symbol}:`, error);
     }

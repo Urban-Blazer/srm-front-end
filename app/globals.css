@@ -13,7 +13,7 @@
 /* 🎨 Define Global Theme Variables */
 :root {
   --color-deep-teal: #0d3b3e;
-  --color-emerald-green: #21b573;
+  --color-emerald-green: #61F98A;
   --color-soft-mint: #9fffcb;
   --color-royal-purple: #6a1b9a;
   --color-lavender-glow: #c77dff;
@@ -80,29 +80,44 @@ p {
 .MuiTabs-indicator {
   background-color: #61f98a !important;
 }
-button.MuiTab-root:hover {
-  background-color: rgb(22, 21, 21) !important;
+
+.MuiTabs-list {
+  gap: 16px !important;
 }
 
 .MuiButtonBase-root {
+    min-height: 36px !important;
+
+    padding: 0px 10px !important;
     background-color: transparent !important;
+    border: 1px solid transparent !important;
     color: white !important;
 }
 
 .MuiButtonBase-root:hover {
     background-color: transparent !important;
+    border: 1px solid var(--primary-button) !important;
     color: var(--primary-button) !important;
+    font-weight: 700 !important;
 }
+
+.MuiTabs-indicator {
+  border: none !important;
+  background-color: transparent !important;
+} 
 
 .MuiButtonBase-root.Mui-selected {
     background-color: var(--primary-button) !important;
-    color: white !important;
+    color: black !important;
+    font-weight: 700 !important;
+    border: none !important;
 }
-
 .MuiButtonBase-root.Mui-selected:hover {
-    opacity: 0.8;
+    cursor: not-allowed !important;
     background-color: var(--primary-button) !important;
-    color: white !important;
+    color: black !important;
+    font-weight: 700 !important;
+    opacity: 0.8;
 }
 
 
@@ -128,7 +143,6 @@ button.menu-button {
 }
 
 button.menu-button:hover {
-  border-bottom: 3px solid var(--color-royal-purple);
   background-color: transparent;
   color: var(--color-soft-mint);
 }
@@ -290,6 +304,7 @@ a:hover {
 [data-dapp-kit] * {
   font-family: var(--font-cta) !important;
   transition: all 0.3s ease;
+  color:black !important;
 }
 
 /* Botones principales de connect wallet y sus variantes */
@@ -298,8 +313,8 @@ a:hover {
 [data-dapp-kit] .Button_buttonVariants_size_lg__x1s81q4,
 [data-dapp-kit].Button_buttonVariants_size_md__x1s81q3,
 [data-dapp-kit] .Button_buttonVariants_size_md__x1s81q3 {
-  background-image: linear-gradient(205deg, #009966 1%, #61f98a 100%);
-  color: #5e21a1 !important;
+  background-color: #61f98a;
+  color: #130e18 !important;
   border: 1px solid #61f98a !important;
   border-radius: 0px !important;
   font-size: 14px !important;
@@ -307,7 +322,7 @@ a:hover {
   text-transform: uppercase !important;
   letter-spacing: 1px !important;
   box-shadow: 0 4px 8px rgba(97, 249, 138, 0.2);
-  padding: 8px 16px !important;
+  padding: 2px 8px !important;
   min-height: 42px;
   display: flex;
   align-items: center;
@@ -327,10 +342,9 @@ a:hover {
 /* Menú desplegable de la cuenta */
 [data-dapp-kit].AccountDropdownMenu_menuContent__div2ql2,
 [data-dapp-kit] .AccountDropdownMenu_menuContent__div2ql2 {
-  background-color: #14110c !important;
-  border: 1px solid #61f98a !important;
+  background-color: #130e18 !important;
+  color: #fff !important;
   border-radius: 0px !important;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5), 0 0 8px rgba(97, 249, 138, 0.2);
   width: 220px;
   max-height: 80vh;
   overflow: hidden;
@@ -342,7 +356,7 @@ a:hover {
 
 /* Elementos del menú desplegable */
 [data-dapp-kit] .AccountDropdownMenu_menuItem__div2ql3 {
-  color: #5e21a1 !important;
+  color: #fff !important;
   border-radius: 0px !important;
   padding: 10px 12px !important;
   font-size: 14px;
@@ -380,11 +394,9 @@ a:hover {
 
 [data-dapp-kit].ConnectModal_content__gz8z92,
 [data-dapp-kit] .ConnectModal_content__gz8z92 {
-  background-color: #14110c !important;
-  border: 1px solid #61f98a !important;
+  background-color: #130e18 !important;
   border-radius: 0px !important;
-  color: #5e21a1 !important;
-  box-shadow: 0 8px 32px rgba(97, 249, 138, 0.2);
+  color: white !important;
 }
 
 /* Botón de cierre */
@@ -418,25 +430,35 @@ a:hover {
 
 [data-dapp-kit].ConnectModal_walletListContent__gz8z98,
 [data-dapp-kit] .ConnectModal_walletListContent__gz8z98 {
-  background-color: #14110c !important;
+  background-color: #130e18 !important;
+  color: white !important;
 }
 
 /* Iconos de wallet */
-[data-dapp-kit] .WalletListItem_walletIcon__1dqqtqs3,
+/* [data-dapp-kit] .WalletListItem_walletIcon__1dqqtqs3,
 [data-dapp-kit] .ConnectionStatus_walletIcon__nckm2d1 {
-  border: 1px solid #61f98a !important;
+} */
+
+[data-dapp-kit].WhatIsAWallet_container__1ktpkq90, [data-dapp-kit] .WhatIsAWallet_container__1ktpkq90 {
+  align-items: flex-start !important;
 }
 
 /* Encabezados y textos */
+[data-dapp-kit] .Heading__1aa835k0,
 [data-dapp-kit] .Heading_headingVariants_size_lg__1aa835k3,
 [data-dapp-kit] .Heading_headingVariants_size_xl__1aa835k4 {
-  color: #5e21a1 !important;
+  text-align: left !important;
+  color: white !important;
   font-family: var(--font-heading) !important;
   font-weight: 600 !important;
 }
 
-[data-dapp-kit] .Text_textVariants_color_muted__2bv1ur5 {
-  color: rgba(255, 255, 255, 0.6) !important;
+[data-dapp-kit] .Text_textVariants_color_muted__2bv1ur5, [data-dapp-kit] .Text__2bv1ur0 {
+  color: white !important;
+}
+
+[data-dapp-kit] .Text_textVariants_mono_true__2bv1ur7 {
+  color: black !important;
 }
 
 /* Base general para sobrescribir estilos predeterminados */
@@ -444,7 +466,6 @@ a:hover {
 [data-dapp-kit] :where(*) {
   font-family: var(--font-body), sans-serif !important;
   box-sizing: border-box;
-  color: #5e21a1;
   line-height: 1.5;
   letter-spacing: normal;
 }
@@ -453,4 +474,8 @@ a:hover {
 [data-dapp-kit].ConnectModal_title__gz8z91,
 [data-dapp-kit] .ConnectModal_title__gz8z91 {
   color: #fff !important;
+}
+
+[data-dapp-kit] .AccountDropdownMenu_menuItem__div2ql3 > * {
+  color: white !important;
 }

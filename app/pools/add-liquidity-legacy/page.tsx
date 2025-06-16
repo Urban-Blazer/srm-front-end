@@ -684,7 +684,7 @@ export default function AddLiquidity() {
                 <strong>Select First Coin:</strong>
               </label>
               <button
-                className="rounded-none w-full flex items-center justify-between p-2 border border-slate-600 bg-[#14110c]"
+                className="rounded-none w-full flex items-center justify-between p-2 border border-slate-600 bg-[#130e18]"
                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
               >
                 <div className="flex items-center space-x-2">
@@ -699,7 +699,7 @@ export default function AddLiquidity() {
               </button>
 
               {state.dropdownOpen && (
-                <div className="absolute left-0 mt-1 w-full bg-[#14110c] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
+                <div className="absolute left-0 mt-1 w-full bg-[#130e18] border border-slate-600 shadow-lg z-10 max-h-48 overflow-y-auto">
                   {predefinedCoins.filter((coin) => coin.lists?.includes("strict")).map((coin) => (
                     <div
                       key={coin.symbol}
@@ -729,7 +729,7 @@ export default function AddLiquidity() {
               </label>
               <input
                 type="text"
-                className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
+                className="w-full p-2 border border-slate-600 bg-[#130e18] placeholder-slate-500"
                 placeholder="Enter coin type (e.g., 0x2::sui::SUI)"
                 value={state.customCoin}
                 onChange={(e) =>
@@ -912,7 +912,7 @@ export default function AddLiquidity() {
                 <div className="flex items-center space-x-2 mt-2">
                   <input
                     type="number"
-                    className="bg-[#14110c] text-lg md:text-2xl font-semibold p-2 w-full md:w-20 border border-slate-600 outline-none"
+                    className="bg-[#130e18] text-lg md:text-2xl font-semibold p-2 w-full md:w-20 border border-slate-600 outline-none"
                     placeholder="0.5"
                     value={state.slippageTolerance}
                     onChange={(e) => {
@@ -936,7 +936,7 @@ export default function AddLiquidity() {
                   Deposit Tokens
                 </h2>
 
-                <div className="flex items-center p-3 bg-[#14110c] border border-slate-600 mb-2">
+                <div className="flex items-center p-3 bg-[#130e18] border border-slate-600 mb-2">
                   <Image
                     src={
                       state.dropdownCoinMetadata?.image || "/default-coin.png"
@@ -960,7 +960,7 @@ export default function AddLiquidity() {
                   />
                 </div>
 
-                <div className="flex items-center p-3 bg-[#14110c] border border-slate-600 mb-2">
+                <div className="flex items-center p-3 bg-[#130e18] border border-slate-600 mb-2">
                   <Image
                     src={state.customCoinMetadata?.image || "/default-coin.png"}
                     alt={state.customCoinMetadata?.symbol || "Coin B"}
@@ -1025,7 +1025,7 @@ export default function AddLiquidity() {
               Liquidity Successfully Added! 🎉
             </h2>
 
-            <div className="bg-[#14110c] border border-[#61F98A] p-4 shadow-md mb-4">
+            <div className="bg-[#130e18] border border-[#61F98A] p-4 shadow-md mb-4">
               <h3 className="text-lg font-semibold text-[#61F98A]">
                 Transaction Summary
               </h3>

@@ -717,7 +717,7 @@ export default function Pools() {
                 <strong>Select First Coin:</strong>
               </label>
               <button
-                className="w-full flex items-center justify-between p-3 sm:p-2 border border-slate-600 bg-[#14110c]"
+                className="w-full flex items-center justify-between p-3 sm:p-2 border border-slate-600 bg-[#130e18]"
                 onClick={() => dispatch({ type: "TOGGLE_DROPDOWN" })}
               >
                 <div className="flex items-center space-x-2">
@@ -735,7 +735,7 @@ export default function Pools() {
 
               {/* Client-side only rendering for the dropdown */}
               {state.dropdownOpen && (
-                <div className="absolute left-0 mt-1 w-full  border border-slate-600 shadow-lg z-10 bg-[#14110c]">
+                <div className="absolute left-0 mt-1 w-full  border border-slate-600 shadow-lg z-10 bg-[#130e18]">
                   {predefinedCoins.map((coin) => (
                     <div
                       key={coin.symbol}
@@ -765,7 +765,7 @@ export default function Pools() {
               </label>
               <input
                 type="text"
-                className="w-full p-2 border border-slate-600 bg-[#14110c] placeholder-slate-500"
+                className="w-full p-2 border border-slate-600 bg-[#130e18] placeholder-slate-500"
                 placeholder="Enter Coin TypeName (e.g., 0x2::sui::SUI)"
                 value={state.customCoin}
                 onChange={(e) =>
@@ -854,7 +854,7 @@ export default function Pools() {
                       </strong>
                     </label>
 
-                    <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
+                    <div className="flex justify-between items-center bg-[#130e18] px-3 py-2">
                       <InputCurrency
                         className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
                         placeholder={`Enter fee (0.00 - ${max.toFixed(2)})`}
@@ -909,7 +909,7 @@ export default function Pools() {
                         variant="secondary"
                         size="xs"
                         rounded={false}
-                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                        className={`flex-1 text-xs sm:text-md bg-[#130e18] hover:bg-slate-600 rounded-none px-1 py-1  ${
                           state[field] === "0"
                             ? "bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:opacity-75"
                             : "text-slate-300"
@@ -924,7 +924,7 @@ export default function Pools() {
                         variant="primary"
                         size="xs"
                         rounded={false}
-                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                        className={`flex-1 text-xs sm:text-md bg-[#130e18] hover:bg-slate-600 rounded-none px-1 py-1  ${
                            state[field] === max / 4
                             ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
                             : "text-slate-300"
@@ -940,7 +940,7 @@ export default function Pools() {
                         variant="primary"
                         size="xs"
                         rounded={false}
-                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                        className={`flex-1 text-xs sm:text-md bg-[#130e18] hover:bg-slate-600 rounded-none px-1 py-1  ${
                            state[field] === max / 2
                             ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
                             : "text-slate-300"
@@ -959,7 +959,7 @@ export default function Pools() {
                         variant="primary"
                         size="xs"
                         rounded={false}
-                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                        className={`flex-1 text-xs sm:text-md bg-[#130e18] hover:bg-slate-600 rounded-none px-1 py-1  ${
                            state[field] === (max / 4) * 3
                             ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
                             : "text-slate-300"
@@ -974,7 +974,7 @@ export default function Pools() {
                         variant="primary"
                         size="xs"
                         rounded={false}
-                        className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-1 py-1  ${
+                        className={`flex-1 text-xs sm:text-md bg-[#130e18] hover:bg-slate-600 rounded-none px-1 py-1  ${
                            state[field] === max
                             ? "bg-gradient-to-r from-[#07a654] from-10% via-[#61f98a] via-30% to-[#07a654] to-90% text-[#000306] hover:text-[#5E21A1] hover:opacity-75"
                             : "text-slate-300"
@@ -1038,7 +1038,7 @@ export default function Pools() {
                   </label>
                   <input
                     type="text"
-                    className={`w-full p-2 bg-[#14110c] placeholder-slate-500 ${
+                    className={`w-full p-2 bg-[#130e18] placeholder-slate-500 ${
                       state.deployerRoyaltyWallet &&
                       !isValidSuiAddress(state.deployerRoyaltyWallet)
                         ? "border-red-500"

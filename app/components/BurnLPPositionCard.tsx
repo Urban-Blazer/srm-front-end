@@ -326,7 +326,7 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
                 variant="secondary"
                 size="full"
                 onClick={() => handlePercentageClick(lp, percent)}
-                className={`flex-1 text-xs sm:text-md bg-[#14110c] hover:bg-slate-600 rounded-none px-3 py-1  ${
+                className={`flex-1 text-xs sm:text-md bg-[#130e18] hover:bg-slate-600 rounded-none px-3 py-1  ${
                   removePercentage[lp.objectId] === percent
                     ? "bg-gradient-to-r from-[#5E21A1] from-10% via-[#6738a8] via-30% to-[#663398] to-90% text-[#61F98A] hover:opacity-75"
                     : "text-slate-300"
@@ -341,7 +341,7 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
           <div className="space-y-1 mb-4">
             <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
             </div>
-            <div className="flex justify-between items-center bg-[#14110c] px-3 py-2">
+            <div className="flex justify-between items-center bg-[#130e18] px-3 py-2">
               <input
                 type="number"
                 className={`flex-1 p-2 outline-none bg-transparent text-sm sm:text-md overflow-hidden grow`}
@@ -358,7 +358,7 @@ export const BurnLPPositionCard = ({ lp }: { lp: any }) => {
           </div>
 
           {/* ✅ Checkbox for Agreement */}
-          <div className="flex items-center mt-3 bg-[#14110c] px-3 py-2">
+          <div className="flex items-center mt-3 bg-[#130e18] px-3 py-2">
             <input
               type="checkbox"
               id={`burn-agreement-${lp.objectId}`} // Unique ID for each LP

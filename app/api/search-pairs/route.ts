@@ -31,22 +31,45 @@ export async function GET(req: NextRequest) {
 
     const isTypename = query.startsWith("0x");
     const keyName = isTypename ? "coinB" : "coinB_symbol";
-    const searchValue = isTypename ? decodeURIComponent(query) : query.toUpperCase(); // 🔁 Normalize symbol
+    // For typeNames (0x...), use original case; for symbols, normalize to lowercase
+    const searchValue = isTypename ? decodeURIComponent(query) : query.toLowerCase();
     console.log({keyName, isTypename, searchValue});
+    
     try {
-        const response = await docClient.send(
-            new ScanCommand({
-                TableName: TABLE_NAME,
-                FilterExpression: `begins_with(${keyName}, :value)`,
-                ExpressionAttributeValues: {
-                    ":value": searchValue,
-                },
-                Limit: 20,
-            })
-        );
-
-        const items = response.Items || [];
-
+        let items = [];
+        
+        if (isTypename) {
+            // For typeNames (0x...), we can use direct comparison since they're case-sensitive
+            const response = await docClient.send(
+                new ScanCommand({
+                    TableName: TABLE_NAME,
+                    FilterExpression: `begins_with(${keyName}, :value)`, 
+                    ExpressionAttributeValues: {
+                        ":value": searchValue,
+                    },
+                    Limit: 20,
+                })
+            );
+            items = response.Items || [];
+        } else {
+            // For symbols, perform a scan and handle case-insensitivity in the application
+            // since DynamoDB's begins_with is case-sensitive
+            const response = await docClient.send(
+                new ScanCommand({
+                    TableName: TABLE_NAME,
+                    // Get a reasonable number of items to filter through
+                    Limit: 200,
+                })
+            );
+            
+            // Filter items case-insensitively on the application side
+            items = (response.Items || []).filter(item => {
+                const fieldValue = item[keyName]?.toString() || "";
+                return fieldValue.toLowerCase().startsWith(searchValue);
+            }).slice(0, 20); // Limit to 20 results
+        }
+        
+        // Format all results the same way regardless of how we queried
         const formatted = items.map((item) => ({
             poolId: item.poolId,
             coinA: {

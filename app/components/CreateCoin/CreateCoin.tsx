@@ -11,13 +11,11 @@ import init, {
   update_constants,
   update_identifiers,
 } from "@mysten/move-bytecode-template";
-import { FormEvent, ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import "./autofill-styles.css";
 import coinTemplateBytes from "./coin-template-bytes";
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
 
-import { SRM_COIN_CREATOR_FEE, SRM_COIN_CREATOR_WALLET } from "@/app/config";
+import { SRM_COIN_CREATOR_FEE, SRM_COIN_CREATOR_WALLET,IMG_BASE_URL } from "@/app/config";
 import Avatar from "@components/Avatar";
 import CopyBtn from "@components/CopyBtn";
 import ExplorerCoinLink from "@components/ExplorerLink/ExplorerCoinLink";
@@ -79,70 +77,41 @@ export default function CreateCoin() {
   const [uploading, setUploading] = useState(false);
   const [isUploadImage, setIsUploadImage] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-  
-  // Convex mutations for image upload
-  const generateUploadUrl = useMutation(api.storage.generateUploadUrl);
-  const saveImage = useMutation(api.storage.saveImage);
 
   const handleSelectImage = async () => {
     inputRef.current?.click();
   };
-  
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
-    setSelectedImage(file);
-    await handleUploadImage(file);
-  };
-  
-  const handleUploadImage = async (file: File) => {
+
+    const formData = new FormData();
+    formData.append("image", file);
+
     try {
       setUploading(true);
       setResponseMessage(null);
-      
-      // Step 1: Get a short-lived upload URL from Convex
-      const postUrl = await generateUploadUrl();
-      
-      // Step 2: Upload the file directly to storage
-      const result = await fetch(postUrl, {
+
+      const response = await fetch(`${IMG_BASE_URL}upload.php`, {
         method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
+        body: formData,
       });
-      
-      const json = await result.json();
-      
-      if (!result.ok) {
-        throw new Error(`Upload failed: ${JSON.stringify(json)}`);
-      }
-      
-      const { storageId } = json;
-      
-      // Step 3: Save the storage reference in the database
-      const savedImage = await saveImage({ 
-        storageId, 
-        fileName: file.name,
-        type: file.type 
-      });
-      
-      // Update the form with the new image URL
-      if (savedImage && savedImage.url) {
-        setResponseMessage(`✅ Image uploaded successfully`);
-        setValue("image", savedImage.url);
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setResponseMessage(`✅ ${result.message}`);
+        setValue("image", file ? IMG_BASE_URL + result.file_path : "");
       } else {
-        setResponseMessage(`❌ Error: Could not get image URL`);
+        setResponseMessage(`❌ Error: ${result.message}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error uploading the image:", error);
-      setResponseMessage(`❌ Error: ${error.message || "Failed to upload image"}`);
+      setResponseMessage("❌ Error uploading the image.");
     } finally {
       setUploading(false);
-      setSelectedImage(null);
-      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
@@ -151,12 +120,9 @@ export default function CreateCoin() {
     setValue("image", e.target.value);
     setResponseMessage("✅ URL updated");
   };
-  
   const handleRemoveImage = () => {
     setValue("image", "");
-    setSelectedImage(null);
     setResponseMessage(null);
-    if (inputRef.current) inputRef.current.value = "";
   };
 
   useEffect(() => {

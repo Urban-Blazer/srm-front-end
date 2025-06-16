@@ -15,7 +15,7 @@ export const SRM_COIN_CREATOR_WALLET = "0xb139316ab0ab0b2309010335ca60586e5b4f21
 export const EXPLORER = {
   ADDRESS: `https://suiscan.xyz`,
 };
-export const IMG_BASE_URL = "https://blob.suiget.xyz/";
+export const IMG_BASE_URL = "https://suirewards.me/coinphp/";
 
 
 export const SUI_SHORT_ID = "0x2::sui::SUI";

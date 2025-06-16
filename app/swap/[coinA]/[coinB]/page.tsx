@@ -116,7 +116,20 @@ const SwapParams: FC<PageProps> = ({ params }) => {
       return;
     }
 
-    const candidate = results[0];
+    const candidate = results.find((result) => {
+      const aSym = result.coinA.symbol.toLowerCase();
+      const aType = result.coinA.typeName.toLowerCase();
+      const bSym = result.coinB.symbol.toLowerCase();
+      const bType = result.coinB.typeName.toLowerCase();
+      return (
+        (aSym === normalizedA || aType === normalizedA) &&
+        (bSym === normalizedB || bType === normalizedB)
+      );
+    });
+    if (!candidate) {
+      console.warn("No matching pair found");
+      return;
+    }
     const aSym = candidate.coinA.symbol.toLowerCase();
     const aType = candidate.coinA.typeName.toLowerCase();
     const bSym = candidate.coinB.symbol.toLowerCase();

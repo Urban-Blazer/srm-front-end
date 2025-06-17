@@ -14,6 +14,7 @@ import init, {
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import "./autofill-styles.css";
 import coinTemplateBytes from "./coin-template-bytes";
+import TransactionModal from "@components/TransactionModal";
 
 import { SRM_COIN_CREATOR_FEE, SRM_COIN_CREATOR_WALLET,IMG_BASE_URL } from "@/app/config";
 import Avatar from "@components/Avatar";
@@ -56,6 +57,15 @@ export default function CreateCoin() {
   const [mintTX, setMintTX] = useState<any>({});
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [transactionProgress, setTransactionProgress] = useState<{
+    image: string;
+    text: string;
+  } | null>(null);
+  const [digest, setDigest] = useState<string | undefined>();
+  const [modalTimer, setModalTimer] = useState<NodeJS.Timeout | null>(null);
 
   const {
     register,
@@ -237,8 +247,20 @@ export default function CreateCoin() {
     }
   };
 
+  // Helper function to add logs to the transaction modal
+  const addLog = (message: string) => {
+    setLogs((prevLogs) => [...prevLogs, message]);
+  };
+
   const handleCreateToken = () => {
     setIsLoading(true);
+    setIsProcessing(true);
+    setLogs([]);
+    setIsModalOpen(true);
+    setTransactionProgress({
+      image: "/images/txn_loading.png",
+      text: "",
+    });
     console.log("signAndExecute", {
       address: currentAccount?.address,
       updatedBytecode,
@@ -273,6 +295,8 @@ export default function CreateCoin() {
       {
         onSuccess: async (tx) => {
           console.log("Transaction success:", tx);
+          setDigest(tx.digest);
+          addLog(`✅ Transaction submitted: ${tx.digest}`);
           const result = await suiClient.waitForTransaction({
             digest: tx.digest,
             options: { showObjectChanges: true },
@@ -298,6 +322,7 @@ export default function CreateCoin() {
           });
 
           if (coinAdress && treasuryCapObjectType && treasuryCapObjectID) {
+            addLog(`✅ Coin published successfully: ${coinAdress}`);
             const txMint = new Transaction();
             const mintAmount =
               Number(getValues("totalSupply")) * 10 ** decimals;
@@ -333,22 +358,51 @@ export default function CreateCoin() {
                   await new Promise((resolve) => setTimeout(resolve, 100));
                   // TODO: deploy supply to lauchpad
                   setMintTX(tx);
+                  setDigest(tx.digest);
+                  addLog(`✅ Mint transaction successful: ${tx.digest}`);
+                  setTransactionProgress({
+                    image: "/images/txn_successful.png",
+                    text: "",
+                  });
                   setIsLoading(false);
+                  setIsProcessing(false);
+                  const timer = setTimeout(() => {
+                    setIsModalOpen(false);
+                  }, 3000);
+                  setModalTimer(timer);
                 },
                 onError: (error) => {
                   console.error("Error", error);
+                  addLog(`❌ Error in mint transaction: ${error.message || JSON.stringify(error)}`);
+                  setTransactionProgress({
+                    image: "/images/txn_failed.png",
+                    text: "",
+                  });
                   setIsLoading(false);
+                  setIsProcessing(false);
                 },
               }
             );
           } else {
             console.log("Transaction failed");
+            addLog("❌ Transaction failed: Couldn't find required objects");
+            setTransactionProgress({
+              image: "/images/txn_failed.png",
+              text: "",
+            });
             setIsLoading(false);
+            setIsProcessing(false);
           }
         },
         onError: (error) => {
           console.error("Error", error);
+          addLog(`❌ Error: ${error.message || JSON.stringify(error)}`);
+          setTransactionProgress({
+            image: "/images/txn_failed.png",
+            text: "",
+          });
           setIsLoading(false);
+          setIsProcessing(false);
         },
       }
     );
@@ -369,6 +423,20 @@ export default function CreateCoin() {
 
   return (
     <div style={{ maxWidth: "600px", minWidth: "300px", margin: "auto" }}>
+      <TransactionModal
+        open={isModalOpen}
+        transactionProgress={transactionProgress ?? undefined}
+        onClose={() => {
+          setIsModalOpen(false);
+          if (modalTimer) {
+            clearTimeout(modalTimer);
+            setModalTimer(null);
+          }
+        }}
+        logs={logs}
+        isProcessing={isProcessing}
+        digest={digest}
+      />
       {!coinAdress ? (
         <div className="flex flex-col">
           <h1 className="text-lg font-semibold mb-4">CREATE COIN</h1>
@@ -552,7 +620,7 @@ export default function CreateCoin() {
                 )}
               </div>
 
-              <div className="mt-4 justify-between flex flex-col gap-4">
+              <div className="mt-4 justify-between flex flex-col gap-4 mb-8">
                 {updatedBytecode === "" ? (
                   <Button
                     variant="primary"

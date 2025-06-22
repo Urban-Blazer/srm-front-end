@@ -117,7 +117,6 @@ export const predefinedCoins: CoinMeta[] = [
     socials: {
       telegram: "https://t.me/+n8Lkccxhz-NkZDU0",
       x: "https://x.com/FuturusDaoLtd",
-      discord: "https://discord.gg/NyDks6cB",
       website: "https://linktr.ee/futurusdao",
     },
   },
@@ -190,8 +189,6 @@ export const predefinedCoins: CoinMeta[] = [
     socials: {
       telegram: 'https://t.me/+8xppPdpiTOhkMGQx',
       x: 'https://x.com/suieaterrewards?s=21',
-      discord: 'https://discord.gg/suirewardsme',
-      website: 'https://suirewards.me',
     }
   },
 ];

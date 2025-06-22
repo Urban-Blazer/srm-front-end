@@ -11,7 +11,7 @@ import { CONFIG_ID, DEX_MODULE_NAME, PACKAGE_ID } from "../config";
 import Image from "next/image";
 import { predefinedCoins } from "../data/coins";
 import { PoolStats, SwapInterfaceProps } from "@/app/types";
-import InputCurrency, { formatWithCommas } from "./InputCurrency";
+import InputCurrency from "./InputCurrency";
 import SelectTokenModal from "./SelectTokenModal";
 import useAccountBalances from "../hooks/useAccountBalances";
 import SRMSwapIcon from "./UI/SRMSwapIcon";
@@ -204,10 +204,10 @@ export default function SwapInterface({
         let _amount;
 
         if (isAtoB && data.buyAmount) {
-          _amount = formatWithCommas(Number(data.buyAmount).toFixed(4));
+          _amount = Number(data.buyAmount).toFixed(4);
           setAmountOut(_amount);
         } else if (!isAtoB && data.sellAmount) {
-          _amount = formatWithCommas(Number(data.sellAmount).toFixed(4));
+          _amount = Number(data.sellAmount).toFixed(4);
           setAmountIn(_amount);
         }
       }
@@ -255,7 +255,6 @@ export default function SwapInterface({
   const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsAtoB(true);
     setQuickSelect(null);
-    console.log('handleAmountInChange', e.target.value);
     if (e.target.value === "" || Number(e.target.value) === 0) {
       setQueryParams(undefined);
       setAmountIn(e.target.value === "0." ? e.target.value : e.target.value === "" ? "" : "0");
@@ -265,15 +264,14 @@ export default function SwapInterface({
     setQueryParams(undefined);
     const value = e.target.value;
     setAmountIn(value);
-    if (value && !isNaN(Number(value.replace(/,/g, "")))) {
-      debouncedGetQuote(value.replace(/,/g, ""), true);
+    if (value && !isNaN(Number(value))) {
+      debouncedGetQuote(value, true);
     }
   };
   const handleAmountOutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSlippage(2);
     setIsAtoB(false);
     setQuickSelect(null);
-    console.log('handleAmountOutChange', e.target.value);
     if (e.target.value === "" || Number(e.target.value) === 0) {
       setQueryParams(undefined);
       setAmountOut(e.target.value === "0." ? e.target.value : e.target.value === "" ? "" : "0");
@@ -283,8 +281,8 @@ export default function SwapInterface({
     setQueryParams(undefined);
     const value = e.target.value;
     setAmountOut(value);
-    if (value && !isNaN(Number(value.replace(/,/g, "")))) {
-      debouncedGetQuote(value.replace(/,/g, ""), false);
+    if (value && !isNaN(Number(value))) {
+      debouncedGetQuote(value, false);
     }
   };
 
@@ -350,7 +348,7 @@ export default function SwapInterface({
         getQueryParams(amount, isSell);
       }, 300);
     },
-    [coinA, coinB, isBuy, poolId, poolStats, refetch, isAtoB]
+    [coinA, coinB, isBuy, poolId, poolStats, refetch]
   );
 
   const handleQuickSelect = (percent: number) => {
@@ -365,7 +363,7 @@ export default function SwapInterface({
       (balance > 0 ? balance : 0) / Math.pow(10, decimals);
 
     const amount = (formattedBalance * (percent / 100)).toString();
-    setAmountIn(formatWithCommas(Number(amount).toFixed(4)));
+    setAmountIn(Number(amount).toFixed(4));
     debouncedGetQuote(amount, true);
   };
 
@@ -411,12 +409,12 @@ export default function SwapInterface({
       // let sellAmountU64: bigint = BigInt(Math.floor(Number(amountIn.replace(/,/g, "")) * Math.pow(10, sellDecimals)));
       let sellAmountU64: bigint = BigInt(
         Math.floor(
-          Number(amountIn.replace(/,/g, "")) * Math.pow(10, sellDecimals)
+          Number(amountIn) * Math.pow(10, sellDecimals)
         )
       );
       const expectedOutU64 = BigInt(
         Math.floor(
-          Number(amountOut.replace(/,/g, "")) * Math.pow(10, buyDecimals)
+          Number(amountOut) * Math.pow(10, buyDecimals)
         )
       );
 

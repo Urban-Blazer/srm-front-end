@@ -66,6 +66,7 @@ const NAVIGATION_ITEMS = [
     label: "POOLS",
     path: "/pools",
     submenu: [
+      { id: "rewardians", label: "Rewardians", path: "/pools/rewardians" },
       { id: "stats", label: "Pool Stats", path: "/pools" },
       { id: "positions", label: "My Positions", path: "/pools/my-positions" },
       { id: "create-pool", label: "Create Pool", path: "/pools/create-pool" },

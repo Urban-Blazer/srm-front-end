@@ -7,14 +7,18 @@ import Chart from "@components/Chart";
 import Holders from "@components/Holders";
 import PairStats from "@components/PairStats";
 import PoolInfoV2 from "@components/PoolInfoV2";
-import PoolsBar from "@components/PoolsBar";
+import PoolsBar, { Socials } from "@components/PoolsBar";
 import RecentTransactions from "@components/RecentTransactions";
 import SearchBar from "@components/SearchBar";
 import SwapInterface from "@components/SwapInterface";
 import { emptyPairAtom } from "@data/store";
 import { Tabs, Tab, Box } from "@mui/material";
 import { useAtom } from "jotai";
+import Link from "next/link";
 import { FC, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import Avatar from "@components/Avatar";
+import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
 
 function a11yProps(index: number) {
   return {
@@ -54,6 +58,7 @@ interface PageProps {
 }
 
 const SwapParams: FC<PageProps> = ({ params }) => {
+  const { coins: predefinedCoins } = usePredefinedCoins();
   const [value, setValue] = useState(0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -80,6 +85,7 @@ const SwapParams: FC<PageProps> = ({ params }) => {
   } = usePoolSearch(query);
 
   const [selectedPair, setSelectedPair] = useAtom(emptyPairAtom);
+  const coin = selectedPair && predefinedCoins.find((coin) => coin.typeName === selectedPair.coinB.typeName);
 
   const [poolId, setPoolId] = useState<string | null>(null);
   const {
@@ -176,6 +182,25 @@ const SwapParams: FC<PageProps> = ({ params }) => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           <div className="flex flex-col gap-6 col-span-12 md:col-span-5 lg:col-span-4 h-full pb-10">
             <SearchBar />
+          </div>
+          <div className="flex flex-col gap-6 col-span-12 md:col-span-6 h-full pb-10">
+            {coinB?.image ? (
+          <div
+            className="relative w-full max-w-[300px] sm:max-w-full flex items-center justify-center sm:justify-start"
+          >
+            <Avatar
+              src={coinB?.image}
+              alt={coinB?.symbol}
+              className="lg:w-9 lg:h-9 w-9 h-9 aspect-square rounded-full token-icon"
+            />
+            <span className="ml-2 text-white text-lg font-bold mr-6">{coinB?.name}</span>
+
+            {/* socials links icons: web, telegram, twitter, discord */}
+            {coin && <Socials coin={coin} />}
+          </div>
+        ) : (
+          <div className="w-[36px] h-[36px] rounded-full animate-pulse bg-gray-900 border border-gray-800 shadow-md p-4" />
+        )}
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">

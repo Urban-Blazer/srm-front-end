@@ -85,6 +85,12 @@ export interface CoinMeta {
   name: string;
   symbol: string;
   lists?: string[];
+  socials?: {
+    telegram?: string;
+    x?: string;
+    discord?: string;
+    website?: string;
+  };
 }
 
 export interface PoolSearchResult {

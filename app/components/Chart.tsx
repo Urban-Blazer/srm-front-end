@@ -26,7 +26,7 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
     isPending: isChartDataPending,
   } = useChartData(poolId, interval);
   const { data: coinAPriceUSD, isPending: isCoinPricePending } =
-    useCoinPrice(coinASymbol);
+    useCoinPrice(coinASymbol === 'SUI' ? coinASymbol : 'USDC');
   const isAnyLoading = isChartDataPending || isCoinPricePending;
   let ws: WebSocket | null = null;
 

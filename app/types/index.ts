@@ -86,10 +86,10 @@ export interface CoinMeta {
   symbol: string;
   lists?: string[];
   socials?: {
-    telegram?: string;
-    x?: string;
-    discord?: string;
-    website?: string;
+    telegram?: string | null;
+    x?: string | null;
+    discord?: string | null;
+    website?: string | null;
   };
 }
 

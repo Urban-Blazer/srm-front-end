@@ -8,6 +8,8 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   StarIcon,
+  CopyIcon,
+  CheckIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { FC, useMemo, useState } from "react";
@@ -18,6 +20,7 @@ import { Spinner } from "./Spinner";
 import Image from "next/image";
 import { usePredefinedCoins } from "../hooks/usePredefinedCoins";
 import { CoinMeta } from "../types";
+import { Tooltip } from "@mui/material";
 
 interface PoolsBarProps {
   featuredCoinBSymbol?: string;
@@ -36,10 +39,12 @@ interface SortedPool {
   coinA: {
     symbol: string;
     image: string;
+    typeName: string;
   };
   coinB: {
     symbol: string;
     image: string;
+    typeName: string;
   };
   coin: CoinMeta;
   rewardsDistributed: number;
@@ -63,6 +68,8 @@ const PoolsBar: FC<PoolsBarProps> = ({
   const [sortField, setSortField] = useState<SortField>("totalVolume");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [range, setRange] = useState<"24h" | "7d" | "all">("24h");
+  // Track copied state for each coin typeName separately
+  const [copiedTypeNames, setCopiedTypeNames] = useState<Record<string, boolean>>({});
 
   const selectedPair = useAtomValue(emptyPairAtom);
   const { coins: predefinedCoins } = usePredefinedCoins();
@@ -209,6 +216,22 @@ const PoolsBar: FC<PoolsBarProps> = ({
     }
   };
 
+  const handleCopyTypeName = (coin: CoinMeta, event: React.MouseEvent) => {
+    // Prevent the event from propagating up to the parent Link
+    event.stopPropagation();
+    event.preventDefault();
+    
+    // Set this specific coin's typeName as copied
+    const typeName = coin?.typeName ?? "";
+    setCopiedTypeNames(prev => ({ ...prev, [typeName]: true }));
+    navigator.clipboard.writeText(typeName);
+    
+    // Reset this specific coin's copied state after 3 seconds
+    setTimeout(() => {
+      setCopiedTypeNames(prev => ({ ...prev, [typeName]: false }));
+    }, 3000);
+  };
+
   const isPending = isPoolsPending || isRankingLoading;
   const error = poolsError || rankingError;
 
@@ -344,8 +367,10 @@ const PoolsBar: FC<PoolsBarProps> = ({
                   : "75"
               } hover:opacity-100 hover:cursor-pointer `}
             >
-              <Link href={`/swap/${pool.coinA.symbol}/${pool.coinB.symbol}`}
-              className="w-full flex flex-col gap-2 justify-between items-start">
+              <Link
+                href={`/swap/${pool.coinA.symbol}/${pool.coinB.symbol}`}
+                className="w-full flex flex-col gap-2 justify-between items-start"
+              >
                 <div className="w-full flex justify-between items-start">
                   <div className="flex items-center gap-2">
                     <Avatar
@@ -365,6 +390,24 @@ const PoolsBar: FC<PoolsBarProps> = ({
                     <span className="text-white lg:text-lg">
                       {pool.coinB.symbol}
                     </span>
+                    {pool.coinB?.typeName && (
+                      <Tooltip title="Copy CA">
+                        <button
+                          onClick={(e) =>
+                            handleCopyTypeName(pool.coinB as CoinMeta, e)
+                          }
+                          className="tooltip"
+                          data-tip="Copy CA"
+                          aria-label="Copy CA"
+                        >
+                          {copiedTypeNames[pool.coinB?.typeName || ""] ? (
+                            <CheckIcon size={12} className="text-green-500" />
+                          ) : (
+                            <CopyIcon size={12} className="text-white" />
+                          )}
+                        </button>
+                      </Tooltip>
+                    )}
                   </div>
                   <div>
                     {pool.isSRM && (
@@ -449,6 +492,24 @@ const PoolsBar: FC<PoolsBarProps> = ({
                   <span className="text-white lg:text-lg">
                     {pool.coinB.symbol}
                   </span>
+                  {pool.coinB?.typeName && (
+                    <Tooltip title="Copy CA">
+                      <button
+                        onClick={(e) =>
+                          handleCopyTypeName(pool.coinB as CoinMeta, e)
+                        }
+                        className="tooltip"
+                        data-tip="Copy CA"
+                        aria-label="Copy CA"
+                      >
+                        {copiedTypeNames[pool.coinB?.typeName || ""] ? (
+                          <CheckIcon size={12} className="text-green-500" />
+                        ) : (
+                          <CopyIcon size={12} className="text-white" />
+                        )}
+                      </button>
+                    </Tooltip>
+                  )}
                 </div>
                 <div>
                   {pool.isSRM && (

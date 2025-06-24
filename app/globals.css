@@ -300,6 +300,12 @@ a:hover {
 
 /* Wallet Connect - Personalización SRM */
 
+[data-dapp-kit].Button_buttonVariants_variant_primary__x1s81q1, [data-dapp-kit] .Button_buttonVariants_variant_primary__x1s81q1 {
+  background-color: #61f98a !important;
+  color: #130e18 !important;
+  box-shadow: 0 4px 8px rgba(97, 249, 138, 0.2);
+}
+
 /* Estilos de base para todos los elementos del dapp-kit */
 [data-dapp-kit] * {
   font-family: var(--font-cta) !important;
@@ -313,7 +319,7 @@ a:hover {
 [data-dapp-kit] .Button_buttonVariants_size_lg__x1s81q4,
 [data-dapp-kit].Button_buttonVariants_size_md__x1s81q3,
 [data-dapp-kit] .Button_buttonVariants_size_md__x1s81q3 {
-  background-color: #61f98a;
+  background-color: #61f98a !important;
   color: #130e18 !important;
   border: 1px solid #61f98a !important;
   border-radius: 0px !important;
@@ -335,8 +341,9 @@ a:hover {
 [data-dapp-kit].Button_buttonVariants_size_md__x1s81q3:hover,
 [data-dapp-kit] .Button_buttonVariants_size_md__x1s81q3:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(97, 249, 138, 0.3);
-  background-image: linear-gradient(205deg, #00b377 1%, #61f98a 100%);
+  box-shadow: 0 6px 12px rgba(97, 249, 138, 0.3) !important;
+  /* background-image: linear-gradient(205deg, #00b377 1%, #61f98a 100%); */
+  background-color: #61f98a !important;
 }
 
 /* Menú desplegable de la cuenta */

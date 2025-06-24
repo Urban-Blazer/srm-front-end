@@ -2,7 +2,9 @@
 
 import { usePoolSearch } from "@/app/hooks/usePoolSearch";
 import { usePoolStats } from "@/app/hooks/usePoolStats";
+import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
 import { PoolSearchResult } from "@/app/types";
+import Avatar from "@components/Avatar";
 import Chart from "@components/Chart";
 import Holders from "@components/Holders";
 import PairStats from "@components/PairStats";
@@ -12,13 +14,10 @@ import RecentTransactions from "@components/RecentTransactions";
 import SearchBar from "@components/SearchBar";
 import SwapInterface from "@components/SwapInterface";
 import { emptyPairAtom } from "@data/store";
-import { Tabs, Tab, Box } from "@mui/material";
+import { Box, Tab, Tabs, Tooltip } from "@mui/material";
 import { useAtom } from "jotai";
-import Link from "next/link";
+import { CheckIcon, CopyIcon } from "lucide-react";
 import { FC, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
-import Avatar from "@components/Avatar";
-import { usePredefinedCoins } from "@/app/hooks/usePredefinedCoins";
 
 function a11yProps(index: number) {
   return {
@@ -60,6 +59,7 @@ interface PageProps {
 const SwapParams: FC<PageProps> = ({ params }) => {
   const { coins: predefinedCoins } = usePredefinedCoins();
   const [value, setValue] = useState(0);
+  const [copiedTypeName, setCopiedTypeName] = useState(false);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -85,7 +85,11 @@ const SwapParams: FC<PageProps> = ({ params }) => {
   } = usePoolSearch(query);
 
   const [selectedPair, setSelectedPair] = useAtom(emptyPairAtom);
-  const coin = selectedPair && predefinedCoins.find((coin) => coin.typeName === selectedPair.coinB.typeName);
+  const coin =
+    selectedPair &&
+    predefinedCoins.find(
+      (coin) => coin.typeName === selectedPair.coinB.typeName
+    );
 
   const [poolId, setPoolId] = useState<string | null>(null);
   const {
@@ -104,6 +108,14 @@ const SwapParams: FC<PageProps> = ({ params }) => {
     () => ({ poolId: poolId ?? undefined, coinASymbol: coinA?.symbol }),
     [poolId, coinA?.symbol]
   );
+
+  const handleCopyTypeName = () => {
+    // TODO: handle error and implement green check icon to confirm copy 3000ms
+    
+    setCopiedTypeName(true);
+    navigator.clipboard.writeText(coin?.typeName ?? "");
+    setTimeout(() => setCopiedTypeName(false), 3000);
+  };
 
   // 7) Efecto: cuando cambian los params, disparamos búsqueda
   useEffect(() => {
@@ -171,36 +183,46 @@ const SwapParams: FC<PageProps> = ({ params }) => {
 
   return (
     <div className="flex flex-col min-h-screen text-white bg-[#000306]">
-      {/* <div className="w-full p-6 mx-auto max-w-screen-2xl">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-[#5E21A1] pb-10">
-                    <div className="md:col-span-4">
-                        <PoolsBar />
-                    </div>
-                </div>
-            </div> */}
       <div className="w-full p-6 border-b border-gray-800 max-w-screen-2xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           <div className="flex flex-col gap-6 col-span-12 md:col-span-5 lg:col-span-4 h-full pb-10">
             <SearchBar />
           </div>
-          <div className="flex flex-col gap-6 col-span-12 md:col-span-6 h-full pb-10">
+          <div className="flex flex-col gap-6 col-span-12 md:col-span-7 h-full pb-10">
             {coinB?.image ? (
-          <div
-            className="relative w-full max-w-[300px] sm:max-w-full flex items-center justify-center sm:justify-start"
-          >
-            <Avatar
-              src={coinB?.image}
-              alt={coinB?.symbol}
-              className="lg:w-9 lg:h-9 w-9 h-9 aspect-square rounded-full token-icon"
-            />
-            <span className="ml-2 text-white text-lg font-bold mr-6">{coinB?.name}</span>
+              <div className="w-full flex flex-wrap md:flex-nowrap items-center gap-2">
+                <Avatar
+                  src={coinB?.image}
+                  alt={coinB?.symbol}
+                  className="min-w-fit w-9 h-9 aspect-square rounded-full token-icon my-auto"
+                />
+                <span className="min-w-fit text-white text-lg font-bold">
+                  {coinB?.name}
+                </span>
+                {coin?.typeName && (
+                  // TODO: show tooltip on hover
+                  <Tooltip title="Copy CA">
+                    <button
+                      onClick={handleCopyTypeName}
+                      className="tooltip ml-2 mr-6"
+                      data-tip="Copy CA"
+                      aria-label="Copy CA"
+                    >
+                      {copiedTypeName ? (
+                        <CheckIcon size={12} className="text-green-500" />
+                      ) : (
+                        <CopyIcon size={12} className="text-white" />
+                      )}
+                  </button>
+                </Tooltip>
+                )}
 
-            {/* socials links icons: web, telegram, twitter, discord */}
-            {coin && <Socials coin={coin} />}
-          </div>
-        ) : (
-          <div className="w-[36px] h-[36px] rounded-full animate-pulse bg-gray-900 border border-gray-800 shadow-md p-4" />
-        )}
+                {/* socials links icons: web, telegram, twitter, discord */}
+                {coin && <Socials coin={coin} />}
+              </div>
+            ) : (
+              <div className="w-[36px] h-[36px] rounded-full animate-pulse bg-gray-900 border border-gray-800 shadow-md p-4" />
+            )}
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">

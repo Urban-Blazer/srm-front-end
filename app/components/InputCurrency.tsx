@@ -38,7 +38,7 @@ function InputCurrency(
   const _onChange: React.ChangeEventHandler<HTMLInputElement> = useCallback(
     (e) => {
       const currentValue = e.target.value;
-
+      console.log("currentValue", currentValue);
       if (currentValue === "" || inputRegex.test(currentValue)) {
         const numDecimals = currentValue.split(".")[1]?.length || 0;
         if (
@@ -46,9 +46,11 @@ function InputCurrency(
           decimals >= 0 &&
           numDecimals > decimals
         ) {
+          console.log("numDecimals", numDecimals);
           e.target.value = previousVal;
         }
       } else {
+        console.log("else", previousVal);
         e.target.value = previousVal;
       }
       
@@ -61,6 +63,7 @@ function InputCurrency(
 
   const num = useMemo(() => {
     const _num = +(value || '');
+    console.log("num", _num, value);
     return Number.isNaN(_num) ? 0 : _num;
   }, [value]);
 

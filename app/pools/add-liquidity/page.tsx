@@ -855,7 +855,7 @@ export default function AddLiquidity() {
                         dispatch({
                           type: "SET_SLIPPAGE",
                           payload:
-                            e.target.value === "0."
+                            e.target.value.includes(".")
                               ? e.target.value
                               : e.target.value === ""
                               ? ""
@@ -901,7 +901,7 @@ export default function AddLiquidity() {
                     </strong>
                   </span>
                   <InputCurrency
-                    className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
+                    className="max-w-[240px] sm:w-full sm:max-w-[calc(100%-100px)] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
                     placeholder="0"
                     value={state.depositDropdownCoin}
                     onChange={(e) => {
@@ -912,11 +912,11 @@ export default function AddLiquidity() {
                         isNaN(Number(e.target.value))
                       ) {
                         handleCoinAChange(
-                          e.target.value === "0."
-                                  ? e.target.value
-                                  : e.target.value === ""
-                                  ? ""
-                                  : e.target.value.replace(/,/g, ""),
+                          e.target.value.includes(".")
+                            ? e.target.value
+                            : e.target.value === ""
+                            ? ""
+                            : e.target.value.replace(/,/g, ""),
                         )
                         return;
                       }
@@ -938,7 +938,7 @@ export default function AddLiquidity() {
                     </strong>
                   </span>
                   <InputCurrency
-                    className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
+                    className="max-w-[240px] sm:w-full sm:max-w-[calc(100%-100px)] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
                     placeholder="0"
                     value={state.depositCustomCoin}
                     onChange={(e) => {
@@ -949,11 +949,11 @@ export default function AddLiquidity() {
                         isNaN(Number(e.target.value))
                       ) {
                         handleCoinBChange(
-                          e.target.value === "0."
-                                  ? e.target.value
-                                  : e.target.value === ""
-                                  ? ""
-                                  : e.target.value.replace(/,/g, ""),
+                          e.target.value.includes(".")
+                            ? e.target.value
+                            : e.target.value === ""
+                            ? ""
+                            : e.target.value.replace(/,/g, ""),
                         )
                         return;
                       }

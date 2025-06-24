@@ -257,7 +257,7 @@ export default function SwapInterface({
     setQuickSelect(null);
     if (e.target.value === "" || Number(e.target.value) === 0) {
       setQueryParams(undefined);
-      setAmountIn(e.target.value === "0." ? e.target.value : e.target.value === "" ? "" : "0");
+      setAmountIn(e.target.value.includes(".") ? e.target.value : e.target.value === "" ? "" : "0");
       setAmountOut("");
       return;
     }
@@ -274,7 +274,7 @@ export default function SwapInterface({
     setQuickSelect(null);
     if (e.target.value === "" || Number(e.target.value) === 0) {
       setQueryParams(undefined);
-      setAmountOut(e.target.value === "0." ? e.target.value : e.target.value === "" ? "" : "0");
+      setAmountOut(e.target.value.includes(".") ? e.target.value : e.target.value === "" ? "" : "0");
       setAmountIn("");
       return;
     }

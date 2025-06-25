@@ -32,6 +32,7 @@ interface CoinMeta {
   typeName: string;
   name: string;
   symbol: string;
+  lists?: string[];
 }
 
 // Function to create the table if it doesn't exist
@@ -110,10 +111,38 @@ async function seedInitialData() {
   }
 }
 
+// Function to update predefined coins from the local data file
+async function updatePredefinedCoins() {
+  // Import default coins from the predefined list
+  const { predefinedCoins } = await import("@/app/data/coins");
+  
+  // Add or update each coin in the database
+  for (const coin of predefinedCoins) {
+    try {
+      const { typeName } = coin;
+      
+      if (!typeName) {
+        return NextResponse.json({ error: "typeName is required" }, { status: 400 });
+      }
+      
+      // Update the coin
+      await dynamoDB.send(new PutCommand({
+        TableName: TABLE_NAME,
+        Item: coin
+      }));
+
+      console.log(`Successfully upserted coin ${coin.symbol}`);
+    } catch (error) {
+      console.error(`Failed to upsert coin ${coin.symbol}:`, error);
+    }
+  }
+}
+
 // GET all coins
 export async function GET(req: NextRequest) {
   try {
-    await ensureTableExists();
+    // await ensureTableExists();
+    // await updatePredefinedCoins();
     
     // Parse pagination parameters from query string
     const { searchParams } = new URL(req.url);
@@ -169,113 +198,114 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Create a new coin
-export async function POST(req: NextRequest) {
-  try {
-    await ensureTableExists();
+// Security Disable
+// // POST - Create a new coin
+// export async function POST(req: NextRequest) {
+//   try {
+//     await ensureTableExists();
     
-    const coinData: CoinMeta = await req.json();
+//     const coinData: CoinMeta = await req.json();
     
-    // Validate required fields
-    if (!coinData.typeName || !coinData.symbol || !coinData.name || coinData.decimals === undefined) {
-      return NextResponse.json(
-        { error: "Missing required fields (typeName, symbol, name, decimals)" }, 
-        { status: 400 }
-      );
-    }
+//     // Validate required fields
+//     if (!coinData.typeName || !coinData.symbol || !coinData.name || coinData.decimals === undefined) {
+//       return NextResponse.json(
+//         { error: "Missing required fields (typeName, symbol, name, decimals)" }, 
+//         { status: 400 }
+//       );
+//     }
     
-    // Check if coin already exists
-    const existingCoin = await dynamoDB.send(new GetCommand({
-      TableName: TABLE_NAME,
-      Key: { typeName: coinData.typeName }
-    }));
+//     // Check if coin already exists
+//     const existingCoin = await dynamoDB.send(new GetCommand({
+//       TableName: TABLE_NAME,
+//       Key: { typeName: coinData.typeName }
+//     }));
     
-    if (existingCoin.Item) {
-      return NextResponse.json(
-        { error: "Coin with this typeName already exists" }, 
-        { status: 409 }
-      );
-    }
+//     if (existingCoin.Item) {
+//       return NextResponse.json(
+//         { error: "Coin with this typeName already exists" }, 
+//         { status: 409 }
+//       );
+//     }
     
-    // Add the new coin
-    await dynamoDB.send(new PutCommand({
-      TableName: TABLE_NAME,
-      Item: coinData
-    }));
+//     // Add the new coin
+//     await dynamoDB.send(new PutCommand({
+//       TableName: TABLE_NAME,
+//       Item: coinData
+//     }));
     
-    return NextResponse.json(coinData, { status: 201 });
-  } catch (error) {
-    console.error("Error creating coin:", error);
-    return NextResponse.json({ error: "Failed to create coin" }, { status: 500 });
-  }
-}
+//     return NextResponse.json(coinData, { status: 201 });
+//   } catch (error) {
+//     console.error("Error creating coin:", error);
+//     return NextResponse.json({ error: "Failed to create coin" }, { status: 500 });
+//   }
+// }
 
-// PUT - Update an existing coin
-export async function PUT(req: NextRequest) {
-  try {
-    await ensureTableExists();
+// // PUT - Update an existing coin
+// export async function PUT(req: NextRequest) {
+//   try {
+//     await ensureTableExists();
     
-    const coinData: CoinMeta = await req.json();
-    const { typeName } = coinData;
+//     const coinData: CoinMeta = await req.json();
+//     const { typeName } = coinData;
     
-    if (!typeName) {
-      return NextResponse.json({ error: "typeName is required" }, { status: 400 });
-    }
+//     if (!typeName) {
+//       return NextResponse.json({ error: "typeName is required" }, { status: 400 });
+//     }
     
-    // Check if coin exists
-    const existingCoin = await dynamoDB.send(new GetCommand({
-      TableName: TABLE_NAME,
-      Key: { typeName }
-    }));
+//     // Check if coin exists
+//     const existingCoin = await dynamoDB.send(new GetCommand({
+//       TableName: TABLE_NAME,
+//       Key: { typeName }
+//     }));
     
-    if (!existingCoin.Item) {
-      return NextResponse.json({ error: "Coin not found" }, { status: 404 });
-    }
+//     if (!existingCoin.Item) {
+//       return NextResponse.json({ error: "Coin not found" }, { status: 404 });
+//     }
     
-    // Update the coin
-    await dynamoDB.send(new PutCommand({
-      TableName: TABLE_NAME,
-      Item: coinData
-    }));
+//     // Update the coin
+//     await dynamoDB.send(new PutCommand({
+//       TableName: TABLE_NAME,
+//       Item: coinData
+//     }));
     
-    return NextResponse.json(coinData, { status: 200 });
-  } catch (error) {
-    console.error("Error updating coin:", error);
-    return NextResponse.json({ error: "Failed to update coin" }, { status: 500 });
-  }
-}
+//     return NextResponse.json(coinData, { status: 200 });
+//   } catch (error) {
+//     console.error("Error updating coin:", error);
+//     return NextResponse.json({ error: "Failed to update coin" }, { status: 500 });
+//   }
+// }
 
-// DELETE - Delete a coin
-export async function DELETE(req: NextRequest) {
-  try {
-    await ensureTableExists();
+// // DELETE - Delete a coin
+// export async function DELETE(req: NextRequest) {
+//   try {
+//     await ensureTableExists();
     
-    const { searchParams } = new URL(req.url);
-    const typeName = searchParams.get("typeName");
+//     const { searchParams } = new URL(req.url);
+//     const typeName = searchParams.get("typeName");
     
-    if (!typeName) {
-      return NextResponse.json({ error: "typeName query parameter is required" }, { status: 400 });
-    }
+//     if (!typeName) {
+//       return NextResponse.json({ error: "typeName query parameter is required" }, { status: 400 });
+//     }
     
-    // Check if coin exists
-    const existingCoin = await dynamoDB.send(new GetCommand({
-      TableName: TABLE_NAME,
-      Key: { typeName }
-    }));
+//     // Check if coin exists
+//     const existingCoin = await dynamoDB.send(new GetCommand({
+//       TableName: TABLE_NAME,
+//       Key: { typeName }
+//     }));
     
-    if (!existingCoin.Item) {
-      return NextResponse.json({ error: "Coin not found" }, { status: 404 });
-    }
+//     if (!existingCoin.Item) {
+//       return NextResponse.json({ error: "Coin not found" }, { status: 404 });
+//     }
     
-    // Delete the coin
-    await dynamoDB.send(new DeleteCommand({
-      TableName: TABLE_NAME,
-      Key: { typeName }
-    }));
+//     // Delete the coin
+//     await dynamoDB.send(new DeleteCommand({
+//       TableName: TABLE_NAME,
+//       Key: { typeName }
+//     }));
     
-    return NextResponse.json({ message: "Coin deleted successfully" }, { status: 200 });
-  } catch (error) {
-    console.error("Error deleting coin:", error);
-    return NextResponse.json({ error: "Failed to delete coin" }, { status: 500 });
-  }
-}
+//     return NextResponse.json({ message: "Coin deleted successfully" }, { status: 200 });
+//   } catch (error) {
+//     console.error("Error deleting coin:", error);
+//     return NextResponse.json({ error: "Failed to delete coin" }, { status: 500 });
+//   }
+// }

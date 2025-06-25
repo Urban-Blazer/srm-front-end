@@ -856,7 +856,7 @@ export default function Pools() {
 
                     <div className="flex justify-between items-center bg-[#130e18] px-3 py-2">
                       <InputCurrency
-                        className="max-w-[240px] sm:max-w-[calc(100%-100px)] xl:max-w-[240px] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
+                        className="max-w-[240px] sm:max-w-[calc(100%-100px)] p-2 outline-none bg-transparent text-3xl sm:text-2xl overflow-hidden disabled:text-[#868098]"
                         placeholder={`Enter fee (0.00 - ${max.toFixed(2)})`}
                         value={state[field] === 0 ? "" : state[field]}
                         min={0}
@@ -865,18 +865,16 @@ export default function Pools() {
                         minLength={1}
                         step={0.01}
                         onChange={(e) => {
-                          console.log("onChange", e.target.value);
                           if (
                             e.target.value === "" ||
                             Number(e.target.value) === 0 ||
                             isNaN(Number(e.target.value))
                           ) {
-                            console.log("dispatch1", e.target.value);
                             dispatch({
                               type: "SET_FEES",
                               field,
                               value:
-                                e.target.value === "0."
+                                e.target.value.includes(".")
                                   ? e.target.value
                                   : e.target.value === ""
                                   ? ""
@@ -884,7 +882,6 @@ export default function Pools() {
                             });
                             return;
                           }
-                          console.log("dispatch2", e.target.value);
                           const value =
                             Number(e.target.value.replace(/,/g, "")) > max
                               ? max.toString()

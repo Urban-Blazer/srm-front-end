@@ -15,7 +15,7 @@ const provider = new SuiClient({ url: GETTER_RPC });
 
 const SUI_REWARD_BALANCE = 100 * Math.pow(10, 9);  // 100 SUI
 const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
-const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9);  // 5 SRM
+const SRM_REWARD_BALANCE = 100000 * Math.pow(10, 9);  // 5 SRM
 
 export default function Swap() {
     const wallet = useCurrentWallet()?.currentWallet;

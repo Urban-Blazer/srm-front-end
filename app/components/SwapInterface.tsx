@@ -25,7 +25,7 @@ import { ChevronsDown, ChevronsUp, MinusIcon, PlusIcon } from "lucide-react";
 
 const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9); // 50 SUI
 const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
-const SRM_REWARD_BALANCE = 5 * Math.pow(10, 9); // 5 SRM (adjust if needed)
+const SRM_REWARD_BALANCE = 100000 * Math.pow(10, 9); // 100,000 SRM (adjust if needed)
 
 export default function SwapInterface({
   poolId,

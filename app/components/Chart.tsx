@@ -6,30 +6,45 @@ import {
   createChart,
   type CandlestickData,
   type CandlestickSeriesPartialOptions,
+  CrosshairMode,
 } from "lightweight-charts";
 import { useEffect, useRef, useState } from "react";
 import useChartData from "../hooks/useChartData";
 import useCoinPrice from "../hooks/useCoinPrice";
 import { ChartProps, IntervalType } from "../types";
+import useSRMPrice from "../hooks/useSRMPrice";
 
-
-export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: ChartProps) {
+export default function Chart({
+  poolId,
+  coinASymbol,
+  coinA,
+  coinB,
+  children,
+}: ChartProps) {
   const websocketUrl = "wss://api.suirewards.me";
   const wsRef = useRef<WebSocket | null>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const latestCandles = useRef<CandlestickData[]>([]);
   const intervals = ["1m", "5m", "15m", "1h", "4h", "24h"];
   const [interval, setInterval] = useState<IntervalType>("1h");
+  const isSRMCoinA = coinASymbol === "SRM";
+  const [isUSDCandle, setIsUSDCandle] = useState(true);
   const {
     data: chartData,
     refetch: refetchChartData,
     isPending: isChartDataPending,
-  } = useChartData(poolId, interval);
-  const { data: coinAPriceUSD, isPending: isCoinPricePending } =
-    useCoinPrice(coinASymbol === 'SUI' ? coinASymbol : 'USDC');
-  const isAnyLoading = isChartDataPending || isCoinPricePending;
+  } = useChartData(poolId, interval, 15000);
+  const { data: coinAPriceUSD, isPending: isCoinPricePending } = useCoinPrice(
+    coinASymbol === "SUI" ? coinASymbol : "USDC"
+  );
   let ws: WebSocket | null = null;
-
+  const {
+    price: srmPriceInSui,
+    srmAmount,
+    isLoading,
+    isPending,
+  } = useSRMPrice(1, 30000, isSRMCoinA); // Refetch every 30 seconds
+  const isAnyLoading = isChartDataPending || isCoinPricePending || (isSRMCoinA && (isLoading || isPending));
   useEffect(() => {
     if (!chartContainerRef.current || !chartData || !coinAPriceUSD) return;
 
@@ -65,33 +80,120 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
       borderVisible: false,
       wickUpColor: "#4ade80",
       wickDownColor: "#f87171",
+      lastValueVisible: true,
     } satisfies CandlestickSeriesPartialOptions);
+
+    const processCandles = (candles: CandlestickData[]) => {
+      // Check each candle for gaps between the close of the previous candle and the open of the current candle
+      // Fix gaps while preserving wicks (high/low values)
+      const processedCandles = candles.map((candle, index) => {
+        if (index === 0) return candle;
+
+        const prevCandle = candles[index - 1];
+
+        // Case 1: Gap up (current open > previous close)
+        if (candle.open > prevCandle.close) {
+          // Preserve the original range between open and low
+          const originalOpenLowRange = candle.open - candle.low;
+          // Preserve the original range between high and open
+          const originalHighOpenRange = candle.high - candle.open;
+
+          const newOpen = prevCandle.close;
+          // Adjust low to maintain the same range from the new open
+          const newLow = Math.min(candle.low, newOpen - originalOpenLowRange);
+          // Adjust high to maintain the same range from the new open
+          const newHigh = Math.max(
+            candle.high,
+            newOpen + originalHighOpenRange
+          );
+
+          return {
+            ...candle,
+            open: newOpen,
+            low: newLow,
+            high: newHigh,
+          };
+        }
+
+        // Case 2: Gap down (current open < previous close)
+        if (candle.open < prevCandle.close) {
+          // Preserve the original range between open and low
+          const originalOpenLowRange = candle.open - candle.low;
+          // Preserve the original range between high and open
+          const originalHighOpenRange = candle.high - candle.open;
+
+          const newOpen = prevCandle.close;
+          // Adjust low to maintain the same range from the new open
+          const newLow = Math.min(candle.low, newOpen - originalOpenLowRange);
+          // Adjust high to maintain the same range from the new open
+          const newHigh = Math.max(
+            candle.high,
+            newOpen + originalHighOpenRange
+          );
+
+          return {
+            ...candle,
+            open: newOpen,
+            low: newLow,
+            high: newHigh,
+          };
+        }
+
+        return candle;
+      });
+
+      return processedCandles;
+    };
 
     const setChartData = async () => {
       const rawData = chartData;
-      const coinADecimals = coinA?.decimals ?? 9;
       const coinBDecimals = coinB?.decimals ?? 9;
-      let usdCandles: CandlestickData[] = [];
-      if(coinBDecimals === 9){
-        usdCandles = rawData.map((candle) => ({
+      let candles: CandlestickData[] = [];
+      const isSRMCoinA = coinASymbol === "SRM";
+      const srmPriceInUsdc =
+        srmPriceInSui && isSRMCoinA ? srmPriceInSui * coinAPriceUSD : 1;
+      const usdPrice = isSRMCoinA ? srmPriceInUsdc : coinAPriceUSD;
+      let price = isUSDCandle ? usdPrice : 1;
+      console.log({
+        coinASymbol,
+        price,
+        coinBDecimals,
+        srmPriceInSui,
+        srmAmount,
+      });
+      if (coinBDecimals === 9) {
+        candles = rawData.map((candle) => ({
           time: candle.time,
-          open: candle.open * coinAPriceUSD,
-          high: candle.high * coinAPriceUSD,
-          low: candle.low * coinAPriceUSD,
-          close: candle.close * coinAPriceUSD,
+          open: candle.open * price,
+          high: candle.high * price,
+          low: candle.low * price,
+          close: candle.close * price,
         }));
       } else {
-        usdCandles = rawData.map((candle) => ({
+        candles = rawData.map((candle) => ({
           time: candle.time,
-          open: ((candle.open / Math.pow(10, 9)) * Math.pow(10, coinBDecimals)) * coinAPriceUSD,
-          high: ((candle.high / Math.pow(10, 9)) * Math.pow(10, coinBDecimals)) * coinAPriceUSD,
-          low: ((candle.low / Math.pow(10, 9)) * Math.pow(10, coinBDecimals)) * coinAPriceUSD,
-          close: ((candle.close / Math.pow(10, 9)) * Math.pow(10, coinBDecimals)) * coinAPriceUSD,
+          open:
+            (candle.open / Math.pow(10, 9)) *
+            Math.pow(10, coinBDecimals) *
+            price,
+          high:
+            (candle.high / Math.pow(10, 9)) *
+            Math.pow(10, coinBDecimals) *
+            price,
+          low:
+            (candle.low / Math.pow(10, 9)) *
+            Math.pow(10, coinBDecimals) *
+            price,
+          close:
+            (candle.close / Math.pow(10, 9)) *
+            Math.pow(10, coinBDecimals) *
+            price,
         }));
       }
 
-      latestCandles.current = usdCandles; // ✍️ Save in ref
-      series.setData(usdCandles);
+      candles = processCandles(candles);
+      latestCandles.current = candles; // ✍️ Save in ref
+      series.setData(candles);
 
       chart.timeScale().fitContent();
 
@@ -164,12 +266,21 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
         wsRef.current.close();
       }
     };
-  }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData, refetchChartData, coinA?.decimals, coinB?.decimals]);
+  }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData, refetchChartData, coinA?.decimals, coinB?.decimals, isUSDCandle, srmPriceInSui, srmAmount]);
 
   return (
     <div className="w-full min-h-[500px]">
       <div className="flex flex-col lg:flex-row justify-between gap-2 mb-2 overflow-hidden">
         {children}
+        {/* sui/usd price selector */}
+        <select
+          value={isUSDCandle ? "true" : "false"}
+          onChange={(e) => setIsUSDCandle(e.target.value === "true")}
+          className="bg-[#130e18] text-slate-100 border border-[#221d14] px-2 py-1 text-sm"
+        >
+          <option value="false">{coinASymbol}</option>
+          <option value="true">USD</option>
+        </select>
         <select
           value={interval}
           onChange={(e) => setInterval(e.target.value as IntervalType)}
@@ -187,7 +298,10 @@ export default function Chart({ poolId, coinASymbol, coinA, coinB, children }: C
         <div className="w-full h-[500px] animate-pulse flex bg-gray-900 border border-gray-800 shadow-md p-4" />
       )}
 
-      <div ref={chartContainerRef} className={`w-full h-full ${isAnyLoading ? 'hidden' : ''}`} />
+      <div
+        ref={chartContainerRef}
+        className={`w-full h-full ${isAnyLoading ? "hidden" : ""}`}
+      />
     </div>
   );
 }

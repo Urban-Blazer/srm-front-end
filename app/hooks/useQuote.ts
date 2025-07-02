@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-const getQuote = async (queryParams: URLSearchParams) => {
+export const getQuote = async (queryParams: URLSearchParams) => {
   const res = await fetch(`/api/get-quote?${queryParams}`);
   if (!res.ok) {
     throw new Error("❌ Failed to fetch chart data");
@@ -43,7 +43,7 @@ const useQuote = (
     queryFn: () => getQuote(queryParams!),
     enabled: isEnabled,
     refetchInterval,
-    staleTime: refetchInterval,
+    staleTime: refetchInterval ? refetchInterval / 2 : 0,
   });
 };
 

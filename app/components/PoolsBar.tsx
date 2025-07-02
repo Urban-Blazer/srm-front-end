@@ -81,7 +81,7 @@ const PoolsBar: FC<PoolsBarProps> = ({
     error: poolsError,
   } = usePoolsWithStats({
     featuredCoinBSymbol,
-    limit: 12, // Request more pools so we have enough for the expanded view
+    limit: 32, // Request more pools so we have enough for the expanded view
   });
 
   // Fetch pool ranking data for volume information
@@ -179,7 +179,7 @@ const PoolsBar: FC<PoolsBarProps> = ({
     if (srmPool) result.push(srmPool);
 
     // Decide where to place featured pool based on expanded state
-    const displayLimit = expanded ? (initialExpanded ? 25 : 8) : 4;
+    const displayLimit = expanded ? (initialExpanded ? 32 : 8) : 4;
 
     if (expanded && featuredPool) {
       // In expanded mode, featured pool is second after SRM

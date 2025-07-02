@@ -12,6 +12,23 @@ export const SRM_COINTYPE = "0xbd2301d12b96dd64b41134168931dd54742c0336bcf1752ed
 export const SRM_COIN_SUPPLY = 1_000_000_000_000_000_000; // 1B
 export const SRM_COIN_CREATOR_FEE = 5;
 export const SRM_COIN_CREATOR_WALLET = "0xb139316ab0ab0b2309010335ca60586e5b4f21d86328638829759aad62ecc616";
+export const SRM_MAIN_POOL = {
+  poolId: "0xbad96d82f84d3fa3b31d49054e277eed973347382835b479622f277641abc693",
+  coinA: {
+      typeName: "0x2::sui::SUI",
+      decimals: 9,
+      image: "https://strapi-dev.scand.app/uploads/sui_c07df05f00.png",
+      name: "Sui",
+      symbol: "SUI"
+  },
+  coinB: {
+      typeName: "0xbd2301d12b96dd64b41134168931dd54742c0336bcf1752ed346a177ac00d1ed::SuiRewardsMe::SUIREWARDSME",
+      decimals: 9,
+      image: "https://bafybeif5r3biiwsylqsjkkwh4yrsbltbeetq5w3snuodcw56b7iaaglxoa.ipfs.w3s.link/logo_blk.png",
+      name: "SuiRewards.Me",
+      symbol: "SRM"
+  }
+};
 export const EXPLORER = {
   ADDRESS: `https://suiscan.xyz`,
 };

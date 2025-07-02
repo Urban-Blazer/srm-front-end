@@ -61,7 +61,7 @@ export const predefinedCoins: CoinMeta[] = [
       "https://bafybeif5r3biiwsylqsjkkwh4yrsbltbeetq5w3snuodcw56b7iaaglxoa.ipfs.w3s.link/logo_blk.png",
     lists: ["strict", "all"],
     socials: {
-      telegram: "https://t.me/suirewardsme",
+      telegram: "https://t.me/suirewards",
       x: "https://x.com/SuiRewardsMe",
       discord: "https://discord.gg/suirewardsme",
       website: "https://suirewards.me",

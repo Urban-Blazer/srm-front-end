@@ -58,6 +58,10 @@ export const LPPositionCard = ({
   const [logs, setLogs] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [transactionProgress, setTransactionProgress] = useState<{
+    image: string;
+    text: string;
+  } | null>(null);
 
   const [slippageConfig, setSlippageConfig] = useState<boolean>(false);
 
@@ -223,12 +227,20 @@ export const LPPositionCard = ({
     // Reset and prepare UI state
     setLogs([]);
     setIsProcessing(true);
+    setTransactionProgress({
+      image: "/images/txn_loading.png",
+      text: "",
+    });
     setIsModalOpen(true);
     setIsRemovingLiquidity((prev) => ({ ...prev, [lp.objectId]: true }));
 
     if (!walletConnected || !account?.address) {
       addLog("Please connect your wallet first");
       setIsProcessing(false);
+      setTransactionProgress({
+        image: "/images/txn_failed.png",
+        text: "",
+      });
       return;
     }
 
@@ -243,6 +255,10 @@ export const LPPositionCard = ({
       ) {
         addLog("Please enter a valid LP amount");
         setIsProcessing(false);
+        setTransactionProgress({
+          image: "/images/txn_failed.png",
+          text: "",
+        });
         return;
       }
 
@@ -336,6 +352,10 @@ export const LPPositionCard = ({
 
       if (!executeResponse?.digest) {
         addLog("Transaction submission failed");
+        setTransactionProgress({
+          image: "/images/txn_failed.png",
+          text: "",
+        });
         return;
       }
 
@@ -347,9 +367,17 @@ export const LPPositionCard = ({
 
       if (!txnDetails) {
         addLog("Could not confirm transaction success. Please check Explorer.");
+        setTransactionProgress({
+          image: "/images/txn_failed.png",
+          text: "",
+        });
         return;
       }
 
+      setTransactionProgress({
+        image: "/images/txn_successful.png",
+        text: "",
+      });
       // Success handling
       addLog(`Successfully removed ${inputAmount} LP tokens!`);
       addLog(
@@ -367,6 +395,10 @@ export const LPPositionCard = ({
     } catch (error: any) {
       logger.error("Remove liquidity transaction failed:", error);
       addLog(`Failed to remove liquidity: ${error.message || "Unknown error"}`);
+      setTransactionProgress({
+        image: "/images/txn_failed.png",
+        text: "",
+      });
     } finally {
       setLoading(false);
       setIsProcessing(false);
@@ -390,10 +422,11 @@ export const LPPositionCard = ({
       <TransactionModal
         open={isModalOpen}
         onClose={() => {
-          if (!isProcessing) setIsModalOpen(false);
+          setIsModalOpen(false);
         }}
         logs={logs}
         isProcessing={isProcessing}
+        transactionProgress={transactionProgress ?? undefined}
       />
       {/* Coin Images & Symbols */}
       <div className="flex items-center justify-center space-x-1 md:space-x-2 flex-wrap">

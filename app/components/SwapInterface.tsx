@@ -22,6 +22,7 @@ import { Spinner } from "./Spinner";
 import Button from "./UI/Button";
 import Avatar from "./Avatar";
 import { ChevronsDown, ChevronsUp, MinusIcon, PlusIcon } from "lucide-react";
+import { normalizeTokenId } from "../utils/token";
 
 const SUI_REWARD_BALANCE = 50 * Math.pow(10, 9); // 50 SUI
 const USDC_REWARD_BALANCE = 250 * Math.pow(10, 6); // 250 USDC
@@ -37,8 +38,10 @@ export default function SwapInterface({
   const [isBuy, setIsBuy] = useAtom(isBuyAtom);
   const [quickSelect, setQuickSelect] = useState<number | null>(null);
   const [slippageConfig, setSlippageConfig] = useState<boolean>(false);
+
   const [coinABalance, setCoinABalance] = useState<number>(0);
   const [coinBBalance, setCoinBBalance] = useState<number>(0);
+
   const [amountIn, setAmountIn] = useState<string>("");
   const [digest, setDigest] = useState<string>("");
   const [amountOut, setAmountOut] = useState<string>("");
@@ -79,30 +82,46 @@ export default function SwapInterface({
   } = useQuote(queryParams, 10000);
 
   const isAnyLoading = isLoading || isRefetching;
-  const { obj: accountBalancesObj } = useAccountBalances();
+  const { obj: accountBalancesObj, refetch: refetchAccountBalances } = useAccountBalances();
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
   };
 
-  const fetchBalance = useCallback(
-    async (token: any, setBalance: (balance: number) => void) => {
-      if (!walletAddress || !token || !token?.symbol) return; //
+  useEffect(() => {
+    console.log("coinA", coinA?.typeName, accountBalancesObj?.[normalizeTokenId(coinA?.typeName ?? "")], accountBalancesObj);
+    if (coinA?.typeName && accountBalancesObj?.[normalizeTokenId(coinA?.typeName ?? "")]) {
+      setCoinABalance(Number(accountBalancesObj?.[normalizeTokenId(coinA?.typeName ?? "")]));
+    }
+    
+  }, [accountBalancesObj, coinA?.typeName]);
 
-      try {
-        const { totalBalance } = await provider.getBalance({
-          owner: walletAddress,
-          coinType: token.typeName,
-        });
+  useEffect(() => {
+    console.log("coinB", coinB?.typeName, accountBalancesObj?.[normalizeTokenId(coinB?.typeName ?? "")], accountBalancesObj); 
+    if (coinB?.typeName && accountBalancesObj?.[normalizeTokenId(coinB?.typeName ?? "")]) {
+      setCoinBBalance(Number(accountBalancesObj?.[normalizeTokenId(coinB?.typeName ?? "")]));
+    }
+    
+  }, [accountBalancesObj, coinB?.typeName]);
 
-        setBalance(Number(totalBalance));
-      } catch (error) {
-        console.error(`Error fetching balance for ${token.symbol}:`, error);
-        setBalance(0);
-      }
-    },
-    [provider, walletAddress]
-  );
+  // const fetchBalance = useCallback(
+  //   async (token: any, setBalance: (balance: number) => void) => {
+  //     if (!walletAddress || !token || !token?.symbol) return; //
+
+  //     try {
+  //       const { totalBalance } = await provider.getBalance({
+  //         owner: walletAddress,
+  //         coinType: token.typeName,
+  //       });
+
+  //       setBalance(Number(totalBalance));
+  //     } catch (error) {
+  //       console.error(`Error fetching balance for ${token.symbol}:`, error);
+  //       setBalance(0);
+  //     }
+  //   },
+  //   [provider, walletAddress]
+  // );
 
   useEffect(() => {
     setAmountIn("");
@@ -238,11 +257,8 @@ export default function SwapInterface({
 
   useEffect(() => {
     const fetchBalances = async () => {
-      if (walletAddress && coinA) {
-        await fetchBalance(coinA, setCoinABalance);
-      }
-      if (walletAddress && coinB) {
-        await fetchBalance(coinB, setCoinBBalance);
+      if ((walletAddress && coinA) || (walletAddress && coinB)) {
+        refetchAccountBalances();
       }
       if (coinA && coinB) {
         setLoading(false);
@@ -250,7 +266,7 @@ export default function SwapInterface({
     };
 
     fetchBalances();
-  }, [coinA, coinB, fetchBalance, walletAddress]);
+  }, [coinA, coinB, refetchAccountBalances, walletAddress]);
 
   const handleAmountInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsAtoB(true);
@@ -604,6 +620,8 @@ export default function SwapInterface({
         image: "/images/txn_successful.png",
         text: "",
       });
+      
+      refetchAccountBalances();
 
       const rewardBalance = Number(poolStats?.reward_balance_a ?? 0);
       const suiTypeName = predefinedCoins.find(
@@ -643,9 +661,6 @@ export default function SwapInterface({
           "❌ Skipping isActive update due to insufficient reward balance."
         );
       }
-
-      await fetchBalance(coinA, setCoinABalance);
-      await fetchBalance(coinB, setCoinBBalance);
     } catch (error: any) {
       console.error("Swap failed:", error.message);
       addLog(`❌ Swap failed: ${error.message}`);

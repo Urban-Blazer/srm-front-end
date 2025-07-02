@@ -6,13 +6,14 @@ import { normalizeTokenId } from "../utils/token";
 
 const useAccountBalances = () => {
   const account = useCurrentAccount();
-  const { data } = useSuiClientQuery(
+  const { data, refetch } = useSuiClientQuery(
     "getAllBalances",
     {
       owner: account?.address as string,
     },
     {
       enabled: !!account,
+      refetchInterval: 8000,
     },
   );
 
@@ -38,6 +39,7 @@ const useAccountBalances = () => {
   return {
     list: balances,
     obj: balancesObj,
+    refetch,
   };
 };
 

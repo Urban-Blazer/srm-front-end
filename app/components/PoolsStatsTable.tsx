@@ -52,7 +52,12 @@ type PoolSortKey =
   | "totalVolume"
   | "timestamp"
   | "buyTxCount"
-  | "sellTxCount";
+  | "sellTxCount"
+  | "lp_builder_fee"
+  | "burn_fee"
+  | "creator_royalty_fee"
+  | "rewards_fee";
+
 type Order = "asc" | "desc";
 
 interface HeadCell {
@@ -68,6 +73,10 @@ const headCells: HeadCell[] = [
   { id: "sellVolume", label: "Sell Volume", numeric: true },
   { id: "totalVolume", label: "Total Volume", numeric: true },
   { id: "timestamp", label: "Created", numeric: true },
+  { id: "lp_builder_fee", label: "LP Fee", numeric: true },
+  { id: "burn_fee", label: "Burn Fee", numeric: true },
+  { id: "creator_royalty_fee", label: "Creator Fee", numeric: true },
+  { id: "rewards_fee", label: "Rewards Fee", numeric: true },
 ];
 
 const formatBpsToPercent = (bps: string) => {
@@ -128,10 +137,6 @@ function EnhancedTableHead(props: EnhancedTableHeadProps) {
             </TableSortLabel>
           </TableCell>
         ))}
-        <TableCell align="left">LP Fee</TableCell>
-        <TableCell align="left">Burn Fee</TableCell>
-        <TableCell align="left">Creator Fee</TableCell>
-        <TableCell align="left">Rewards Fee</TableCell>
         <TableCell align="left">Royalty Wallet</TableCell>
       </TableRow>
     </TableHead>
@@ -194,6 +199,22 @@ export default function PoolsStatsTable() {
           return order === "asc"
             ? Number(a.sellTxCount) - Number(b.sellTxCount)
             : Number(b.sellTxCount) - Number(a.sellTxCount);
+        case "lp_builder_fee":  
+          return order === "asc"
+            ? Number(a.lp_builder_fee) - Number(b.lp_builder_fee)
+            : Number(b.lp_builder_fee) - Number(a.lp_builder_fee);
+        case "burn_fee":
+          return order === "asc"
+            ? Number(a.burn_fee) - Number(b.burn_fee)
+            : Number(b.burn_fee) - Number(a.burn_fee);
+        case "creator_royalty_fee":
+          return order === "asc"
+            ? Number(a.creator_royalty_fee) - Number(b.creator_royalty_fee)
+            : Number(b.creator_royalty_fee) - Number(a.creator_royalty_fee);
+        case "rewards_fee":
+          return order === "asc"
+            ? Number(a.rewards_fee) - Number(b.rewards_fee)
+            : Number(b.rewards_fee) - Number(a.rewards_fee);
         default:
           return 0;
       }
@@ -372,7 +393,7 @@ export default function PoolsStatsTable() {
                       </Link>
                     </Box>
                   </TableCell>
-                  <TableCell align="left">{pool.buyTxCount}</TableCell>
+                  <TableCell align="left">{Number(pool.buyTxCount).toLocaleString()}</TableCell>
                   <TableCell align="left">
                     <Box
                       sx={{
@@ -390,11 +411,11 @@ export default function PoolsStatsTable() {
                         />
                       )}
                       <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {Number(parseInt(`${pool.buyVolume}`))}
+                        {Number(parseInt(`${pool.buyVolume}`.replace(",", ""))).toLocaleString()}
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell align="left">{pool.sellTxCount}</TableCell>
+                  <TableCell align="left">{Number(pool.sellTxCount).toLocaleString()}</TableCell>
                   <TableCell align="left">
                     <Box
                       sx={{
@@ -412,7 +433,7 @@ export default function PoolsStatsTable() {
                         />
                       )}
                       <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {Number(parseInt(`${pool.sellVolume}`))}
+                        {Number(parseInt(`${pool.sellVolume}`.replace(",", ""))).toLocaleString()}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -433,9 +454,7 @@ export default function PoolsStatsTable() {
                         />
                       )}
                       <Typography variant="body2" sx={{ color: "#fff" }}>
-                        {Number(
-                          parseInt(`${pool.totalVolume}`.replace(",", ""))
-                        )}
+                        {Number(parseInt(`${pool.totalVolume}`.replace(",", ""))).toLocaleString()}
                       </Typography>
                     </Box>
                   </TableCell>

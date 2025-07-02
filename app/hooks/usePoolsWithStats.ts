@@ -43,7 +43,7 @@ interface UsePoolsWithStatsOptions {
 export function usePoolsWithStats({
   featuredCoinBSymbol,
   limit = 4,
-  refetchInterval = 30 * 1000,
+  refetchInterval = 60 * 1000,
   range = "24h",
 }: UsePoolsWithStatsOptions = {}) {
   // Fetch all pools first
@@ -63,6 +63,8 @@ export function usePoolsWithStats({
         id: pool.poolId,
         options: { showContent: true, showType: true },
       },
+      staleTime: 1000 * 60 * 120,
+      refetchInterval,
     })),
     combine: (results) => {
       return {

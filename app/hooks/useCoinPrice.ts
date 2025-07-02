@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
 const fetchCoinPrice = async (symbol: string) => {
-    if (symbol === 'SUI') {
+    if (symbol === "SRM") {
+       // TODO: fetch SRM price custom 
+    } else if (symbol === 'SUI') {
         const res = await fetch(`/api/get-coina-price?symbol=SUIUSD`);
         if (!res.ok) {
             throw new Error('❌ Failed to fetch coin price data');

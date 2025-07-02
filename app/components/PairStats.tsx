@@ -26,10 +26,11 @@ export default function PairStats({
   variant = "default",
 }: PairStatsProps) {
   const [selectedRange, setSelectedRange] = useAtom(selectedRangeAtom);
+  
   const { data: buy1SuiQuote } = useQuote(
     new URLSearchParams({
       poolId: poolId!,
-      amount: (1 * Number(MIST_PER_SUI)).toString(),
+      amount: (1 * Math.pow(10, Number(coinA?.decimals ?? 9))).toString(),
       isSell: "true",
       isAtoB: "true",
       outputDecimals: coinB?.decimals.toString() ?? "9",

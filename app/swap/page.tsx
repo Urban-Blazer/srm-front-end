@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 // @ts-nocheck
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -242,7 +243,7 @@ export default function Swap() {
     };
 
     // ✅ Fetch Token Balances when a Token is Selected
-    const fetchBalance = async (token, setBalance) => {
+    const fetchBalance = useCallback(async (token, setBalance) => {
         if (!walletAddress || !token) return;
 
         try {
@@ -257,17 +258,17 @@ export default function Swap() {
             console.error(`Error fetching balance for ${token.symbol}:`, error);
             setBalance(0);
         }
-    };
+    }, [walletAddress]);
 
     // ✅ Fetch balances whenever `sellToken` or `buyToken` changes
     useEffect(() => {
         if (sellToken && !fetchingQuote) fetchBalance(sellToken, setSellBalance);
     // ts-ignore
-    }, [sellToken, walletAddress, fetchingQuote]);
+    }, [sellToken, walletAddress, fetchingQuote, fetchBalance]);
 
     useEffect(() => {
         if (buyToken && !fetchingQuote) fetchBalance(buyToken, setBuyBalance);
-    }, [buyToken, walletAddress, fetchingQuote]);
+    }, [buyToken, walletAddress, fetchingQuote, fetchBalance]);
 
     useEffect(() => {
         const fetchPrice = async () => {
@@ -454,9 +455,10 @@ export default function Swap() {
                 setFetchingQuote(false);
             }
         }, 300);
-    }, [poolId, isAtoB, sellToken, buyToken, poolStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [poolId, isAtoB, sellToken, buyToken, poolStats, poolMetadata]);
 
-    const getSwapQuote = async (
+    const getSwapQuote = useCallback(async (
         poolId: string,
         amount: string,
         isSell: boolean,
@@ -515,7 +517,7 @@ export default function Swap() {
         } finally {
             setFetchingQuote(false);
         }
-    };
+    }, [sellToken, buyToken]);
 
     // ✅ Swap Tokens Function
     const handleSwapTokens = async () => {
@@ -943,7 +945,7 @@ export default function Swap() {
         setTimeout(() => setCopiedText(null), 2000);
     };
 
-    const calculateEffectiveAmountIn = (amountIn: number, stats: any) => {
+    const calculateEffectiveAmountIn = useCallback((amountIn: number, stats: any) => {
         const totalFeeBps =
             Number(stats.lp_builder_fee || 0) +
             Number(stats.burn_fee || 0) +
@@ -953,9 +955,9 @@ export default function Swap() {
 
         const netAmountBps = 10000 - totalFeeBps;
         return (amountIn * netAmountBps) / 10000;
-    };
+    }, []);
 
-    const calculatePriceImpact = (
+    const calculatePriceImpact = useCallback((
         amountInHuman: number,
         stats: any,
         reserveInRaw: number,
@@ -973,7 +975,7 @@ export default function Swap() {
         const expectedOut = effectiveIn * (reserveOut / reserveIn);
 
         return ((expectedOut - amountOut) / expectedOut) * 100;
-    };
+    }, [calculateEffectiveAmountIn]);
 
 
     return (

@@ -1,4 +1,6 @@
 import { CreateTableCommand, DynamoDBClient, KeyType, ScalarAttributeType } from "@aws-sdk/client-dynamodb";
+
+export const dynamic = 'force-dynamic';
 import {
     DeleteCommand,
     DynamoDBDocumentClient,

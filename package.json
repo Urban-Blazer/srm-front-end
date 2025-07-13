@@ -20,7 +20,7 @@
     "@mui/material": "^6.4.5",
     "@mysten/bcs": "^1.6.2",
     "@mysten/dapp-kit": "^0.16.1",
-    "@mysten/move-bytecode-template": "^0.1.0",
+    "@mysten/move-bytecode-template": "0.1.0",
     "@mysten/sui": "^1.29.0",
     "@mysten/sui.js": "^0.48.1",
     "@mysten/wallet-standard": "^0.9.0",

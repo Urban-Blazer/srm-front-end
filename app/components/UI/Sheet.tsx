@@ -72,7 +72,7 @@ const SheetContent = React.forwardRef<
       setTimeout(() => {
         control.start("open");
       }, 100);
-    }, [control, side]);
+    }, [animation, control, side]);
     return (
       <SheetPortal forceMount={props.forceMount}>
         <SheetOverlay

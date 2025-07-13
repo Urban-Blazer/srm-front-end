@@ -1,5 +1,5 @@
 import { RecentSwap, RecentTransactionsProps } from '@/app/types';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePoolStats } from '../hooks/usePoolStats';
 import useRecentSwaps from '../hooks/useRecentSwaps';
 import { Spinner } from './Spinner';
@@ -12,7 +12,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
     const { data: recentSwaps, refetch: refetchRecentSwaps, isLoading: isRecentSwapsLoading } = useRecentSwaps(poolId, 60 * 1000);
     const { refetch: refetchPoolStats } = usePoolStats(poolId, 60 * 1000);
 
-    const handleRecentSwapWS = (event: MessageEvent<any>) => {
+    const handleRecentSwapWS = useCallback((event: MessageEvent<any>) => {
         try {
             const data = JSON.parse(event.data);
 
@@ -25,7 +25,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
             console.error('❌ Error parsing WebSocket message:', err);
         }
 
-    }
+    }, [poolId, refetchPoolStats, refetchRecentSwaps]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -36,7 +36,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
     }, []);
 
     // WebSocket reconexión
-    const connectWebSocket = () => {
+    const connectWebSocket = useCallback(() => {
         if (!poolId) return;
 
         const ws = new WebSocket(websocketUrl);
@@ -56,7 +56,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
             console.warn('🔌 WebSocket closed (RecentTransactions), reconnecting...');
             setTimeout(connectWebSocket, 5000); // Intenta reconectar después de 5 segundos
         };
-    };
+    }, [handleRecentSwapWS, poolId, websocketUrl]);
 
     useEffect(() => {
         connectWebSocket();
@@ -66,7 +66,7 @@ export default function RecentTransactions({ poolId, websocketUrl, coinA, coinB 
                 wsRef.current.close();
             }
         };
-    }, [poolId, websocketUrl]);
+    }, [connectWebSocket]);
 
     useEffect(() => {
         const fetchCoinAPrice = async () => {

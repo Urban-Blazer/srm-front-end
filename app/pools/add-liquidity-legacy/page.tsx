@@ -107,7 +107,7 @@ export default function AddLiquidity() {
       dispatch({ type: "SET_COIN", payload: predefinedCoin });
       dispatch({ type: "SET_CUSTOM_COIN", payload: coinB });
     }
-  }, [predefinedCoins]);
+  }, [coinA, coinB, predefinedCoins]);
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]); // Append new log to state

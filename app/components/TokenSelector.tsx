@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useState, useEffect, useRef } from "react";
 import { SuiClient } from "@mysten/sui.js/client";
 import { GETTER_RPC } from "../config";

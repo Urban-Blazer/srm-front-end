@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 // @ts-nocheck
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -73,7 +74,7 @@ const MergeCoinsModal = () => {
     /**
      * ✅ Fetch Coins from RPC
      */
-    const fetchCoins = async () => {
+    const fetchCoins = useCallback(async () => {
         if (!walletAddress) return;
 
         try {
@@ -115,12 +116,12 @@ const MergeCoinsModal = () => {
         } catch (error) {
             console.error("❌ Error fetching coins:", error);
         }
-    };
+    }, [walletAddress]);
 
     // ✅ Fetch coins on walletAddress change
     useEffect(() => {
         fetchCoins();
-    }, [walletAddress]);
+    }, [walletAddress, fetchCoins]);
 
     /**
  * ✅ Handle Coin Merging

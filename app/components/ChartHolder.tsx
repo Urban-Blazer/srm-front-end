@@ -7,7 +7,7 @@ import {
     type CandlestickData,
     type CandlestickSeriesPartialOptions
 } from 'lightweight-charts';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useChartData from '../hooks/useChartData';
 import { IntervalType } from '../types';
 import useCoinPrice from '../hooks/useCoinPrice';
@@ -32,7 +32,7 @@ export default function ChartHolder({ poolId, coinASymbol }: ChartProps) {
     let ws: WebSocket | null = null;
 
     // WebSocket reconexión
-    const connectWebSocket = () => {
+    const connectWebSocket = useCallback(() => {
         if (!poolId) return;
 
         const ws = new WebSocket(websocketUrl);
@@ -63,7 +63,7 @@ export default function ChartHolder({ poolId, coinASymbol }: ChartProps) {
             console.warn('🔌 WebSocket closed (Chart), reconnecting...');
             setTimeout(connectWebSocket, 5000); // Intenta reconectar después de 5 segundos
         };
-    };
+    }, [poolId, refetchChartData, websocketUrl]);
 
     useEffect(() => {
         if (!chartContainerRef.current || !chartData || !coinAPriceUSD) return;
@@ -151,7 +151,7 @@ export default function ChartHolder({ poolId, coinASymbol }: ChartProps) {
                 wsRef.current.close();
             }
         };
-    }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData]);
+    }, [poolId, interval, coinASymbol, coinAPriceUSD, chartData, connectWebSocket]);
 
     return (
         <div className="w-full min-h-[480px]">

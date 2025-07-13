@@ -275,9 +275,8 @@ export const LPPositionCard = ({
           ? BigInt(lp.balance)
           : BigInt(
               Math.floor(
-                Number(inputAmount) *
-                  removePercentage[lp.objectId] *
-                  Number(MIST_PER_SUI)
+                (Number(inputAmount) * Number(MIST_PER_SUI)) *
+                  (removePercentage[lp.objectId] / 100)
               )
             );
 
@@ -286,30 +285,29 @@ export const LPPositionCard = ({
       const coinBDecimals = lp.poolData?.coinB_metadata?.decimals ?? 9;
 
       const withdrawFraction =
-        (lpWithdraw_MIST * BigInt(1_000_000)) / lp.balance;
-
+        (lpWithdraw_MIST * BigInt(1_000)) / lp.balance;
       // Calculate expected output amounts with proper decimal scaling
       const estimatedAOut =
         (BigInt(Math.floor(lp.userCoinA * Math.pow(10, coinADecimals))) *
           withdrawFraction) /
-        BigInt(1_000_000);
+        BigInt(1_000);
 
       const estimatedBOut =
         (BigInt(Math.floor(lp.userCoinB * Math.pow(10, coinBDecimals))) *
           withdrawFraction) /
-        BigInt(1_000_000);
+        BigInt(1_000);
 
       // Apply slippage tolerance to minimum output amounts
       const userSlippage = parseFloat(slippageTolerance[lp.objectId]) || 1.0;
       const slippageMultiplier = (100 - userSlippage) / 100;
 
       const minAOut =
-        (estimatedAOut * BigInt(Math.floor(slippageMultiplier * 1_000_000))) /
-        BigInt(1_000_000);
+        (estimatedAOut * BigInt(Math.floor(slippageMultiplier * 1_000))) /
+        BigInt(1_000);
       const minBOut =
-        (estimatedBOut * BigInt(Math.floor(slippageMultiplier * 1_000_000))) /
-        BigInt(1_000_000);
-
+        (estimatedBOut * BigInt(Math.floor(slippageMultiplier * 1_000))) /
+        BigInt(1_000);
+      
       addLog(
         `Expected output: ~${lp.userCoinA.toFixed(4)} ${
           lp.poolData?.coinA_metadata?.symbol
@@ -322,13 +320,20 @@ export const LPPositionCard = ({
           Number(minAOut) / Math.pow(10, coinADecimals)
         } ${lp.poolData?.coinA_metadata?.symbol} and ${
           Number(minBOut) / Math.pow(10, coinBDecimals)
-        } ${lp.poolData?.coinB_metadata?.symbol}`
+        } ${lp.poolData?.coinB_metadata?.symbol}
+        ${slippageMultiplier} ${Math.floor(slippageMultiplier * 1_000)} ${userSlippage}`
       );
 
       // Build transaction block
       const txb = new TransactionBlock();
 
-      console.log(withdrawAmount[lp.objectId], lpWithdraw_MIST, lp.balance);
+
+      txb.setGasBudget(50_000_000);
+      // split LP first
+      const [lpToken] = txb.splitCoins(txb.object(lp.objectId), [
+        txb.pure.u64(lpWithdraw_MIST),
+      ]);
+
 
       txb.moveCall({
         target: `${PACKAGE_ID}::${DEX_MODULE_NAME}::remove_liquidity_with_coins_and_transfer_to_sender`,
@@ -338,7 +343,7 @@ export const LPPositionCard = ({
         ],
         arguments: [
           txb.object(lp.poolData?.poolId),
-          txb.object(lp.objectId),
+          lpToken,
           txb.pure.u64(lpWithdraw_MIST),
           txb.pure.u64(minAOut),
           txb.pure.u64(minBOut),

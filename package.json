@@ -53,6 +53,7 @@
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.1",
     "framer-motion": "^12.12.1",
+    "fs": "^0.0.1-security",
     "jotai": "^2.12.3",
     "lightweight-charts": "^5.0.6",
     "lodash": "^4.17.21",

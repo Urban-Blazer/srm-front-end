@@ -285,4 +285,18 @@ export const predefinedCoins: CoinMeta[] = [
       website: "https://www.teammysten.com/",
     },
   },
+  {
+    symbol: "TOILET",
+    name: "Toilet Dust",
+    typeName:
+      "0xc5b61b1e1f7f88511c9c0c6f475f823c66cc4e2d39a49beb6777059710be8404::toilet::TOILET",
+    decimals: 6,
+    image: "https://api.movepump.com/uploads/IMG_4034_ef8df5844a.jpeg",
+    lists: ["all"],
+    socials: {
+      x: "https://x.com/Toiletdustsui",
+      telegram: "https://t.me/ToiletDustonSui",
+      website: "https://www.toiletdust.com/",
+    },
+  },
 ];
